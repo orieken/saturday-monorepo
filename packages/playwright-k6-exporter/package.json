@@ -1,0 +1,66 @@
+{
+  "name": "@orieken/saturday-playwright-k6-exporter",
+  "version": "0.1.0",
+  "description": "Record Playwright API calls and generate k6 test scripts automatically.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./fixture": {
+      "types": "./dist/fixture.d.ts",
+      "import": "./dist/fixture.mjs",
+      "require": "./dist/fixture.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "k6-exporter-init": "./dist/cli.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/fixture.ts src/cli.ts --dts --format cjs,esm --out-dir dist",
+    "clean": "rimraf dist",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "prepack": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "playwright",
+    "k6",
+    "performance",
+    "exporter",
+    "testing"
+  ],
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "devDependencies": {
+    "@orieken/saturday-k6-redaction-basic": "workspace:*",
+    "@types/node": "^20.11.30",
+    "eslint": "^9.13.0",
+    "eslint-config-prettier": "^9.1.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://example.com/your/repo.git"
+  },
+  "bugs": {
+    "url": "https://example.com/your/repo/issues"
+  },
+  "homepage": "https://example.com/your/repo#readme"
+}
