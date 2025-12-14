@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+  - saturday-starter
+  - 'saturday-go-cli'
+  - saturday-mcp
+
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
+  - unrs-resolver

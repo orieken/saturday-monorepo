@@ -31,7 +31,8 @@
     "build": "tsup src/index.ts src/fixture.ts src/cli.ts --dts --format cjs,esm --out-dir dist",
     "clean": "rimraf dist",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "prepack": "npm run clean && npm run build"
+    "prepack": "npm run clean && npm run build",
+    "test": "jest"
   },
   "keywords": [
     "playwright",
@@ -45,10 +46,13 @@
   },
   "devDependencies": {
     "@orieken/saturday-k6-redaction-basic": "workspace:*",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.30",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
+    "jest": "^30.2.0",
     "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.6",
     "tsup": "^8.3.0",
     "typescript": "^5.6.3"
   },

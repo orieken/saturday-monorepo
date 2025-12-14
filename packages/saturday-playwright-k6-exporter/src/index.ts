@@ -234,6 +234,9 @@ export function makeSlugFromTitle(title: string): string {
 export async function createK6Recorder(testTitle: string, outDir = path.join(process.cwd(), 'perf', 'k6'), options?: ExporterOptions): Promise<{ ctx: APIRequestContext; recorder: K6Recorder } | null> {
   if (!process.env.K6_EXPORT) return null;
   const testSlug = makeSlugFromTitle(testTitle);
+  /* istanbul ignore next */
+  if (!options) options = {};
+  if (!options.policy) options.policy = await resolvePolicy(options);
   const recorder = new K6Recorder(outDir, testSlug, options);
   const ctx = await request.newContext();
   const wrapped = recorder.wrap(ctx);

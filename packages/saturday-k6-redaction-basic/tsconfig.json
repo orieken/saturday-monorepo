@@ -3,22 +3,21 @@
     "target": "ES2021",
     "module": "ESNext",
     "lib": [
-      "ES2021",
-      "DOM"
+      "ES2021"
     ],
     "moduleResolution": "Bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
     "declaration": false,
     "outDir": "dist",
     "types": [
       "node",
-      "@playwright/test"
+      "jest"
     ]
   },
   "include": [
-    "src"
+    "src",
+    "tests"
   ]
 }

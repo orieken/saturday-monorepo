@@ -13,7 +13,7 @@ export type RedactionOptions = {
 
 const DEFAULT_SECRET_HEADERS = [
   'authorization', 'proxy-authorization', 'x-api-key', 'x-apikey', 'x-api-token',
-  'x-auth-token', 'x-access-token', 'x-amz-security-token', 'cookie', 'set-cookie'
+  'x-auth-token', 'x-access-token', 'x-amz-security-token', 'set-cookie'
 ];
 
 function makeEnvName(prefix: string, name: string) {
