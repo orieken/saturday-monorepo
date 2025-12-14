@@ -1,0 +1,61 @@
+{
+  "name": "@orieken/saturday-cucumber-otel-formatter",
+  "version": "0.1.1",
+  "license": "MIT",
+  "description": "OpenTelemetry formatter for CucumberJS in the Saturday Framework",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format cjs,esm --out-dir dist",
+    "clean": "rimraf dist",
+    "prepack": "npm run clean && npm run build",
+    "test": "jest",
+    "e2e": "cucumber-js",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "dependencies": {
+    "@cucumber/messages": "^24.0.1",
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.54.0",
+    "@opentelemetry/resources": "^1.21.0",
+    "@opentelemetry/sdk-trace-base": "^1.21.0",
+    "@opentelemetry/sdk-trace-node": "^1.21.0",
+    "@opentelemetry/semantic-conventions": "^1.21.0"
+  },
+  "peerDependencies": {
+    "@cucumber/cucumber": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.1.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.1",
+    "jest": "^30.2.0",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.6",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "cucumber-formatter",
+    "opentelemetry",
+    "cucumber",
+    "testing",
+    "observability",
+    "saturday"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
