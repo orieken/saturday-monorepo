@@ -2,8 +2,8 @@ import { StatusMapper } from '../src/status-mapper';
 import { TestStepResultStatus } from '@cucumber/messages';
 
 describe('StatusMapper', () => {
-  it('should map PASSED to ok', () => {
-    expect(StatusMapper.map(TestStepResultStatus.PASSED)).toBe('ok');
+  it('should map PASSED to passed', () => {
+    expect(StatusMapper.map(TestStepResultStatus.PASSED)).toBe('passed');
   });
 
   it('should map FAILED to error', () => {

@@ -10,6 +10,11 @@ export interface OtelCucumberConfig {
 
 export const defaultConfig: OtelCucumberConfig = {
   resourceAttributes: {},
-  scenarioAttributes: {},
+  scenarioAttributes: (pickle: Pickle, gherkinDocument: GherkinDocument) => {
+    return {
+       'custom.feature.name': gherkinDocument.feature?.name || 'unknown',
+       'custom.scenario.tags': pickle.tags.map(t => t.name).join(','),
+    };
+  },
   stepAttributes: {}
 };

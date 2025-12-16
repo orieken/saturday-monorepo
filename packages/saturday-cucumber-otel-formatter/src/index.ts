@@ -5,9 +5,10 @@ import {
 } from '@cucumber/cucumber'
 import * as messages from '@cucumber/messages'
 import { EOL as n } from 'os'
-import { trace } from '@opentelemetry/api';
+import { trace, Counter } from '@opentelemetry/api';
 import * as fs from 'fs';
 import { TracerSetup } from './tracer-setup';
+import { MetricsSetup } from './metrics-setup';
 import { SpanManager } from './span-manager';
 import { StatusMapper } from './status-mapper';
 import { CurrentScenario, CurrentStep } from './types';
@@ -20,7 +21,9 @@ const { getPickleStepMap } = PickleParser
 
 export default class OtelFormatter extends Formatter {
   private tracerSetup?: TracerSetup;
+  private metricsSetup?: MetricsSetup;
   private spanManager?: SpanManager;
+  private scenarioCounter?: Counter;
   private currentScenario?: CurrentScenario;
   private uri?: string;
   private config: OtelCucumberConfig = defaultConfig;
@@ -40,6 +43,15 @@ export default class OtelFormatter extends Formatter {
   async finished(): Promise<void> {
     await this.initPromise;
     console.log('OtelFormatter: Report processing completed.');
+
+    if (this.metricsSetup) {
+      console.log('OtelFormatter: Shutting down Metrics...');
+      try {
+        await this.metricsSetup.shutdown();
+      } catch (e) {
+        console.error('OtelFormatter: Metrics shutdown failed', e);
+      }
+    }
     
     if (this.tracerSetup) {
       console.log('OtelFormatter: Shutting down OTel...');
@@ -82,6 +94,14 @@ export default class OtelFormatter extends Formatter {
         this.config = await loadConfig(process.env.OTEL_CUSTOM_CONFIG);
         this.tracerSetup = new TracerSetup('cucumber-tests', this.config.resourceAttributes);
         this.spanManager = new SpanManager(this.tracerSetup.getTracer());
+
+        // Initialize Metrics
+        this.metricsSetup = new MetricsSetup('cucumber-tests', this.tracerSetup.getResource());
+        const meter = this.metricsSetup.getMeter();
+        this.scenarioCounter = meter.createCounter('cucumber.test.cases', {
+          description: 'Counts the number of test cases executed',
+        });
+        
         this.isReady = true;
         
         // Process queued envelopes
@@ -212,6 +232,16 @@ export default class OtelFormatter extends Formatter {
       ? (testStepFinished.testStepResult.duration.seconds as unknown as number) * 1000 + (testStepFinished.testStepResult.duration.nanos / 1000000)
       : undefined;
 
+    if (process.env.OTEL_DEBUG_LOGGING === 'true') {
+        if (status === 'ok' || status === 'passed') {
+            console.log(`\x1b[32m✔ ${currentStep.name}\x1b[0m`);
+        } else if (status === 'error' || status === 'failed') {
+            console.log(`\x1b[31m✖ ${currentStep.name}\x1b[0m`);
+        } else {
+             console.log(`${currentStep.name} [${status}]`);
+        }
+    }
+
     if (status === 'error') {
       this.currentScenario.hasFailedSteps = true;
       this.currentScenario.error = error;
@@ -229,8 +259,16 @@ export default class OtelFormatter extends Formatter {
     if (this.currentScenario && this.currentScenario.context) {
       const span = trace.getSpan(this.currentScenario.context);
       if (span) {
-        const status = this.currentScenario.hasFailedSteps ? 'error' : 'ok';
+        const status = this.currentScenario.hasFailedSteps ? 'error' : 'passed';
         this.spanManager!.endSpan(span, status, this.currentScenario.error);
+
+        // Record Metric
+        if (this.scenarioCounter) {
+            this.scenarioCounter.add(1, {
+                'test.status': status,
+                'test.file': this.currentScenario.file || 'unknown' 
+            });
+        }
       }
       this.currentScenario = undefined;
     }

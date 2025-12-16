@@ -12,7 +12,7 @@ export class TracerSetup {
   private provider?: NodeTracerProvider;
   private tracer: Tracer;
 
-  constructor(serviceName: string = 'cucumber-tests', customAttributes: Attributes = {}) {
+  constructor(serviceName: string = 'playwright-tests', customAttributes: Attributes = {}) {
     if (process.env.ENABLE_OTEL !== 'true') {
       this.tracer = trace.getTracer(serviceName);
       return;
@@ -31,7 +31,7 @@ export class TracerSetup {
         'test.platform': process.platform,
         'test.os': os.type(),
         'test.browser': process.env.BROWSER || 'unknown',
-        'test.reporter': 'cucumber',
+        'test.reporter': 'playwright',
         ...customAttributes
       }),
     });
@@ -45,10 +45,12 @@ export class TracerSetup {
     this.provider.addSpanProcessor(new SimpleSpanProcessor(otlpExporter));
 
     if (process.env.OTEL_SAVE_PAYLOADS === 'true') {
-      const { FileSpanExporter } = require('./file-exporter');
-      console.log('OTEL: Enabling FileSpanExporter');
-      const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
-      this.provider.addSpanProcessor(new SimpleSpanProcessor(new FileSpanExporter('./reports', `otel-cucumber-spans-${timestamp}.json`)));
+        const { FileSpanExporter } = require('./file-exporter');
+        if (process.env.OTEL_DEBUG_LOGGING === 'true') {
+            console.log('OTEL: Enabling FileSpanExporter');
+        }
+        const timestamp = new Date().toISOString().replace(/:/g, '-').replace(/\..+/, '');
+        this.provider.addSpanProcessor(new SimpleSpanProcessor(new FileSpanExporter('./reports', `otel-playwright-spans-${timestamp}.json`)));
     }
 
     this.provider.register();

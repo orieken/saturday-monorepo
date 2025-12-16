@@ -4,7 +4,7 @@ export class StatusMapper {
   static map(status?: TestStepResultStatus): string {
     switch (status) {
       case TestStepResultStatus.PASSED:
-        return 'ok';
+        return 'passed';
       case TestStepResultStatus.FAILED:
         return 'error';
       case TestStepResultStatus.SKIPPED:

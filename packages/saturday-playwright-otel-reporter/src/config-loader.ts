@@ -1,14 +1,14 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { pathToFileURL } from 'url';
-import { OtelCucumberConfig, defaultConfig } from './config';
+import { OtelPlaywrightConfig, defaultConfig } from './config';
 
-export async function loadConfig(configPath?: string): Promise<OtelCucumberConfig> {
+export async function loadConfig(configPath?: string): Promise<OtelPlaywrightConfig> {
   let searchPath = configPath;
-  
+
   if (!searchPath) {
-      const defaultMjs = path.join(process.cwd(), 'cucumber-otel.config.mjs');
-      const defaultJs = path.join(process.cwd(), 'cucumber-otel.config.js');
+      const defaultMjs = path.join(process.cwd(), 'playwright-otel.config.mjs');
+      const defaultJs = path.join(process.cwd(), 'playwright-otel.config.js');
       
       if (fs.existsSync(defaultMjs)) {
           searchPath = defaultMjs;
@@ -24,7 +24,7 @@ export async function loadConfig(configPath?: string): Promise<OtelCucumberConfi
       const module = await import(fileUrl);
       return { ...defaultConfig, ...(module.default || module) };
     } catch (error) {
-      console.error(`[OtelFormatter] Failed to load config from ${searchPath}:`, error);
+      console.error(`[OtelReporter] Failed to load config from ${searchPath}:`, error);
       return defaultConfig;
     }
   }

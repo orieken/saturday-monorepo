@@ -26,7 +26,7 @@ The formatter uses standard OpenTelemetry environment variables for configuratio
 | `OTEL_SERVICE_VERSION` | Service version | - |
 | `OTEL_SERVICE_NAMESPACE` | Service namespace | - |
 | `OTEL_DEFAULT_ENVIRONMENT` | Deployment environment | - |
-| `OTEL_CUSTOM_CONFIG` | Path to a custom configuration file (e.g. `./otel-config.mjs`) for advanced attributes | - |
+| `OTEL_CUSTOM_CONFIG` | Path to a custom configuration file. If not specified, looks for `cucumber-otel.config.mjs` or `cucumber-otel.config.js` in the project root. | - |
 | `OTEL_DEBUG_LOGGING` | Set to `true` to enable verbose logging of active handles and initialization steps for debugging hangs. | `false` |
 
 ## Robustness Features
@@ -49,6 +49,61 @@ npx cucumber-js \
   --format @orieken/saturday-cucumber-otel-formatter \
   --require features/**/*.ts
 ```
+
+
+## Custom Configuration
+
+You can define a `cucumber-otel.config.mjs` file in your project root to customize resource and scenario attributes:
+
+```javascript
+export default {
+  resourceAttributes: {
+    'service.version': '1.0.0',
+    'service.runner': 'cucumber'
+  },
+  // Custom logic for adding attributes to scenarios
+  scenarioAttributes: (pickle, gherkinDocument) => {
+    return {
+      'custom.scenario.tags': pickle.tags.map(t => t.name).join(',')
+    };
+  },
+  // Custom logic for adding attributes to steps
+  stepAttributes: (pickleStep, gherkinStep) => {
+    return {
+      'custom.step.keyword': gherkinStep.keyword
+    };
+  }
+};
+```
+
+## Metrics
+
+In addition to traces, this formatter automatically collects the following metrics:
+
+- `cucumber.test.cases` (Counter): Counts the number of executed test cases.
+  - Labels: `test.status` ('passed' | 'error'), `test.file`
+
+## Sample Queries (PromQL)
+
+Here are some example queries you can use in Grafana (Prometheus datasource) to visualize your test data:
+
+**Total Pass/Fail Count per Feature:**
+```promql
+sum by (test_status, test_file) (cucumber_test_cases_total)
+```
+
+**Success Rate (%):**
+```promql
+sum(cucumber_test_cases_total{test_status="passed"}) / sum(cucumber_test_cases_total) * 100
+```
+
+
+## Debugging & Diagnostics
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTEL_SAVE_PAYLOADS` | If `true`, saves the exact JSON payload sent to the OTel collector to `./reports/otel-cucumber-spans-<TIMESTAMP>.json` | `false` |
+| `OTEL_DEBUG_LOGGING` | Set to `true` to enable verbose logging to console and `otel-debug-init.log` | `false` |
 
 ## Trace Structure
 

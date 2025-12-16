@@ -29,12 +29,14 @@ jobs:
           pnpm --filter @orieken/saturday-k6-redaction-basic run build
           pnpm --filter @orieken/saturday-playwright-k6-exporter run build
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run build
+          pnpm --filter @orieken/saturday-playwright-otel-reporter run build
 
       - name: Test Packages
         run: |
           pnpm --filter @orieken/saturday-k6-redaction-basic run test
           pnpm --filter @orieken/saturday-playwright-k6-exporter run test
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run test
+          pnpm --filter @orieken/saturday-playwright-otel-reporter run test
 
   publish:
     needs: build-and-test
@@ -61,6 +63,7 @@ jobs:
           pnpm --filter @orieken/saturday-k6-redaction-basic run build
           pnpm --filter @orieken/saturday-playwright-k6-exporter run build
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run build
+          pnpm --filter @orieken/saturday-playwright-otel-reporter run build
             
       - name: Publish Packages
         # We use || true or simple logic to allow one to fail (e.g. version exists) without failing the whole job if desired.
@@ -70,5 +73,6 @@ jobs:
            pnpm publish -r --filter @orieken/saturday-k6-redaction-basic --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-k6-redaction-basic"
            pnpm publish -r --filter @orieken/saturday-playwright-k6-exporter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-k6-exporter"
            pnpm publish -r --filter @orieken/saturday-cucumber-otel-formatter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber-otel-formatter"
+           pnpm publish -r --filter @orieken/saturday-playwright-otel-reporter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-otel-reporter"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

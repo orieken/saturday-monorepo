@@ -63,22 +63,45 @@ jest.mock('@opentelemetry/api', () => ({
   SpanStatusCode: {
     OK: 1,
     ERROR: 2
-  }
+  },
+  createContextKey: jest.fn(),
+}));
+
+jest.mock('@opentelemetry/sdk-metrics', () => ({
+  MeterProvider: class {
+    getMeter() {
+      return {
+        createCounter: jest.fn().mockReturnValue({
+          add: jest.fn(),
+        }),
+      };
+    }
+    shutdown() {}
+  },
+  PeriodicExportingMetricReader: class {},
+}));
+
+jest.mock('@opentelemetry/exporter-metrics-otlp-http', () => ({
+  OTLPMetricExporter: class {},
 }));
 
 import OtelFormatter from '../src/index';
 import { EventEmitter } from 'events';
 import { SpanManager } from '../src/span-manager';
 import { TracerSetup } from '../src/tracer-setup';
+import { MetricsSetup } from '../src/metrics-setup';
 
 jest.mock('../src/tracer-setup');
+jest.mock('../src/metrics-setup');
 jest.mock('../src/span-manager');
 
 describe('OtelFormatter', () => {
   let formatter: OtelFormatter;
   let eventBroadcaster: EventEmitter;
   let mockTracerSetup: any;
+  let mockMetricsSetup: any;
   let mockSpanManager: any;
+
 
   beforeEach(() => {
     eventBroadcaster = new EventEmitter();
@@ -86,8 +109,19 @@ describe('OtelFormatter', () => {
     // Setup mocks
     mockTracerSetup = {
       getTracer: jest.fn().mockReturnValue({}),
+      getResource: jest.fn().mockReturnValue({}),
     };
     (TracerSetup as jest.Mock).mockImplementation(() => mockTracerSetup);
+
+    mockMetricsSetup = {
+        getMeter: jest.fn().mockReturnValue({
+            createCounter: jest.fn().mockReturnValue({
+                add: jest.fn()
+            })
+        }),
+        shutdown: jest.fn()
+    };
+    (MetricsSetup as jest.Mock).mockImplementation(() => mockMetricsSetup);
 
     mockSpanManager = {
       startTestRun: jest.fn(),
@@ -103,7 +137,7 @@ describe('OtelFormatter', () => {
       eventDataCollector: {
         getTestCaseAttempt: jest.fn().mockReturnValue({
           gherkinDocument: { feature: { uri: 'feature.feature' }, uri: 'feature.feature' },
-          pickle: { astNodeIds: ['1'], name: 'scenario' },
+          pickle: { astNodeIds: ['1'], name: 'scenario', tags: [] },
           testCase: {
              testSteps: [{ id: 'step-1', pickleStepId: 'pickle-step-1' }]
           }
