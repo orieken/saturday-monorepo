@@ -20,7 +20,7 @@ export class FileSpanExporter implements SpanExporter {
       name: span.name,
       kind: span.kind,
       spanContext: span.spanContext(),
-      parentSpanId: span.parentSpanId,
+      parentSpanId: (span as any).parentSpanId,
       startTime: span.startTime,
       endTime: span.endTime,
       status: span.status,

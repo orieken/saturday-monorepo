@@ -1,13 +1,13 @@
 // Mock OTel dependencies
 jest.mock('@opentelemetry/sdk-trace-node', () => ({
   NodeTracerProvider: jest.fn().mockImplementation(() => ({
-    addSpanProcessor: jest.fn(),
     register: jest.fn(),
   })),
 }));
 
 jest.mock('@opentelemetry/resources', () => ({
   Resource: jest.fn(),
+  resourceFromAttributes: jest.fn(),
 }));
 
 jest.mock('@opentelemetry/semantic-conventions', () => ({
@@ -35,7 +35,7 @@ jest.mock('@opentelemetry/api', () => ({
 
 import { TracerSetup } from '../src/tracer-setup';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { trace } from '@opentelemetry/api';
@@ -56,9 +56,9 @@ describe('TracerSetup', () => {
   it('should initialize with default values', () => {
     const tracerSetup = new TracerSetup();
     
-    // Verify NodeTracerProvider created with Resource
+    // Verify NodeTracerProvider created
     expect(NodeTracerProvider).toHaveBeenCalledTimes(1);
-    expect(Resource).toHaveBeenCalledWith(expect.objectContaining({
+    expect(resourceFromAttributes).toHaveBeenCalledWith(expect.objectContaining({
       'service.name': 'cucumber-tests',
     }));
 
@@ -86,7 +86,7 @@ describe('TracerSetup', () => {
 
     new TracerSetup();
 
-    expect(Resource).toHaveBeenCalledWith(expect.objectContaining({
+    expect(resourceFromAttributes).toHaveBeenCalledWith(expect.objectContaining({
       'service.name': 'env-service-name',
       'service.version': '1.0.0',
       'service.namespace': 'my-namespace',
@@ -103,7 +103,7 @@ describe('TracerSetup', () => {
     process.env.OTEL_SERVICE_NAME = 'env-overrides-ctor';
     new TracerSetup('ctor-service-name');
     
-    expect(Resource).toHaveBeenCalledWith(expect.objectContaining({
+    expect(resourceFromAttributes).toHaveBeenCalledWith(expect.objectContaining({
       'service.name': 'env-overrides-ctor',
     }));
   });
@@ -112,7 +112,7 @@ describe('TracerSetup', () => {
     delete process.env.OTEL_SERVICE_NAME;
     new TracerSetup('ctor-service-name');
     
-    expect(Resource).toHaveBeenCalledWith(expect.objectContaining({
+    expect(resourceFromAttributes).toHaveBeenCalledWith(expect.objectContaining({
       'service.name': 'ctor-service-name',
     }));
   });
@@ -123,7 +123,7 @@ describe('TracerSetup', () => {
     
     new TracerSetup();
     
-    expect(Resource).toHaveBeenCalledWith(expect.objectContaining({
+    expect(resourceFromAttributes).toHaveBeenCalledWith(expect.objectContaining({
       'deployment.environment': 'staging',
     }));
   });
