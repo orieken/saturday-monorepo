@@ -54,4 +54,23 @@ describe('fixture', () => {
         await fixtureFn({}, use, { title: 'test @k6'});
         expect(use).toHaveBeenCalledWith(null);
     });
+
+    it('should initialize k6Request fixture', async () => {
+        const fixtures = (baseTest as any).fixtures;
+        const use = jest.fn();
+        const mockContext = { dispose: jest.fn() };
+        
+        // Mock request.newContext
+        const { request } = require('@playwright/test');
+        (request.newContext as jest.Mock).mockResolvedValue(mockContext);
+
+        const fixtureFn = fixtures.k6Request;
+        const k6Recorder = {}; // Mock recorder dependency
+        
+        await fixtureFn({ k6Recorder }, use);
+
+        expect(request.newContext).toHaveBeenCalled();
+        expect(use).toHaveBeenCalledWith(mockContext);
+        expect(mockContext.dispose).toHaveBeenCalled();
+    });
 });
