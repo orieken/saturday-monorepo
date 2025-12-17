@@ -1,0 +1,42 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:50051
+      http:
+        endpoint: 0.0.0.0:50052
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+connectors:
+  spanmetrics:
+    dimensions:
+      - name: test.environment
+      - name: test.browser
+      - name: test.platform
+      - name: test.type
+      - name: test.status
+
+exporters:
+  prometheus:
+    endpoint: '0.0.0.0:50080'
+    resource_to_telemetry_conversion:
+      enabled: true
+  otlp:
+    endpoint: 'tempo:4317'
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp, spanmetrics]
+      processors: [batch]
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, spanmetrics]
