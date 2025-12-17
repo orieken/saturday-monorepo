@@ -1,6 +1,6 @@
 {
   "name": "@orieken/saturday-playwright-otel-reporter",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenTelemetry reporter for Playwright in the Saturday Framework",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

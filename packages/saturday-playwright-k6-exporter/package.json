@@ -1,6 +1,6 @@
 {
   "name": "@orieken/saturday-playwright-k6-exporter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Record Playwright API calls and generate k6 test scripts automatically.",
   "license": "MIT",
   "type": "module",

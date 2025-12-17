@@ -19,6 +19,12 @@ connectors:
       - name: test.platform
       - name: test.type
       - name: test.status
+      - name: test.case.title
+      - name: test.case.file
+      - name: test.suite
+      - name: test.scenario.name
+      - name: test.feature.name
+      - name: test.file
 
 exporters:
   prometheus:

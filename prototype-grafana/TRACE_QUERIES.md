@@ -11,7 +11,6 @@ Find all spans representing a test case that failed.
 ```traceql
 { span.status = "error" && span.kind = "internal" } 
 ```
-*Note: Adjust `span.kind` if your reporter uses a different kind for test cases.*
 
 ### 2. Slow Tests (> 5s)
 Identify test cases taking longer than 5 seconds.
@@ -20,61 +19,72 @@ Identify test cases taking longer than 5 seconds.
 ```
 
 ### 3. Filter by Service (Test Suite)
-Filter traces for a specific test reporter/service (e.g., `cucumber-tests` or `playwright-tests`).
+Filter traces for a specific test reporter/service.
 ```traceql
 { resource.service.name = "cucumber-tests" }
+# OR
+{ resource.service.name = "playwright-tests" }
 ```
 
-### 4. Failed Scenarios in a Specific Feature
-Find failed spans within a specific Cucumber feature.
+### 4. Failed Scenarios by Feature Name (Cucumber)
+Find failed spans within a specific Cucumber feature using the newly added `test.feature.name` attribute.
 ```traceql
-{ span.status = "error" && resource.service.name = "cucumber-tests" && span.name =~ ".*Feature Name.*" }
+{ span.status = "error" && test.feature.name = "User Login" }
+```
+
+### 5. Find Playwright Tests by Suite (File)
+Filter for tests belonging to a specific test file/suite using `test.suite`.
+```traceql
+{ test.suite = "tests/auth/login.spec.ts" }
 ```
 
 ---
 
 ## PromQL (Prometheus / Span Metrics)
 
-If you are generating metrics from spans (using the OTel Collector `spanmetrics` processor), you can use these queries.
-**Assumed Metric Names**: `traces_span_metrics_latency_bucket`, `traces_span_metrics_calls_total` (names may vary based on your collector config).
+We use the OTel Collector `spanmetrics` processor to generate metrics from traces.
+**Dimensions Available**: `test_status`, `test_browser`, `test_platform`, `test_type`, `test_scenario_name`, `test_feature_name`, `test_case_title` (Playwright), `test_suite` (Playwright), `test_case_file`.
 
-### 1. Test Pass Rate (Percentage)
-Calculate the percentage of successful tests over time for a specific service.
+### 1. Test Pass Rate (Percentage) by Feature
+Calculate the percentage of successful tests per Feature (Cucumber).
 ```promql
-sum(rate(traces_span_metrics_calls_total{service_name="cucumber-tests", status_code="OK"}[5m])) 
+sum(rate(traces_span_metrics_calls_total{job="otel-collector", status_code="OK"}[5m])) by (test_feature_name)
 / 
-sum(rate(traces_span_metrics_calls_total{service_name="cucumber-tests"}[5m])) * 100
+sum(rate(traces_span_metrics_calls_total{job="otel-collector"}[5m])) by (test_feature_name) * 100
 ```
 
-### 2. Failure Rate by Test Name
-Top 10 failing tests by name.
+### 2. Failure Rate by Scenario / Case Name
+Top 10 failing tests by individual test name. Matches both Cucumber Scenarios and Playwright Cases if you query by the specific label, or use `span_name` as a fallback.
 ```promql
-topk(10, sum by (span_name) (rate(traces_span_metrics_calls_total{status_code="ERROR"}[5m])))
+# By Scenario Name (Cucumber)
+topk(10, sum by (test_scenario_name) (rate(traces_span_metrics_calls_total{status_code="ERROR"}[5m])))
+
+# By Case Title (Playwright)
+topk(10, sum by (test_case_title) (rate(traces_span_metrics_calls_total{status_code="ERROR"}[5m])))
 ```
 
-### 3. Average Test Duration (Latency)
-Average duration of tests for a service.
+### 3. Average Test Duration (Latency) by Browser
+Compare performance across browsers (e.g., Chromium vs Firefox).
 ```promql
-rate(traces_span_metrics_latency_sum{service_name="cucumber-tests"}[5m]) 
+rate(traces_span_metrics_latency_sum{}[5m]) by (test_browser)
 / 
-rate(traces_span_metrics_latency_count{service_name="cucumber-tests"}[5m])
+rate(traces_span_metrics_latency_count{}[5m]) by (test_browser)
 ```
 
-### 4. 95th Percentile Latency (P95)
-The 95th percentile duration of tests (good for spotting slow outliers).
+### 4. Total Execution Count by Suite
+See which test suites are running the most.
 ```promql
-histogram_quantile(0.95, sum(rate(traces_span_metrics_latency_bucket{service_name="cucumber-tests"}[5m])) by (le))
+sum(rate(traces_span_metrics_calls_total{service_name="playwright-tests"}[1m])) by (test_suite) * 60
 ```
 
-### 5. Total Test Executions Count
-Total number of tests executed per minute.
+### 5. Flaky Tests (High Variance)
+Identify tests that fail frequently but also pass (Conceptual).
 ```promql
-sum(rate(traces_span_metrics_calls_total{service_name="cucumber-tests"}[1m])) * 60
+sum by (test_scenario_name) (traces_span_metrics_calls_total{status_code="ERROR"}) 
+> 0 
+and 
+sum by (test_scenario_name) (traces_span_metrics_calls_total{status_code="OK"}) > 0
 ```
-
-### 6. Flaky Tests (High Variance in Outcome)
-*Conceptual*: Tests that have both Error and OK status in a short window.
-This is harder to query directly in simple PromQL but you can visualize `status_code="ERROR"` vs `status_code="OK"` counts side-by-side for the same `span_name`.
 
 ---
 
@@ -83,7 +93,8 @@ This is harder to query directly in simple PromQL but you can visualize `status_
 | Panel Title | Visualization | Query Type | Query |
 | :--- | :--- | :--- | :--- |
 | **Global Pass Rate** | Gauge | PromQL | `(sum(rate(...status="OK")) / sum(rate(...))) * 100` |
-| **Test Failures Over Time** | Time Series | PromQL | `sum(rate(...status="ERROR"))` |
-| **Slowest Tests (Top 10)** | Bar Gauge | PromQL | `topk(10, avg_duration)` |
-| **Test Duration Distribution** | Heatmap | PromQL | `rate(...latency_bucket...)` |
-| **Recent Failed Traces** | Table / Trace List | TraceQL | `{ span.status = "error" }` |
+| **Pass Rate by Feature** | Bar Chart | PromQL | `... by (test_feature_name)` |
+| **Failures by Browser** | Pie Chart | PromQL | `sum(traces_span_metrics_calls_total{status_code="ERROR"}) by (test_browser)` |
+| **Slowest Scenarios** | Bar Gauge | PromQL | `topk(10, avg_duration by (test_scenario_name))` |
+| **Test Throughput (Tests/min)** | Stat | PromQL | `sum(rate(traces_span_metrics_calls_total[1m])) * 60` |
+| **Recent Failed Traces** | Table | TraceQL | `{ span.status = "error" }` |

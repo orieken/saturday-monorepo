@@ -165,6 +165,7 @@ export default class OtelFormatter extends Formatter {
 
     const { ctx } = this.spanManager!.startScenario(this.currentScenario.name, {
       'test.type': 'scenario',
+      'test.feature.name': gherkinDocument.feature.name,
       'test.scenario.name': this.currentScenario.name,
       'test.scenario.line': this.currentScenario.line,
       'test.scenario.file': this.currentScenario.file,

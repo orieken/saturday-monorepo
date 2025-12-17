@@ -56,6 +56,7 @@ export default class OtelReporter implements Reporter {
 
     const { ctx } = this.spanManager.startTest(test.title, {
         'test.type': 'test-case',
+        'test.suite': test.parent.title,
         'test.case.title': test.title,
         'test.case.file': test.location.file,
         'test.case.line': test.location.line,
