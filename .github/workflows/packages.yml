@@ -30,6 +30,11 @@ jobs:
           pnpm --filter @orieken/saturday-playwright-k6-exporter run build
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run build
           pnpm --filter @orieken/saturday-playwright-otel-reporter run build
+          pnpm --filter @orieken/saturday-core run build
+          pnpm --filter @orieken/saturday-cucumber run build
+          pnpm --filter @orieken/saturday-cucumber-indexer run build
+          pnpm --filter @orieken/saturday-ml-analyzer run build
+          pnpm --filter @orieken/saturday-playwright-heatmap run build
 
       - name: Test Packages
         run: |
@@ -37,6 +42,11 @@ jobs:
           pnpm --filter @orieken/saturday-playwright-k6-exporter run test
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run test
           pnpm --filter @orieken/saturday-playwright-otel-reporter run test
+          pnpm --filter @orieken/saturday-core run test
+          pnpm --filter @orieken/saturday-cucumber run test
+          pnpm --filter @orieken/saturday-cucumber-indexer run test
+          pnpm --filter @orieken/saturday-ml-analyzer run test
+          pnpm --filter @orieken/saturday-playwright-heatmap run test
 
   publish:
     needs: build-and-test
@@ -64,6 +74,11 @@ jobs:
           pnpm --filter @orieken/saturday-playwright-k6-exporter run build
           pnpm --filter @orieken/saturday-cucumber-otel-formatter run build
           pnpm --filter @orieken/saturday-playwright-otel-reporter run build
+          pnpm --filter @orieken/saturday-core run build
+          pnpm --filter @orieken/saturday-cucumber run build
+          pnpm --filter @orieken/saturday-cucumber-indexer run build
+          pnpm --filter @orieken/saturday-ml-analyzer run build
+          pnpm --filter @orieken/saturday-playwright-heatmap run build
             
       - name: Publish Packages
         # We use || true or simple logic to allow one to fail (e.g. version exists) without failing the whole job if desired.
@@ -74,5 +89,10 @@ jobs:
            pnpm publish -r --filter @orieken/saturday-playwright-k6-exporter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-k6-exporter"
            pnpm publish -r --filter @orieken/saturday-cucumber-otel-formatter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber-otel-formatter"
            pnpm publish -r --filter @orieken/saturday-playwright-otel-reporter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-otel-reporter"
+           pnpm publish -r --filter @orieken/saturday-core --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-core"
+           pnpm publish -r --filter @orieken/saturday-cucumber --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber"
+           pnpm publish -r --filter @orieken/saturday-cucumber-indexer --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber-indexer"
+           pnpm publish -r --filter @orieken/saturday-ml-analyzer --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-ml-analyzer"
+           pnpm publish -r --filter @orieken/saturday-playwright-heatmap --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-heatmap"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

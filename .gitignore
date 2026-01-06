@@ -5,3 +5,6 @@ coverage
 .DS_Store
 perf/k6
 .env.apis
+
+
+containers

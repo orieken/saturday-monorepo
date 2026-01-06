@@ -1,7 +1,7 @@
 packages:
   - apps/*
   - packages/*
-  - saturday-starter
+  - saturday-cucumber-starter
   - 'saturday-go-cli'
   - saturday-mcp
 
