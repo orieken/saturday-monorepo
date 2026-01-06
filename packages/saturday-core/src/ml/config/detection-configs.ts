@@ -184,8 +184,7 @@ export interface ElementDetectionConfig extends DetectorConfig {
 }
 
 // Default configurations for different environments
-export const DetectionConfigs = {
-  development: {
+const DevelopmentConfig = {
     anomaly: {
       type: 'anomaly',
       enabled: true,
@@ -460,12 +459,11 @@ export const DetectionConfigs = {
         styling: true
       }
     } as ElementDetectionConfig
-  },
+};
 
-  staging: {
-    // More restrictive settings for staging
+const StagingConfig = {
     anomaly: {
-      ...DetectionConfigs.development.anomaly,
+      ...DevelopmentConfig.anomaly,
       thresholds: {
         confidence: 0.8,
         similarity: 0.9,
@@ -481,7 +479,7 @@ export const DetectionConfigs = {
     } as AnomalyDetectionConfig,
 
     regression: {
-      ...DetectionConfigs.development.regression,
+      ...DevelopmentConfig.regression,
       thresholds: {
         confidence: 0.9,
         similarity: 0.97,
@@ -497,7 +495,7 @@ export const DetectionConfigs = {
     } as RegressionDetectionConfig,
 
     layout: {
-      ...DetectionConfigs.development.layout,
+      ...DevelopmentConfig.layout,
       thresholds: {
         confidence: 0.85,
         similarity: 0.95,
@@ -507,7 +505,7 @@ export const DetectionConfigs = {
     } as LayoutDetectionConfig,
 
     element: {
-      ...DetectionConfigs.development.element,
+      ...DevelopmentConfig.element,
       thresholds: {
         confidence: 0.92,
         similarity: 0.97,
@@ -515,7 +513,7 @@ export const DetectionConfigs = {
         layout: 0.03
       },
       elementTypes: {
-        ...DetectionConfigs.development.element.elementTypes,
+        ...DevelopmentConfig.element.elementTypes,
         navigation: {
           enabled: true,
           consistency: true,
@@ -524,12 +522,11 @@ export const DetectionConfigs = {
         }
       }
     } as ElementDetectionConfig
-  },
+};
 
-  production: {
-    // Most restrictive settings for production
+const ProductionConfig = {
     anomaly: {
-      ...DetectionConfigs.staging.anomaly,
+      ...StagingConfig.anomaly,
       thresholds: {
         confidence: 0.85,
         similarity: 0.95,
@@ -551,7 +548,7 @@ export const DetectionConfigs = {
     } as AnomalyDetectionConfig,
 
     regression: {
-      ...DetectionConfigs.staging.regression,
+      ...StagingConfig.regression,
       thresholds: {
         confidence: 0.92,
         similarity: 0.98,
@@ -559,7 +556,7 @@ export const DetectionConfigs = {
         layout: 0.02
       },
       comparisonMethods: {
-        ...DetectionConfigs.staging.regression.comparisonMethods,
+        ...StagingConfig.regression.comparisonMethods,
         semantic: {
           enabled: true,
           contentComparison: true,
@@ -570,7 +567,7 @@ export const DetectionConfigs = {
     } as RegressionDetectionConfig,
 
     layout: {
-      ...DetectionConfigs.staging.layout,
+      ...StagingConfig.layout,
       thresholds: {
         confidence: 0.9,
         similarity: 0.97,
@@ -578,7 +575,7 @@ export const DetectionConfigs = {
         layout: 0.03
       },
       layoutChecks: {
-        ...DetectionConfigs.staging.layout.layoutChecks,
+        ...StagingConfig.layout.layoutChecks,
         typography: {
           enabled: true,
           fontSizes: true,
@@ -590,7 +587,7 @@ export const DetectionConfigs = {
     } as LayoutDetectionConfig,
 
     element: {
-      ...DetectionConfigs.staging.element,
+      ...StagingConfig.element,
       thresholds: {
         confidence: 0.95,
         similarity: 0.98,
@@ -631,7 +628,13 @@ export const DetectionConfigs = {
         styling: true
       }
     } as ElementDetectionConfig
-  }
+};
+
+// Default configurations for different environments
+export const DetectionConfigs = {
+  development: DevelopmentConfig,
+  staging: StagingConfig,
+  production: ProductionConfig
 };
 
 // Site-specific configuration overrides
