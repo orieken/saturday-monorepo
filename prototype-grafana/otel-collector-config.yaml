@@ -25,6 +25,9 @@ connectors:
       - name: test.scenario.name
       - name: test.feature.name
       - name: test.file
+      - name: test.tags
+      - name: custom.feature.name
+      - name: custom.scenario.tags
 
 exporters:
   prometheus:
