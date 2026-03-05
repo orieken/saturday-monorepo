@@ -26,6 +26,7 @@ To bridge the gap between **functional testing** (Playwright/Cucumber), **perfor
 |---------|-------------|
 | **[@orieken/saturday-core](./packages/saturday-core)** | fundamental abstractions (`BasePage`, `BaseFlow`, etc.) and utilities for the framework. |
 | **[@orieken/saturday-cucumber](./packages/saturday-cucumber)** | Cucumber.js integration with custom World and Hooks for Playwright. |
+| **[@orieken/saturday-playwright](./packages/saturday-playwright)** | Playwright test integration with extended Saturday framework capabilities. |
 | **[@orieken/saturday-playwright-k6-exporter](./packages/saturday-playwright-k6-exporter)** | Records Playwright API calls and automatically generates k6 performance test scripts. |
 | **[@orieken/saturday-k6-redaction-basic](./packages/saturday-k6-redaction-basic)** | Security policies to redact sensitive data (tokens, passwords) from generated k6 scripts. |
 | **[@orieken/saturday-playwright-otel-reporter](./packages/saturday-playwright-otel-reporter)** | Custom Playwright reporter that emits OpenTelemetry traces for every test. |
@@ -36,7 +37,8 @@ To bridge the gap between **functional testing** (Playwright/Cucumber), **perfor
 
 ### 🚀 Starters
 
-- **[Saturday Cucumber Starter](./saturday-cucumber-starter)**: A boilerplate template for starting new projects with the Saturday Framework.
+- **[Saturday Cucumber Starter](./saturday-cucumber-starter)**: A boilerplate template for starting new projects using Cucumber.
+- **[Saturday Playwright Test Starter](./saturday-playwright-test-starter)**: A boilerplate template for starting new projects using standard Playwright tests.
 
 ## ⚡ Getting Started
 
@@ -72,6 +74,7 @@ pnpm run build
 
 ## Advanced Features
 
+- **Model Context Protocol (MCP)**: The `saturday-mcp` server exposes fully autonomous SME agents (`saturday_sme`, `migrate_test`, `otel_metrics_expert`, `self_heal_test`) that integrate with the Playwright MCP to interactively build, migrate, instrument, and self-heal your test suites from within AI assistants like Claude Desktop.
 - **Multi-Site & Multi-Tab Testing**: The framework supports managing multiple sites and tabs within a single test scenario. See [Site and Tab Management](docs/SITE-TAB-MANAGEMENT.md) for details.
 
 ## 🤝 Contributing

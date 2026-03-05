@@ -1,0 +1,36 @@
+name: Saturday MCP Release
+
+on:
+  push:
+    # Trigger ONLY when pushing a tag that looks like a version strictly for saturday-mcp
+    # e.g., saturday-mcp-v1.0.0
+    tags:
+      - 'saturday-mcp-v*'
+
+permissions:
+  contents: write # Needed by GoReleaser to publish releases
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required by GoReleaser to generate complete changelogs
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+          # Set the working directory directly to where the code and config lives
+          workdir: saturday-mcp
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

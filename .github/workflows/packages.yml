@@ -34,6 +34,7 @@ jobs:
           pnpm --filter @orieken/saturday-cucumber run build
           pnpm --filter @orieken/saturday-cucumber-indexer run build
           pnpm --filter @orieken/saturday-ml-analyzer run build
+          pnpm --filter @orieken/saturday-playwright run build
           pnpm --filter @orieken/saturday-playwright-heatmap run build
 
       - name: Test Packages
@@ -47,6 +48,8 @@ jobs:
           pnpm --filter @orieken/saturday-cucumber-indexer run test
           pnpm --filter @orieken/saturday-ml-analyzer run test
           pnpm --filter @orieken/saturday-playwright-heatmap run test
+          pnpm --filter @orieken/saturday-cucumber-starter run test
+          pnpm --filter @orieken/saturday-playwright-test-starter run test
 
   publish:
     needs: build-and-test
@@ -78,6 +81,7 @@ jobs:
           pnpm --filter @orieken/saturday-cucumber run build
           pnpm --filter @orieken/saturday-cucumber-indexer run build
           pnpm --filter @orieken/saturday-ml-analyzer run build
+          pnpm --filter @orieken/saturday-playwright run build
           pnpm --filter @orieken/saturday-playwright-heatmap run build
             
       - name: Publish Packages
@@ -93,6 +97,9 @@ jobs:
            pnpm publish -r --filter @orieken/saturday-cucumber --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber"
            pnpm publish -r --filter @orieken/saturday-cucumber-indexer --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber-indexer"
            pnpm publish -r --filter @orieken/saturday-ml-analyzer --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-ml-analyzer"
+           pnpm publish -r --filter @orieken/saturday-playwright --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright"
            pnpm publish -r --filter @orieken/saturday-playwright-heatmap --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-heatmap"
+           pnpm publish -r --filter @orieken/saturday-cucumber-starter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-cucumber-starter"
+           pnpm publish -r --filter @orieken/saturday-playwright-test-starter --no-git-checks --access public || echo "Publish skipped for @orieken/saturday-playwright-test-starter"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
