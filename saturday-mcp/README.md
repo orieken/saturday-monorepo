@@ -162,7 +162,60 @@ go build -o bin/saturday ./cmd/cli
 ### 📋 Planned
 - TODO-012-017: Advanced Features (Superseded by Phase 6)
 
-## Architecture
+## Architecture & Agent Workflows
+
+The Saturday MCP Server doesn't just generate scaffolding—it exposes **Autonomous Tester Agents** when loaded into capable clients (like Claude Desktop). By combining the framework rules of this MCP with the browser-control capabilities of the standard **Playwright MCP**, AI assistants can read live DOM state to build robust tests or self-heal broken ones.
+
+### The Self-Healing Workflow (`self_heal_test`)
+
+When a test flakes or breaks due to a UI change, the `self_heal_test` prompt orchestrates the following repair protocol:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Client as Claude Desktop
+    participant SatMCP as Saturday MCP
+    participant PlayMCP as Playwright MCP
+    
+    Dev->>Client: "Test X failed with log Y"
+    Client->>SatMCP: Request prompt: self_heal_test
+    SatMCP-->>Client: Returns Agent Context & Protocol
+    Client->>PlayMCP: playwright_navigate (to failure page)
+    PlayMCP-->>Client: Renders Page Context
+    Client->>PlayMCP: playwright_evaluate (inspect live DOM)
+    PlayMCP-->>Client: Returns current element hierarchy
+    Client->>Client: Analyzes mismatch (e.g. ID changed)
+    Client->>Client: Rewrites Page Object logic
+    Client->>PlayMCP: playwright_click (verify fix)
+    Client-->>Dev: "Page Object updated and verified!"
+```
+
+### The Migration Workflow (`migrate_test`)
+
+Transitioning from Cyress, raw Playwright, or Selenium is fully automated by the Migration Specialist agent:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Client as Claude Desktop
+    participant SatMCP as Saturday MCP
+    participant PlayMCP as Playwright MCP
+    
+    Dev->>Client: "Migrate this Cypress test..."
+    Client->>SatMCP: Request prompt: migrate_test
+    SatMCP-->>Client: Returns Saturday Architecture Rules
+    Client->>PlayMCP: playwright_navigate (to target app)
+    PlayMCP-->>Client: Renders Page Context
+    Client->>Client: Discards old Cypress selectors
+    Client->>Client: Extracts robust Roles/Locators from Live DOM
+    Client->>SatMCP: Call generate_page & generate_flow
+    SatMCP-->>Client: Returns Type-Safe Boilerplate
+    Client->>Client: Injects flow with Live DOM locators
+    Client-->>Dev: "Migration Complete (Page, Flow, Feature)"
+```
+
+### Server Architecture Overview
+
 
 
 ```
@@ -554,10 +607,14 @@ The server exposes internal templates for reference:
 - **`saturday://templates/flow`**: Template for Flow class
 - **`saturday://templates/steps`**: Template for Cucumber steps
 
-### 💡 Available Prompts
+### 💡 Available Prompts / Agents
 
-The server provides pre-defined prompts to help you build faster:
+The server provides pre-defined Prompts that transform an LLM into a Subject Matter Expert (SME) capable of executing specialized workflows:
 
+- **`saturday_sme`**: Injects Saturday Framework principles (Page Objects, Fluent Flows, OTel logging).
+- **`migrate_test`**: An agent workflow that migrates legacy tests (Cypress/Selenium) using the live DOM (via Playwright MCP) to generate robust Saturday Page Objects and Gherkin.
+- **`self_heal_test`**: An autonomous workflow that evaluates failure logs, navigates to the broken state, inspects the DOM, and patches the testing codebase.
+- **`otel_metrics_expert`**: An agent that acts as an observability architect to add custom span counters and tracking to your workflows.
 - **`plan_feature`**: Helps you plan the implementation of a new feature (Pages, Flows, Steps).
 - **`explain_framework`**: Explains the core architectural concepts of Saturday.
 - **`debug_error`**: Analyzes test failures and suggests debugging steps.
