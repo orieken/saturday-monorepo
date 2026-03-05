@@ -6,6 +6,10 @@ version: 2
 # Global configuration applied across the release
 project_name: saturday-mcp
 
+monorepo:
+  tag_prefix: saturday-mcp/
+  dir: .
+
 before:
   hooks:
     # Run go mod tidy before building anything
