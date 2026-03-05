@@ -3,9 +3,9 @@ name: Saturday MCP Release
 on:
   push:
     # Trigger ONLY when pushing a tag that looks like a version strictly for saturday-mcp
-    # e.g., saturday-mcp-v1.0.0
+    # e.g., saturday-mcp/v1.0.0 (Standard Go submodule tag)
     tags:
-      - 'saturday-mcp-v*'
+      - 'saturday-mcp/v*'
 
 permissions:
   contents: write # Needed by GoReleaser to publish releases
