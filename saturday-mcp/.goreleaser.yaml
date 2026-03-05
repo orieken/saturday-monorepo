@@ -1,0 +1,66 @@
+# .goreleaser.yaml
+# Make sure to check the documentation at https://goreleaser.com
+
+version: 2
+
+# Global configuration applied across the release
+project_name: saturday-mcp
+
+before:
+  hooks:
+    # Run go mod tidy before building anything
+    - go mod tidy
+
+builds:
+  - id: saturday-mcp
+    main: ./cmd/saturday-mcp
+    binary: saturday-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+  - id: saturday-cli
+    main: ./cmd/cli
+    binary: saturday
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    # Use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

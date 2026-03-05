@@ -1,0 +1,21 @@
+import { BaseSite } from '@orieken/saturday-core';
+import { Page } from 'playwright';
+{{range .Imports}}
+import { {{pascalCase .}}Page } from './pages/{{kebabCase .}}-page';
+{{end}}
+
+export class {{pascalCase .Name}}Site extends BaseSite {
+  constructor(page: Page, baseUrl: string) {
+    super(page, baseUrl);
+  }
+
+  protected initializePages(): void {
+    {{range .Pages}}
+    this.registerPage('{{.}}', new {{pascalCase .}}Page(this.page));
+    {{end}}
+  }
+
+  protected initializeFlows(): void {
+    // Add flows as needed
+  }
+}

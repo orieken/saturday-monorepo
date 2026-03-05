@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Page Generation Request",
+  "type": "object",
+  "required": ["name", "path", "elements"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of the page class"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "URL path for the page"
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/element"
+      },
+      "description": "List of elements on the page"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description of the page"
+    }
+  },
+  "definitions": {
+    "element": {
+      "type": "object",
+      "required": ["name", "selector"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Element identifier name"
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1,
+          "description": "CSS selector for the element"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["button", "input", "link", "select", "checkbox", "radio"],
+          "description": "Type of element"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+import { BaseFlow } from '@orieken/saturday-core';
+import { Page } from 'playwright';
+
+export class {{pascalCase .Name}}Flow extends BaseFlow {
+  constructor(page: Page) {
+    super(page);
+  }
+
+  async execute(): Promise<void> {
+    {{range .Steps}}
+    // Step: {{.}}
+    {{end}}
+  }
+}

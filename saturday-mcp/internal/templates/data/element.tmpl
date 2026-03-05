@@ -1,0 +1,14 @@
+import { BaseComponent } from '@orieken/saturday-core';
+import { Page, Locator } from 'playwright';
+
+export class {{pascalCase .Name}} extends BaseComponent {
+  constructor(page: Page, rootLocator: Locator) {
+    super(page, rootLocator);
+  }
+
+  {{range .Methods}}
+  async {{camelCase .}}(): Promise<void> {
+    // TODO: Implement {{.}}
+  }
+  {{end}}
+}

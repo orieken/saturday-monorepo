@@ -1,0 +1,18 @@
+import { BasePage } from '@orieken/saturday-core';
+import { Page } from 'playwright';
+
+export class {{pascalCase .Name}}Page extends BasePage {
+  constructor(page: Page) {
+    super(page, '{{.Path}}');
+  }
+
+  protected initializeElements(): void {
+    {{range .Elements}}
+    this.registerElement('{{.Name}}', '{{.Selector}}');
+    {{end}}
+  }
+
+  protected initializeFilters(): void {
+    // Add filters as needed
+  }
+}

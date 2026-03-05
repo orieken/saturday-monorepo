@@ -1,0 +1,13 @@
+import { BaseService, APIRequestContext } from '@orieken/saturday-core';
+
+export class {{pascalCase .Name}}Service extends BaseService {
+  constructor(request: APIRequestContext, baseURL: string = '{{.BaseURL}}') {
+    super(request, baseURL);
+  }
+
+  {{range .Endpoints}}
+  async {{camelCase .Name}}(): Promise<any> {
+    return this.{{lower .Method}}('{{.Path}}');
+  }
+  {{end}}
+}

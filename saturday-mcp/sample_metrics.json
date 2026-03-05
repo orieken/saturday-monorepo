@@ -1,0 +1,6 @@
+[
+  { "path": "/products/123", "visits": 1500, "errorRate": 0.5 },
+  { "path": "/checkout", "visits": 800, "errorRate": 4.2 },
+  { "path": "/login", "visits": 1200, "errorRate": 1.1 },
+  { "path": "/about", "visits": 300, "errorRate": 0.0 }
+]
