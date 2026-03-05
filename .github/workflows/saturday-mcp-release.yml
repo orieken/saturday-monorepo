@@ -24,6 +24,10 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Extract Tag
+        id: extract_tag
+        run: echo "tag=${GITHUB_REF#refs/tags/saturday-mcp/}" >> $GITHUB_OUTPUT
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -34,3 +38,4 @@ jobs:
           workdir: saturday-mcp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.extract_tag.outputs.tag }}
