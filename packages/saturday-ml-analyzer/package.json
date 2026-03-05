@@ -1,6 +1,6 @@
 {
   "name": "@orieken/saturday-ml-analyzer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ML-powered analysis for test interaction heatmaps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

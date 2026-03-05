@@ -1,6 +1,6 @@
 {
   "name": "@orieken/saturday-playwright-heatmap",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Playwright heatmap generator for test coverage visualization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
