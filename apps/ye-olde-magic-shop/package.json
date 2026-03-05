@@ -1,0 +1,43 @@
+{
+  "name": "@orieken/ye-olde-magic-shop",
+  "version": "0.1.1",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node ../mock-api/server.js\" --names \"vite,mock-api\" --prefix name",
+    "dev:local": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mock-api:start": "node ../mock-api/server.js",
+    "test:e2e": "playwright test",
+    "test:pw": "playwright test",
+    "test:bdd": "TS_NODE_PROJECT=tsconfig.cucumber.json cucumber-js",
+    "test": "npm run test:bdd",
+    "index:features": "npm --prefix ../../packages/saturday-cucumber-indexer ci && npm --prefix ../../packages/saturday-cucumber-indexer run build && node ../../packages/saturday-cucumber-indexer/dist/index.js --features ./features --suiteId ye-olde-magic-shop --out ./feature-index.json",
+    "index:features:post": "npm --prefix ../../packages/saturday-cucumber-indexer ci && npm --prefix ../../packages/saturday-cucumber-indexer run build && node ../../packages/saturday-cucumber-indexer/dist/index.js --features ./features --suiteId ye-olde-magic-shop --out ./feature-index.json --backend http://localhost:8080"
+  },
+  "dependencies": {
+    "pinia": "^3.0.4",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.1.0",
+    "@playwright/test": "^1.57.0",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/node": "^24.10.2",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "autoprefixer": "^10.4.22",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "@orieken/saturday-core": "file:./saturday-core",
+    "@orieken/saturday-cucumber": "file:./saturday-cucumber",
+    "@orieken/saturday-playwright-heatmap": "file:./saturday-playwright-heatmap",
+    "vite": "^7.2.4"
+  }
+}

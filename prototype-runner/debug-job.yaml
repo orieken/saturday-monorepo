@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: debug-cucumber
+  namespace: test-runner
+spec:
+  template:
+    spec:
+      containers:
+        - name: runner
+          image: cucumber-project:local
+          command: ["sleep", "3600"]
+          env:
+            - name: BASE_URL
+              value: "http://web-app:8000"
+          volumeMounts:
+            - name: reports
+              mountPath: /app/reports
+      volumes:
+        - name: reports
+          persistentVolumeClaim:
+            claimName: reports-pvc
+      restartPolicy: Never

@@ -1,0 +1,45 @@
+# NodePort services for local access
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-runner-service-nodeport
+  namespace: test-runner
+spec:
+  type: NodePort
+  selector:
+    app: test-runner-service
+  ports:
+    - port: 9001
+      targetPort: 9001
+      nodePort: 30001
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-runner-ui-nodeport
+  namespace: test-runner
+spec:
+  type: NodePort
+  selector:
+    app: test-runner-ui
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30000
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-nodeport
+  namespace: test-runner
+spec:
+  type: NodePort
+  selector:
+    app: web-app
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30003
+      protocol: TCP

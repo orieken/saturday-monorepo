@@ -1,0 +1,54 @@
+version: '3.9'
+services:
+  test-runner-service:
+    build: ../apps/console
+    image: test-runner-service:local
+    ports:
+      - "9001:9001"
+    working_dir: /app
+    volumes:
+      - ../apps/console/data:/app/data:ro
+      - test-runner-reports:/app/reports
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount a project-local kubeconfig file (create it with local-cluster/export-kubeconfig.sh)
+      - ./local-cluster/kubeconfig:/root/.kube/config:ro
+    environment:
+      - PORT=9001
+      - KUBECONFIG=/root/.kube/config
+
+  test-runner-ui:
+    build: ../apps/cartridge
+    image: test-runner-ui:local
+    ports:
+      - "9000:9000"
+    depends_on:
+      - test-runner-service
+
+  mock-api:
+    build: ../apps/mock-api
+    image: mock-api:local
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+    volumes:
+      - ../apps/mock-api/data:/app/data:ro
+
+  web-app:
+    build:
+      context: ../apps/ye-olde-magic-shop
+      args:
+        VITE_API_BASE: "http://localhost:8001"
+    image: web-app:local
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mock-api
+
+volumes:
+  test-runner-reports:
+
+networks:
+  default:
+    name: test-runner-net
+    driver: bridge

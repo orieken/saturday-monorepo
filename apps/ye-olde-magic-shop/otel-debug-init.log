@@ -1,0 +1,4 @@
+[2025-12-14T18:38:22.872Z] Init start. ENABLE_OTEL=true CONFIG=./cucumber-otel.config.mjs
+[2025-12-15T12:55:55.176Z] Init start. ENABLE_OTEL=true CONFIG=./cucumber-otel.config.mjs
+[2025-12-15T13:11:44.152Z] Init start. ENABLE_OTEL=true CONFIG=./cucumber-otel.config.mjs
+[2025-12-15T13:18:54.500Z] Init start. ENABLE_OTEL=true CONFIG=./cucumber-otel.config.mjs

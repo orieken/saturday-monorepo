@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-runner-demo-job
+  namespace: test-runner
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: demo-runner
+          image: alpine:3.18
+          env:
+            - name: DEMO_RUN_ID
+              value: "demo-1"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eux
+              echo "Starting demo run: $DEMO_RUN_ID"
+              for i in 1 2 3 4 5; do
+                echo "[INFO] Step $i - running..."
+                sleep 1
+              done
+
+              mkdir -p /reports
+              cat > /reports/index.html <<HTML
+              <!doctype html>
+              <html>
+              <head><meta charset="utf-8"><title>Demo Report</title></head>
+              <body>
+                <h1>Demo Test Report</h1>
+                <p>Run ID: $DEMO_RUN_ID</p>
+                <ul>
+                  <li>Step 1: Passed</li>
+                  <li>Step 2: Passed</li>
+                  <li>Step 3: Passed</li>
+                  <li>Step 4: Passed</li>
+                  <li>Step 5: Passed</li>
+                </ul>
+              </body>
+              </html>
+              HTML
+
+              echo "Report written to /reports/index.html"
+              sleep 1
+              echo "Demo run complete"
+          volumeMounts:
+            - name: reports
+              mountPath: /reports
+        - name: waiter
+          image: alpine:3.18
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # keep the pod alive so we can copy artifacts from the shared volume
+              sleep 600
+          volumeMounts:
+            - name: reports
+              mountPath: /reports
+      volumes:
+        - name: reports
+          emptyDir: {}

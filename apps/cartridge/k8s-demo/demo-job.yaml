@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-runner-demo-job
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: demo-runner
+          image: alpine:3.18
+          env:
+            - name: DEMO_RUN_ID
+              value: "demo-1"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eux
+              # Simulate test output
+              echo "Starting demo run: $DEMO_RUN_ID"
+              for i in 1 2 3 4 5; do
+                echo "[INFO] Step $i - running..."
+                sleep 1
+              done
+
+              # Create a simple HTML report
+              mkdir -p /reports
+              cat > /reports/index.html <<'HTML'
+              <!doctype html>
+              <html>
+              <head><meta charset="utf-8"><title>Demo Report</title></head>
+              <body>
+                <h1>Demo Test Report</h1>
+                <p>Run ID: $DEMO_RUN_ID</p>
+                <ul>
+                  <li>Step 1: Passed</li>
+                  <li>Step 2: Passed</li>
+                  <li>Step 3: Passed</li>
+                  <li>Step 4: Passed</li>
+                  <li>Step 5: Passed</li>
+                </ul>
+              </body>
+              </html>
+              HTML
+
+              echo "Report written to /reports/index.html"
+              # Sleep a little to give users time to attach/logs if desired
+              sleep 1
+              echo "Demo run complete"
+      # No volumes: we'll copy the report out of the pod with kubectl cp after the job completes
+

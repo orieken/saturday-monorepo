@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: debug-cucumber-job
+  namespace: test-runner
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: cucumber
+        image: cucumber-project:local
+        imagePullPolicy: Never
+        command: ["npm", "test"]
+        env:
+        - name: BASE_URL
+          value: "http://web-app:8000"
+      restartPolicy: Never

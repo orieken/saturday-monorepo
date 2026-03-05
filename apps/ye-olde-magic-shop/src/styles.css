@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-dnd-dark: #1a1b26;
+  --color-dnd-darker: #12131b;
+  --color-dnd-gold: #ffd700;
+  --color-dnd-parchment: #f4e4bc;
+  --color-dnd-crimson: #8b0000;
+  --color-dnd-slate: #2f3542;
+
+  --font-magical: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  @apply bg-dnd-darker text-gray-100 font-body;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-magical text-dnd-gold;
+}
+

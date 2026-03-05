@@ -1,0 +1,45 @@
+[
+  {
+    "id": "user-1",
+    "email": "gandalf@middleearth.com",
+    "password": "password123",
+    "name": "Gandalf the Grey",
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "address": {
+      "street": "123 Wizard Tower Lane",
+      "city": "Waterdeep",
+      "state": "Sword Coast",
+      "zip": "12345",
+      "country": "Faerûn"
+    }
+  },
+  {
+    "id": "user-2",
+    "email": "merlin@camelot.com",
+    "password": "password123",
+    "name": "Merlin the Wise",
+    "createdAt": "2025-01-02T00:00:00.000Z",
+    "address": {
+      "street": "456 Crystal Cave Road",
+      "city": "Neverwinter",
+      "state": "Sword Coast",
+      "zip": "54321",
+      "country": "Faerûn"
+    }
+  },
+  {
+    "id": "user-3",
+    "email": "alice@example.com",
+    "password": "password123",
+    "name": "Alice the Enchanter",
+    "createdAt": "2025-01-03T00:00:00.000Z",
+    "address": {
+      "street": "789 Mystic Grove",
+      "city": "Baldur's Gate",
+      "state": "Sword Coast",
+      "zip": "67890",
+      "country": "Faerûn"
+    }
+  }
+]
+

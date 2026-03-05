@@ -49,7 +49,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true
     ports:
-      - '4000:3000'
+      - '5005:3000'
     networks:
       - observability
     depends_on:

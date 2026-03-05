@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
+
+WORKDIR /app
+
+# Install basic tools
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Copy package config
+COPY package.json ./
+COPY saturday-core ./saturday-core
+COPY saturday-cucumber ./saturday-cucumber
+COPY saturday-playwright-heatmap ./saturday-playwright-heatmap
+RUN rm -rf saturday-core/node_modules saturday-cucumber/node_modules saturday-playwright-heatmap/node_modules
+RUN rm -f saturday-core/package-lock.json saturday-cucumber/package-lock.json saturday-playwright-heatmap/package-lock.json
+# Install dependencies
+RUN npm install
+
+# Copy source
+COPY . .
+
+# Set permissions
+RUN chmod -R 777 /app
+
+ENV NODE_ENV=test

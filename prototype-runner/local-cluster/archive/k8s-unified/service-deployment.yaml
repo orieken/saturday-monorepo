@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-runner-service
+  namespace: test-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-runner-service
+  template:
+    metadata:
+      labels:
+        app: test-runner-service
+    spec:
+      serviceAccountName: test-runner-sa
+      containers:
+        - name: service
+          image: test-runner-service:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9001
+          volumeMounts:
+            - name: reports
+              mountPath: /app/reports
+          env:
+            - name: CUCUMBER_IMAGE
+              value: "cucumber-project:local"
+            - name: DEFAULT_EXECUTOR
+              value: "k8s"
+      volumes:
+        - name: reports
+          persistentVolumeClaim:
+            claimName: reports-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-runner-service
+  namespace: test-runner
+spec:
+  selector:
+    app: test-runner-service
+  ports:
+    - port: 9001
+      targetPort: 9001
+      protocol: TCP
+  type: ClusterIP

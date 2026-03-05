@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reports-pvc
+  namespace: test-runner
+spec:
+  accessModes:
+    - ReadWriteOnce  # Works in kind because all pods are on the same node
+  resources:
+    requests:
+      storage: 1Gi

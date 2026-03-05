@@ -1,0 +1,162 @@
+[
+  {
+    "id": "wand-embers",
+    "name": "Wand of Embers",
+    "price": 120.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/wand-embers.png",
+    "description": "A slender wand that emits warm, perpetual embers. Grants +1 to fire bolt once per short rest."
+  },
+  {
+    "id": "cloak-shadows",
+    "name": "Cloak of Shadows",
+    "price": 350.0,
+    "rarity": "Rare",
+    "image": "http://localhost:8001/images/cloak-shadows.png",
+    "description": "Draped in shifting darkness. Wearer gains advantage on stealth checks in dim light."
+  },
+  {
+    "id": "ring-truth",
+    "name": "Ring of Truth-Telling",
+    "price": 220.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/ring-truth.png",
+    "description": "Simple silver band. Once per day, wearer can force a creature to speak a single truthful sentence."
+  },
+  {
+    "id": "vorpal-sword",
+    "name": "Vorpal Sword",
+    "price": 5000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/vorpal-sword.png",
+    "description": "A sword that decapitates on a critical hit."
+  },
+  {
+    "id": "bag-holding",
+    "name": "Bag of Holding",
+    "price": 500.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/bag-holding.png",
+    "description": "A bag that is bigger on the inside."
+  },
+  {
+    "id": "potion-healing",
+    "name": "Potion of Healing",
+    "price": 50.0,
+    "rarity": "Common",
+    "image": "http://localhost:8001/images/potion-healing.png",
+    "description": "A red liquid that heals wounds."
+  },
+  {
+    "id": "staff-power",
+    "name": "Staff of Power",
+    "price": 4000.0,
+    "rarity": "Very Rare",
+    "image": "http://localhost:8001/images/staff-power.png",
+    "description": "A staff of great power."
+  },
+  {
+    "id": "boots-speed",
+    "name": "Boots of Speed",
+    "price": 400.0,
+    "rarity": "Rare",
+    "image": "http://localhost:8001/images/boots-speed.png",
+    "description": "Boots that double your speed."
+  },
+  {
+    "id": "amulet-health",
+    "name": "Amulet of Health",
+    "price": 400.0,
+    "rarity": "Rare",
+    "image": "http://localhost:8001/images/amulet-health.png",
+    "description": "Sets your Constitution to 19."
+  },
+  {
+    "id": "deck-many-things",
+    "name": "Deck of Many Things",
+    "price": 10000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/deck-many-things.png",
+    "description": "A deck of cards with wild effects."
+  },
+  {
+    "id": "holy-avenger",
+    "name": "Holy Avenger",
+    "price": 6000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/holy-avenger.png",
+    "description": "A paladin's holy sword."
+  },
+  {
+    "id": "sphere-annihilation",
+    "name": "Sphere of Annihilation",
+    "price": 8000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/sphere-annihilation.png",
+    "description": "A sphere of pure void."
+  },
+  {
+    "id": "hand-vecna",
+    "name": "Hand of Vecna",
+    "price": 20000.0,
+    "rarity": "Artifact",
+    "image": "http://localhost:8001/images/hand-vecna.png",
+    "description": "A mummified hand of a lich."
+  },
+  {
+    "id": "eye-vecna",
+    "name": "Eye of Vecna",
+    "price": 20000.0,
+    "rarity": "Artifact",
+    "image": "http://localhost:8001/images/eye-vecna.png",
+    "description": "A mummified eye of a lich."
+  },
+  {
+    "id": "apparatus-kwalish",
+    "name": "Apparatus of Kwalish",
+    "price": 5000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/bag-holding.png",
+    "description": "A mechanical crab vehicle."
+  },
+  {
+    "id": "immovable-rod",
+    "name": "Immovable Rod",
+    "price": 100.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/staff-power.png",
+    "description": "A rod that stays in place when a button is pressed."
+  },
+  {
+    "id": "lantern-revealing",
+    "name": "Lantern of Revealing",
+    "price": 200.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/wand-embers.png",
+    "description": "Reveals invisible creatures."
+  },
+  {
+    "id": "robe-archmagi",
+    "name": "Robe of the Archmagi",
+    "price": 6000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/cloak-shadows.png",
+    "description": "Powerful robes for a wizard."
+  },
+  {
+    "id": "shield-hidden-lord",
+    "name": "Shield of the Hidden Lord",
+    "price": 7000.0,
+    "rarity": "Legendary",
+    "image": "http://localhost:8001/images/amulet-health.png",
+    "description": "A shield with a trapped entity."
+  },
+  {
+    "id": "stone-good-luck",
+    "name": "Stone of Good Luck",
+    "price": 300.0,
+    "rarity": "Uncommon",
+    "image": "http://localhost:8001/images/amulet-health.png",
+    "description": "Grants a bonus to ability checks and saving throws."
+  }
+]

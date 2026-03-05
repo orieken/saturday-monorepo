@@ -14,10 +14,15 @@ This document outlines the high-level goals and next steps for the Saturday ecos
 
 ### 🤖 Saturday MCP Server
 *Enabling AI agents to control the testing framework.*
-- [ ] **Framework Analyzer (TODO-008)**: Implement deep analysis of existing project structures to understand page objects and flows.
-- [ ] **Analysis Validation**: Add tools to validate adherence to framework patterns.
-- [ ] **Resource Providers**: Expose documentation and templates as MCP resources.
-- [ ] **Prompt Library**: Add `explain_framework` and `plan_feature` prompts.
+- [x] **Framework Analyzer (TODO-008)**: Implement deep analysis of existing project structures to understand page objects and flows.
+- [x] **Analysis Validation**: Add tools to validate adherence to framework patterns.
+- [x] **Resource Providers**: Expose documentation and templates as MCP resources.
+- [x] **Prompt Library**: Add `explain_framework` and `plan_feature` prompts.
+- [x] **Knowledge Graph (TODO-018)**: Build dependency graph and impact analysis.
+- [x] **Test Execution & Self-Healing (TODO-019)**: Enable MCP to run tests, capture logs, and parse failures for auto-healing.
+- [x] **Visual Intelligence (TODO-020)**: Generate code from screenshots.
+- [x] **Agentic Workflow**: "Autonomous QA" loop combining Vision, Graph, and Execution.
+- [x] **Observability Integration (TODO-021)**: Prioritize tests based on production metrics.
 
 ### 🎛️ Saturday Console
 *The central nervous system for test orchestration.*

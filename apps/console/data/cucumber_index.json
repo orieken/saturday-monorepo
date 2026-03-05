@@ -1,0 +1,473 @@
+{
+  "framework": "cucumber",
+  "suiteId": "final-cucumber-project",
+  "features": [
+    {
+      "id": "account.feature",
+      "name": "Account login and past orders",
+      "file": "account.feature",
+      "description": "  As a returning customer\n  I want to log into my account\n  So that I can see my past orders\n  Background:\n    Given the demo web app is running",
+      "scenarios": [
+        {
+          "id": "account.feature:10",
+          "line": 10,
+          "name": "Successful login shows the Past Orders page",
+          "file": "account.feature",
+          "tags": [
+            "@happy_path"
+          ],
+          "steps": [
+            {
+              "line": 11,
+              "text": "Given I am on the login page"
+            },
+            {
+              "line": 12,
+              "text": "When I log in with username \"alice@example.com\" and password \"password123\""
+            },
+            {
+              "line": 13,
+              "text": "Then I should be redirected to my account dashboard"
+            },
+            {
+              "line": 14,
+              "text": "And I should see a list of my past orders"
+            }
+          ]
+        },
+        {
+          "id": "account.feature:17",
+          "line": 17,
+          "name": "Invalid password shows an error",
+          "file": "account.feature",
+          "tags": [
+            "@negative"
+          ],
+          "steps": [
+            {
+              "line": 18,
+              "text": "Given I am on the login page"
+            },
+            {
+              "line": 19,
+              "text": "When I log in with username \"alice@example.com\" and password \"wrong-password\""
+            },
+            {
+              "line": 20,
+              "text": "Then I should see a login error message"
+            },
+            {
+              "line": 21,
+              "text": "And I should remain on the login page"
+            }
+          ]
+        },
+        {
+          "id": "account.feature:24",
+          "line": 24,
+          "name": "Logout hides account information",
+          "file": "account.feature",
+          "tags": [
+            "@logout"
+          ],
+          "steps": [
+            {
+              "line": 25,
+              "text": "Given I am logged in as \"alice@example.com\""
+            },
+            {
+              "line": 26,
+              "text": "When I log out"
+            },
+            {
+              "line": 27,
+              "text": "Then I should be redirected to the home page"
+            },
+            {
+              "line": 28,
+              "text": "And I should not see account information"
+            }
+          ]
+        },
+        {
+          "id": "account.feature:31",
+          "line": 31,
+          "name": "View details of a past order",
+          "file": "account.feature",
+          "tags": [
+            "@orders"
+          ],
+          "steps": [
+            {
+              "line": 32,
+              "text": "Given I am logged in as \"alice@example.com\""
+            },
+            {
+              "line": 33,
+              "text": "And I am on the Past Orders page"
+            },
+            {
+              "line": 34,
+              "text": "When I view the details of my most recent order"
+            },
+            {
+              "line": 35,
+              "text": "Then I should see the order date, total, and line items"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cart.feature",
+      "name": "Shopping cart operations",
+      "file": "cart.feature",
+      "description": "  As a shopper\n  I want to manage items in my cart\n  So that I can purchase exactly what I need\n  Background:\n    Given the demo web app is running\n    Given I am on the demo shop home page",
+      "scenarios": [
+        {
+          "id": "cart.feature:11",
+          "line": 11,
+          "name": "Add the same item twice increases quantity to 2",
+          "file": "cart.feature",
+          "tags": [
+            "@cart",
+            "@same_item_twice"
+          ],
+          "steps": [
+            {
+              "line": 12,
+              "text": "When I add the first product to the cart"
+            },
+            {
+              "line": 13,
+              "text": "And I add the first product to the cart"
+            },
+            {
+              "line": 14,
+              "text": "And I go to the cart page"
+            },
+            {
+              "line": 15,
+              "text": "Then I should see quantity 2 for the first cart item"
+            },
+            {
+              "line": 16,
+              "text": "And the subtotal for the first cart item should be the unit price times 2"
+            },
+            {
+              "line": 17,
+              "text": "And the cart total should equal the subtotal of all items"
+            }
+          ]
+        },
+        {
+          "id": "cart.feature:20",
+          "line": 20,
+          "name": "Increase quantity from the cart page",
+          "file": "cart.feature",
+          "tags": [
+            "@cart",
+            "@quantities"
+          ],
+          "steps": [
+            {
+              "line": 21,
+              "text": "When I add the first product to the cart"
+            },
+            {
+              "line": 22,
+              "text": "And I go to the cart page"
+            },
+            {
+              "line": 23,
+              "text": "And I increase the quantity of the first cart item to 2"
+            },
+            {
+              "line": 24,
+              "text": "Then I should see quantity 2 for the first cart item"
+            },
+            {
+              "line": 25,
+              "text": "And the subtotal for the first cart item should be the unit price times 2"
+            },
+            {
+              "line": 26,
+              "text": "And the cart total should reflect the updated subtotal"
+            }
+          ]
+        },
+        {
+          "id": "cart.feature:29",
+          "line": 29,
+          "name": "Remove an item from the cart",
+          "file": "cart.feature",
+          "tags": [
+            "@cart",
+            "@remove"
+          ],
+          "steps": [
+            {
+              "line": 30,
+              "text": "When I add the first product to the cart"
+            },
+            {
+              "line": 31,
+              "text": "And I go to the cart page"
+            },
+            {
+              "line": 32,
+              "text": "And I remove the first cart item"
+            },
+            {
+              "line": 33,
+              "text": "Then the cart should be empty"
+            }
+          ]
+        },
+        {
+          "id": "cart.feature:36",
+          "line": 36,
+          "name": "Add two different items and remove one",
+          "file": "cart.feature",
+          "tags": [
+            "@cart",
+            "@mixed",
+            "@focus"
+          ],
+          "steps": [
+            {
+              "line": 37,
+              "text": "When I add the first product to the cart"
+            },
+            {
+              "line": 38,
+              "text": "And I add the second product to the cart"
+            },
+            {
+              "line": 39,
+              "text": "And I go to the cart page"
+            },
+            {
+              "line": 40,
+              "text": "Then I should see 2 items in the cart"
+            },
+            {
+              "line": 41,
+              "text": "When I remove the second cart item"
+            },
+            {
+              "line": 42,
+              "text": "Then I should see 1 item in the cart"
+            },
+            {
+              "line": 43,
+              "text": "And the cart total should equal the remaining item subtotal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checkout.feature",
+      "name": "Checkout Process",
+      "file": "checkout.feature",
+      "description": "  As a shopper\n  I want to complete my purchase\n  So that I can receive my magical items\n  Background:\n     Given the demo web app is running\n     Given I am on the login page\n     When I log in with username \"alice@example.com\" and password \"password123\"\n     Given I am on the demo shop home page\n     When I add the first product to the cart\n     And I go to the cart page",
+      "scenarios": [
+        {
+          "id": "checkout.feature:16",
+          "line": 16,
+          "name": "Complete a transaction successfully",
+          "file": "checkout.feature",
+          "tags": [
+            "@checkout"
+          ],
+          "steps": [
+            {
+              "line": 17,
+              "text": "When I complete the transaction"
+            },
+            {
+              "line": 18,
+              "text": "Then I should be redirected to the order history page"
+            },
+            {
+              "line": 19,
+              "text": "And I should see the new order in the history"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "inventory-list.feature",
+      "name": "View Inventory",
+      "file": "inventory-list.feature",
+      "description": "    As a shopper\n    I want to view the inventory on the demo web app\n    So that I can see the available products\n    Background:\n        Given the demo web app is running",
+      "scenarios": [
+        {
+          "id": "inventory-list.feature:9",
+          "line": 9,
+          "name": "View inventory list on home page",
+          "file": "inventory-list.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 10,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 11,
+              "text": "Then I should see a list of products with their names and prices"
+            }
+          ]
+        },
+        {
+          "id": "inventory-list.feature:13",
+          "line": 13,
+          "name": "Inventory shows images and prices for each product",
+          "file": "inventory-list.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 14,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 15,
+              "text": "Then each product should display an image and a price"
+            }
+          ]
+        },
+        {
+          "id": "inventory-list.feature:18",
+          "line": 18,
+          "name": "Inventory shows at least 3 items",
+          "file": "inventory-list.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 19,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 20,
+              "text": "Then I should see at least 3 products listed"
+            }
+          ]
+        },
+        {
+          "id": "inventory-list.feature:22",
+          "line": 22,
+          "name": "Navigate to item details from the list",
+          "file": "inventory-list.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 23,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 24,
+              "text": "When I click on the first product's details link"
+            },
+            {
+              "line": 25,
+              "text": "Then I should see the product details page with name, price, and description"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "item-details.feature",
+      "name": "Item details",
+      "file": "item-details.feature",
+      "description": "    As a shopper\n    I want to view item details on the demo web app\n    So that I can see more information about a product\n    Background:\n        Given the demo web app is running",
+      "scenarios": [
+        {
+          "id": "item-details.feature:9",
+          "line": 9,
+          "name": "View item details from home page",
+          "file": "item-details.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 10,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 11,
+              "text": "When I click on the first product's details link"
+            },
+            {
+              "line": 12,
+              "text": "Then I should see the product details page with name, price, and description"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smoke.feature",
+      "name": "Web App Smoke Test",
+      "file": "smoke.feature",
+      "description": "",
+      "scenarios": [
+        {
+          "id": "smoke.feature:3",
+          "line": 3,
+          "name": "Homepage loads",
+          "file": "smoke.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 4,
+              "text": "Given the demo web app is running"
+            },
+            {
+              "line": 5,
+              "text": "Then the page title should contain \"Ye Olde Magic Shop\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "webapp_cart.feature",
+      "name": "Demo web-app cart",
+      "file": "webapp_cart.feature",
+      "description": "  As a shopper\n  I want to add items to the cart on the demo web app\n  So that the cart reflects the added items and totals\n  Background:\n    Given the demo web app is running",
+      "scenarios": [
+        {
+          "id": "webapp_cart.feature:9",
+          "line": 9,
+          "name": "Add first product to cart and verify it appears in cart",
+          "file": "webapp_cart.feature",
+          "tags": [],
+          "steps": [
+            {
+              "line": 10,
+              "text": "Given I am on the demo shop home page"
+            },
+            {
+              "line": 11,
+              "text": "When I add the first product to the cart"
+            },
+            {
+              "line": 12,
+              "text": "And I go to the cart page"
+            },
+            {
+              "line": 13,
+              "text": "Then I should see the product in the cart with quantity 1"
+            },
+            {
+              "line": 14,
+              "text": "And the total price should equal the product price"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

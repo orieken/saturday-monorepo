@@ -1,0 +1,37 @@
+{
+  "framework": "cucumber",
+  "suiteId": "demo-suite",
+  "features": [
+    {
+      "id": "product-search",
+      "name": "Product Search",
+      "file": "product_search.feature",
+      "description": "Search for products",
+      "scenarios": [
+        {
+          "id": "searching-for-a-product-by-name",
+          "line": 6,
+          "name": "Searching for a product by name",
+          "file": "product_search.feature",
+          "tags": [
+            "@smoke"
+          ],
+          "steps": [
+            {
+              "text": "Given I am on the demo shop home page",
+              "line": 7
+            },
+            {
+              "text": "When I search for \"keyboard\"",
+              "line": 8
+            },
+            {
+              "text": "Then I should see results containing \"keyboard\"",
+              "line": 9
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
