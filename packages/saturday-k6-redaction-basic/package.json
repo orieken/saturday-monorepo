@@ -2,7 +2,7 @@
   "name": "@orieken/saturday-k6-redaction-basic",
   "version": "0.1.0",
   "description": "Basic redaction policy for @saturday/playwright-k6-exporter (headers, tokens, passwords).",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "exports": {
     ".": {

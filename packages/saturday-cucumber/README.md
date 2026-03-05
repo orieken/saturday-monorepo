@@ -27,13 +27,13 @@ import { installSaturdayHooks } from '@orieken/saturday-cucumber';
 installSaturdayHooks();
 ```
 
-### 2. Use Custom World in Steps
+### 2. Use SaturdayWorld in Steps
 
 ```typescript
 import { Given } from '@cucumber/cucumber';
-import { CustomWorld } from '@orieken/saturday-cucumber';
+import { SaturdayWorld } from '@orieken/saturday-cucumber';
 
-Given('I open the homepage', async function(this: CustomWorld) {
+Given('I open the homepage', async function(this: SaturdayWorld) {
   // Access Playwright Page object directly
   await this.page.goto('https://example.com');
 });

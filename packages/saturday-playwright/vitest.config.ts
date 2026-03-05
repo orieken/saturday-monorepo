@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -18,13 +17,10 @@ export default defineConfig({
       },
       exclude: [
         'dist/**',
-        '**/index.ts',
         '**/*.d.ts',
         '**/*.test.ts',
         '**/*.spec.ts',
-        'vitest.config.ts',
-        'src/ml/utils/**',
-        'src/ml/interfaces/ml-types.ts'
+        'vitest.config.ts'
       ]
     },
   },

@@ -2,7 +2,7 @@
   "name": "@orieken/saturday-core",
   "version": "0.1.0",
   "description": "Core abstractions and utilities for the Saturday automation framework.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "module",
   "exports": {
     ".": {

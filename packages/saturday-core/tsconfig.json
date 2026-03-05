@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": ["ES2020", "DOM"],
@@ -11,7 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

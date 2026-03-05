@@ -1,0 +1,25 @@
+{
+  "name": "@orieken/saturday-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "clean": "pnpm -r clean",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format || prettier --write .",
+    "test": "pnpm -r test",
+    "release:check": "echo 'not implemented for pnpm yet'",
+    "ls:ws": "pnpm -r exec -- echo $npm_package_name"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {
+    "latest": "^0.2.0"
+  }
+}

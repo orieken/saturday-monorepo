@@ -1,13 +1,14 @@
 import { LaunchOptions } from 'playwright';
+import { getConfig } from '../config';
 
 /* eslint-disable @typescript-eslint/naming-convention */
 export const browserOptions: LaunchOptions = {
-  slowMo: 0,
-  args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+  get slowMo() { return getConfig().browser.slowMo; },
+  get headless() { return getConfig().browser.headless; },
+  get args() { return getConfig().browser.args; },
   firefoxUserPrefs: {
     'media.navigator.streams.fake': true,
     'media.navigator.permission.disabled': true,
   },
-  headless: false,
 };
 /* eslint-enable @typescript-eslint/naming-convention */

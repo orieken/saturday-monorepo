@@ -1,0 +1,255 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90m/Users/oscarrieken/Projects/Rieken/saturday-monorepo/packages/saturday-core[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould initialize
+[22m[39m[2026-01-08T03:47:33.931Z] TestModel [test-model]: Initializing model (0%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould initialize
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [test-model]: Model initialized successfully (100%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould dispose
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [test-model]: Model disposed successfully
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [test-model]: Initializing model (0%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [test-model]: Model initialized successfully (100%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [test-model]: Starting training process (0%)
+[2026-01-08T03:47:33.934Z] TestModel [test-model]: Warning: Training data contains only one label
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Preprocessing data (0%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Preprocessing data (50%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Data preprocessing complete (20%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Data split complete (30%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Training complete (80%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Validation complete (90%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute training
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Model saved to 1.0 (100%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould fail training with insufficient data
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Initializing model (0%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould fail training with insufficient data
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Model initialized successfully (100%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould fail training with insufficient data
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Starting training process (0%)
+[2026-01-08T03:47:33.934Z] TestModel [test-model]: Error: No training data provided
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute prediction
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Initializing model (0%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould execute prediction
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [test-model]: Model initialized successfully (100%)
+
+[90mstdout[2m | tests/ml/base-model.spec.ts[2m > [22m[2mBaseModel[2m > [22m[2mshould validate training data
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [test-model]: Error: No training data provided
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould validate training data branches
+[22m[39m[2026-01-08T03:47:33.933Z] TestModel [testLabel]: Error: No training data provided
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould validate training data branches
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [testLabel]: Warning: Training data contains only one label
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould validate training data branches
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [testLabel]: Warning: High class imbalance detected (ratio: 20.00)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould validate training data branches
+[22m[39m[2026-01-08T03:47:33.934Z] TestModel [testLabel]: Warning: Very small training dataset
+[2026-01-08T03:47:33.934Z] TestModel [testLabel]: Warning: Training data contains only one label
+[2026-01-08T03:47:33.934Z] TestModel [testLabel]: Error: Invalid image data for item undefined
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Initializing model (0%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Model initialized successfully (100%)
+
+ [32m✓[39m tests/base/base-element.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | tests/ml/base-detector.spec.ts[2m > [22m[2mBaseDetector[2m > [22m[2mshould validate current page
+[22m[39m[2026-01-08T03:47:33.934Z] TestDetector: PASS - Model: model-label, Confidence: 95.0%, Anomalies: 0, Score: 0.950
+
+[90mstdout[2m | tests/ml/base-detector.spec.ts[2m > [22m[2mBaseDetector[2m > [22m[2mshould validate element
+[22m[39m[2026-01-08T03:47:33.936Z] TestDetector: PASS - Model: model-label, Confidence: 95.0%, Anomalies: 0, Score: 0.950
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Starting training process (0%)
+[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Warning: Training data contains only one label
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Preprocessing data (0%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Data preprocessing complete (20%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Data split complete (30%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Training complete (80%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Validation complete (90%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.935Z] TestModel [testLabel]: Model saved to path (100%)
+
+[90mstdout[2m | tests/ml/base-model-branches.spec.ts[2m > [22m[2mBaseModel Branch Coverage[2m > [22m[2mshould cover executeTraining failure branches
+[22m[39m[2026-01-08T03:47:33.936Z] TestModel [testLabel]: Starting training process (0%)
+
+[90mstdout[2m | tests/ml/base-detector.spec.ts[2m > [22m[2mBaseDetector[2m > [22m[2mshould log detection result
+[22m[39m[2026-01-08T03:47:33.937Z] TestDetector: PASS - Model: test, Confidence: 95.0%, Anomalies: 0, Score: 0.950
+
+ [32m✓[39m tests/ml/base-model.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/ml/base-model-branches.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/ml/base-detector.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/base/page-coverage.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould handle load/delete/deploy errors
+[22m[39mSaving model new version 0.1
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould save, load and delete model
+[22m[39mSaving model new_model version 0.1
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould save, load and delete model
+[22m[39mLoading model homepage_baseline version 1.0
+
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould optimize and schedule
+[22m[39mSaving model homepage_baseline_optimized version 0.1
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould save, load and delete model
+[22m[39mDeleting model homepage_baseline version 1.0
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould optimize model
+[22m[39mSaving model homepage_baseline_optimized version 0.1
+
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould optimize and schedule
+[22m[39mScheduled retraining for l on 2026-01-09T03:47:33.951Z
+
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould cleanup old models
+[22m[39mDeleting model A version 1.0
+
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould cover rollback
+[22m[39mRolling back l from 2.1 to 2.0
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould schedule retraining
+[22m[39mScheduled retraining for model on 2026-01-09T03:47:33.952Z
+
+[90mstdout[2m | tests/ml/models-facade-branches.spec.ts[2m > [22m[2mModelsFacade Branch Coverage[2m > [22m[2mshould deploy logic
+[22m[39mDeploying homepage_baseline v1.0 to production with ID deploy_1767844053952
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould deploy and rollback
+[22m[39mDeploying homepage_baseline v1.0 to production with ID deploy_1767844053952
+
+[90mstdout[2m | tests/ml/models.spec.ts[2m > [22m[2mModelsFacade[2m > [22m[2mshould deploy and rollback
+[22m[39mRolling back homepage_baseline from 2.1 to 2.0
+
+ [32m✓[39m tests/base/base-page.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/ml/models.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/ml/models-facade-branches.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/ml/facades.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/ml/detectors-facade-branches.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | tests/ml/coverage.spec.ts[2m > [22m[2mCoverage Fillers[2m > [22m[2mshould cover BaseModel utilities
+[22m[39m[2026-01-08T03:47:33.968Z] ExposedModel [label]: msg (50%)
+
+[90mstdout[2m | tests/ml/coverage.spec.ts[2m > [22m[2mCoverage Fillers[2m > [22m[2mshould cover BaseDetector utilities
+[22m[39m[2026-01-08T03:47:33.974Z] ExposedDetector: Cleaning up detector resources
+
+[90mstdout[2m | tests/ml/coverage.spec.ts[2m > [22m[2mCoverage Fillers[2m > [22m[2mshould cover BaseDetector utilities
+[22m[39m[2026-01-08T03:47:33.974Z] ExposedDetector: Model lbl warmed up successfully
+
+ [32m✓[39m tests/ml/coverage.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/ml/detectors.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/utils/console-logger.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/ml/trainers-facade-branches.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/base/element-coverage.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/utils/logger.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+[90mstdout[2m | tests/ml/base-trainer.spec.ts[2m > [22m[2mBaseTrainer[2m > [22m[2mshould execute training workflow
+[22m[39mSaving model test-label with version 1.0
+
+ [32m✓[39m tests/base/base-flow.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/ml/base-trainer.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/base/site-coverage.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/elements/elements-coverage.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/base/base-site.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/elements/elements.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/ml/base-trainer-branches.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/ml/config/detection-configs.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/ml/base-detector-branches.spec.ts[2m > [22m[2mBaseDetector Branch Coverage[2m > [22m[2mshould cover stubs and utilities
+[22m[39m[2026-01-08T03:47:35.040Z] TestDetector: Cleaning up detector resources
+
+[90mstdout[2m | tests/ml/base-detector-branches.spec.ts[2m > [22m[2mBaseDetector Branch Coverage[2m > [22m[2mshould warm up model
+[22m[39m[2026-01-08T03:47:35.042Z] TestDetector: Model l warmed up successfully
+
+[90mstdout[2m | tests/ml/base-detector-branches.spec.ts[2m > [22m[2mBaseDetector Branch Coverage[2m > [22m[2mshould warm up model
+[22m[39m[2026-01-08T03:47:35.042Z] TestDetector: Failed to warm up model l: Error: fail
+
+ [32m✓[39m tests/ml/base-detector-branches.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1110[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle healthCheck branches [33m 1102[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m25 passed[39m[22m[90m (25)[39m
+[2m      Tests [22m [1m[32m165 passed[39m[22m[90m (165)[39m
+[2m   Start at [22m 21:47:33
+[2m   Duration [22m 1.45s[2m (transform 970ms, setup 0ms, import 1.28s, tests 1.25s, environment 2ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   91.68 |    85.18 |   91.22 |   91.66 |                   
+ base              |     100 |    96.96 |     100 |     100 |                   
+  base-element.ts  |     100 |     92.3 |     100 |     100 | 44                
+  base-filter.ts   |     100 |      100 |     100 |     100 |                   
+  base-flow.ts     |     100 |      100 |     100 |     100 |                   
+  base-page.ts     |     100 |      100 |     100 |     100 |                   
+  base-site.ts     |     100 |      100 |     100 |     100 |                   
+ decorators        |       0 |        0 |       0 |       0 |                   
+  ...res-filter.ts |       0 |        0 |       0 |       0 | 3-57              
+ elements          |     100 |      100 |     100 |     100 |                   
+  ...on-element.ts |     100 |      100 |     100 |     100 |                   
+  input-element.ts |     100 |      100 |     100 |     100 |                   
+  link-element.ts  |     100 |      100 |     100 |     100 |                   
+ ml/base           |   89.51 |    85.35 |   85.71 |   89.57 |                   
+  base-detector.ts |   96.92 |    86.66 |   93.18 |   96.72 | 77,89,301-302     
+  base-model.ts    |   89.01 |    84.78 |   94.59 |   88.63 | ...04,365-402,505 
+  base-trainer.ts  |      75 |       85 |   58.33 |   77.19 | ...58-186,240-249 
+ ml/config         |     100 |    91.42 |     100 |     100 |                   
+  ...on-configs.ts |     100 |    91.42 |     100 |     100 | 697,778,780       
+ ml/detectors      |     100 |      100 |     100 |     100 |                   
+  ...y-detector.ts |     100 |      100 |     100 |     100 |                   
+  ...t-detector.ts |     100 |      100 |     100 |     100 |                   
+  ...t-detector.ts |     100 |      100 |     100 |     100 |                   
+  ...n-detector.ts |     100 |      100 |     100 |     100 |                   
+ ml/facades        |   95.25 |    85.96 |   96.66 |   95.35 |                   
+  ...ors.facade.ts |   95.45 |    81.48 |   95.23 |   95.23 | 135-137,142       
+  models.facade.ts |   92.72 |     84.5 |   95.83 |   92.92 | ...06,228-232,277 
+  ...ers.facade.ts |     100 |      100 |     100 |     100 |                   
+ ml/interfaces     |       0 |        0 |       0 |       0 |                   
+  ml-types.ts      |       0 |        0 |       0 |       0 |                   
+ ml/models         |     100 |      100 |     100 |     100 |                   
+  anomaly-model.ts |     100 |      100 |     100 |     100 |                   
+  ...sion-model.ts |     100 |      100 |     100 |     100 |                   
+  visual-model.ts  |     100 |      100 |     100 |     100 |                   
+ ml/trainers       |     100 |       50 |     100 |     100 |                   
+  ...nt-trainer.ts |     100 |      100 |     100 |     100 |                   
+  flow-trainer.ts  |     100 |       50 |     100 |     100 | 8                 
+  page-trainer.ts  |     100 |      100 |     100 |     100 |                   
+  ...ot-trainer.ts |     100 |      100 |     100 |     100 |                   
+ utils             |     100 |      100 |     100 |     100 |                   
+  ...ole-logger.ts |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------

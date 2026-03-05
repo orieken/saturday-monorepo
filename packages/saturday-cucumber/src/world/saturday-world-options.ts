@@ -1,5 +1,5 @@
 import { IWorldOptions } from '@cucumber/cucumber';
 
-export interface CustomWorldOptions extends IWorldOptions {
+export interface SaturdayWorldOptions extends IWorldOptions {
   parameters: { [key: string]: string };
 }
