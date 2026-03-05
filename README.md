@@ -37,8 +37,8 @@ To bridge the gap between **functional testing** (Playwright/Cucumber), **perfor
 
 ### 🚀 Starters
 
-- **[Saturday Cucumber Starter](./saturday-cucumber-starter)**: A boilerplate template for starting new projects using Cucumber.
-- **[Saturday Playwright Test Starter](./saturday-playwright-test-starter)**: A boilerplate template for starting new projects using standard Playwright tests.
+- **[Saturday Cucumber Starter](https://github.com/orieken/saturday-cucumber-starter)**: A GitHub Template repository for starting new projects using Cucumber.
+- **[Saturday Playwright Test Starter](https://github.com/orieken/saturday-playwright-test-starter)**: A GitHub Template repository for starting new projects using standard Playwright tests.
 
 ## ⚡ Getting Started
 
