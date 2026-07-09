@@ -1,0 +1,35 @@
+---
+applyTo: "**/*.spec.*,**/*.test.*,**/*.feature"
+---
+# Testing Rules
+
+Cross-language testing principles and the Saturday/Sunday framework conventions. Language-specific
+tooling (unit test framework, fake-data/factory libraries, per-language Playwright bindings, reporting)
+lives in each language's own `shared/rules/<language>-conventions.md` — this file covers what's shared
+across all of them.
+
+## Saturday Framework (E2E / UI Testing)
+ALWAYS use the Site-Centric pattern: `BaseSite`, `BasePage`, `BaseElement`, `BaseFlow`.
+NEVER use traditional Page Object Model (POM).
+ALWAYS use Playwright driven by Cucumber.js for UI automation.
+ALWAYS include OpenTelemetry instrumentation for every BDD scenario.
+
+## Sunday Framework (API Testing)
+ALWAYS use Vitest for unit tests and Playwright for integration/E2E API tests.
+ALWAYS use the custom `api` fixture and fluent matchers (`toHaveStatus`, `toBeSuccessful`, `toRespondWithin`).
+ALWAYS extend `BaseApiClient` for domain-specific API clients.
+ALWAYS validate schemas with Zod (`validateSchema()`).
+NEVER use custom retry loops — use `CircuitBreaker` or `ExponentialBackoffStrategy`.
+
+## Test Quality
+CRITICAL: Test coverage MUST be >= 85%.
+CRITICAL: Cyclomatic complexity per function MUST be < 7.
+ALWAYS practice TDD/BDD — Red-Green-Refactor.
+NEVER write feature code without tests.
+
+## Reporting Pipeline
+Cucumber JSON summaries feed the Friday dashboard (see `shared/rules/approval-gates.md` gate #1 —
+posting to Friday requires explicit human approval, same as any other external-facing action). Every
+language's port of Saturday should be able to produce Cucumber-JSON-compatible output, or a bridge to
+it, so results from any language funnel through the same reporting/approval pipeline rather than each
+language inventing its own.
