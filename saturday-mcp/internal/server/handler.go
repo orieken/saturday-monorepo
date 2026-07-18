@@ -20,6 +20,7 @@ import (
 	"github.com/orieken/saturday-mcp/internal/prompts"
 	"github.com/orieken/saturday-mcp/internal/resources"
 	"github.com/orieken/saturday-mcp/internal/templates"
+	"github.com/orieken/saturday-mcp/internal/tools"
 	"github.com/orieken/saturday-mcp/internal/validators"
 )
 
@@ -37,6 +38,11 @@ type Handler struct {
 	logAnalyzer         *analyzers.TestLogAnalyzer
 	usageAnalyzer       *analyzers.UsageAnalyzer
 	testExecutor        *executor.TestExecutor
+
+	// Extracted tools (Phase C of mcp-add-plan). Each field is a *tools.FooTool
+	// implementing domain.Tool. Handler currently composes them; Phase I moves
+	// registration + composition into a dedicated provider.
+	generateSiteTool *tools.GenerateSiteTool
 }
 
 // NewHandler creates a new server handler
@@ -91,6 +97,8 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		logAnalyzer:         logAnalyzer,
 		usageAnalyzer:       usageAnalyzer,
 		testExecutor:        testExecutor,
+
+		generateSiteTool: tools.NewGenerateSiteTool(logger, siteGen),
 	}, nil
 }
 
@@ -102,52 +110,12 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 func (h *Handler) RegisterTools(s *server.MCPServer) error {
 	h.logger.Info("Registering tools")
 
-	// Register generate_site tool
+	// Register generate_site tool (extracted — Phase C op 6)
 	s.AddTool(mcp.Tool{
-		Name:        "generate_site",
-		Description: "Generate a Site class with page and flow registration",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"name", "baseUrl", "pages"},
-			Properties: map[string]interface{}{
-				"name": map[string]interface{}{
-					"type":        "string",
-					"description": "Name of the site class",
-				},
-				"baseUrl": map[string]interface{}{
-					"type":        "string",
-					"description": "Base URL for the site",
-				},
-				"pages": map[string]interface{}{
-					"type":        "array",
-					"description": "List of page names to register",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-				"flows": map[string]interface{}{
-					"type":        "array",
-					"description": "Optional list of flow names",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-				"description": map[string]interface{}{
-					"type":        "string",
-					"description": "Optional description of the site",
-				},
-				"writeToFile": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to write the generated code to a file (default: false)",
-					"default":     false,
-				},
-				"outputPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Base directory for output files (required if writeToFile is true)",
-				},
-			},
-		},
-	}, h.handleGenerateSite)
+		Name:        h.generateSiteTool.Name(),
+		Description: h.generateSiteTool.Description(),
+		InputSchema: h.generateSiteTool.InputSchema(),
+	}, h.generateSiteTool.Execute)
 
 	// Register generate_page tool
 	s.AddTool(mcp.Tool{
@@ -775,82 +743,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleGenerateSite generates a Site class
-func (h *Handler) handleGenerateSite(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling generate_site request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	
-	// Extract file writing parameters
-	writeToFile, _ := args["writeToFile"].(bool)
-	outputPath, _ := args["outputPath"].(string)
-	
-	// Parse site generation request
-	var req models.SiteGenerationRequest
-	argsJSON, err := json.Marshal(args)
-	if err != nil {
-		h.logger.Error("Failed to marshal arguments", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid arguments: %v", err)), nil
-	}
-
-	if err := json.Unmarshal(argsJSON, &req); err != nil {
-		h.logger.Error("Failed to unmarshal request", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid request format: %v", err)), nil
-	}
-
-	// Generate site
-	resp, err := h.generator.SiteGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Site generation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Generation failed: %v", err)), nil
-	}
-
-	// Write to file if requested
-	var filePath string
-	if writeToFile {
-		if outputPath == "" {
-			return mcp.NewToolResultError("outputPath is required when writeToFile is true"), nil
-		}
-
-		writer := filewriter.NewFileWriter(outputPath, filewriter.WriteModeOverwrite, false)
-		
-		// Determine output directory (e.g., lib/sites/)
-		relativePath := filepath.Join("lib", "sites", resp.FileName)
-		
-		if err := writer.WriteFile(relativePath, resp.Code); err != nil {
-			h.logger.Error("Failed to write file", "error", err, "path", relativePath)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to write file: %v", err)), nil
-		}
-
-		fullPath, _ := writer.GetFullPath(relativePath)
-		filePath = fullPath
-		h.logger.Info("File written successfully", "path", fullPath)
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"success":  true,
-		"code":     resp.Code,
-		"fileName": resp.FileName,
-		"metadata": resp.Metadata,
-	}
-
-	if writeToFile {
-		result["filePath"] = filePath
-		result["written"] = true
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Site generated successfully", "fileName", resp.FileName, "written", writeToFile)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleGeneratePage generates a Page class

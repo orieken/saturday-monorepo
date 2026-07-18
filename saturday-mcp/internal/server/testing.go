@@ -6,9 +6,10 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-// HandleGenerateSite is an exported wrapper for testing
+// HandleGenerateSite is an exported wrapper for testing; delegates to the
+// extracted tools.GenerateSiteTool (Phase C op 6).
 func (h *Handler) HandleGenerateSite(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleGenerateSite(ctx, request)
+	return h.generateSiteTool.Execute(ctx, request)
 }
 
 // HandleGeneratePage is an exported wrapper for testing
