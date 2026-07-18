@@ -271,54 +271,6 @@ func TestE2E_GenerateSite_FileWritingError(t *testing.T) {
 	}
 }
 
-// TestE2E_ListTools tests the list_tools endpoint
-func TestE2E_ListTools(t *testing.T) {
-	// Setup
-	logger := logging.NewLogger(os.Stderr)
-	handler, err := server.NewHandler(logger)
-	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
-	}
-
-	// Create request
-	request := mcp.CallToolRequest{}
-	request.Params.Name = "list_tools"
-	request.Params.Arguments = map[string]interface{}{}
-
-	// Execute
-	ctx := context.Background()
-	result, err := handler.HandleListTools(ctx, request)
-	if err != nil {
-		t.Fatalf("Expected successful list, got error: %v", err)
-	}
-
-	// Parse response
-	var tools []map[string]string
-	if err := json.Unmarshal([]byte(getTextContent(result)), &tools); err != nil {
-		t.Fatalf("Failed to parse response: %v", err)
-	}
-
-	// Verify tools list
-	if len(tools) == 0 {
-		t.Error("Expected tools list to be non-empty")
-	}
-
-	// Find generate_site tool
-	var foundGenerateSite bool
-	for _, tool := range tools {
-		if tool["name"] == "generate_site" {
-			foundGenerateSite = true
-			if tool["status"] != "implemented" {
-				t.Errorf("Expected generate_site status 'implemented', got %s", tool["status"])
-			}
-		}
-	}
-
-	if !foundGenerateSite {
-		t.Error("Expected to find generate_site in tools list")
-	}
-}
-
 // TestE2E_GeneratePage_CodeOnly tests page generation without file writing
 func TestE2E_GeneratePage_CodeOnly(t *testing.T) {
 	// Setup

@@ -6,11 +6,6 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-// HandleListTools is an exported wrapper for testing
-func (h *Handler) HandleListTools(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleListTools(ctx, request)
-}
-
 // HandleGenerateSite is an exported wrapper for testing
 func (h *Handler) HandleGenerateSite(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return h.handleGenerateSite(ctx, request)

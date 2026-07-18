@@ -102,16 +102,6 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 func (h *Handler) RegisterTools(s *server.MCPServer) error {
 	h.logger.Info("Registering tools")
 
-	// Register list_tools endpoint
-	s.AddTool(mcp.Tool{
-		Name:        "list_tools",
-		Description: "List all available Saturday framework generation and analysis tools",
-		InputSchema: mcp.ToolInputSchema{
-			Type:       "object",
-			Properties: map[string]interface{}{},
-		},
-	}, h.handleListTools)
-
 	// Register generate_site tool
 	s.AddTool(mcp.Tool{
 		Name:        "generate_site",
@@ -785,56 +775,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleListTools returns a list of all available tools
-func (h *Handler) handleListTools(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling list_tools request")
-
-	tools := []map[string]string{
-		{
-			"name":        "list_tools",
-			"description": "List all available Saturday framework tools",
-			"status":      "implemented",
-		},
-		{
-			"name":        "generate_site",
-			"description": "Generate a new Site class with page and flow registration",
-			"status":      "implemented",
-		},
-		{
-			"name":        "generate_page",
-			"description": "Generate a new Page class with element registration",
-			"status":      "implemented",
-		},
-		{
-			"name":        "generate_flow",
-			"description": "Generate a new Flow class for multi-step user journeys",
-			"status":      "implemented",
-		},
-		{
-			"name":        "generate_steps",
-			"description": "Generate Cucumber step definitions from Gherkin",
-			"status":      "implemented",
-		},
-		{
-			"name":        "analyze_framework",
-			"description": "Analyze existing framework structure and patterns",
-			"status":      "implemented",
-		},
-		{
-			"name":        "validate_patterns",
-			"description": "Validate code against Saturday framework patterns",
-			"status":      "implemented",
-		},
-	}
-
-	toolsJSON, err := json.Marshal(tools)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal tools: %w", err)
-	}
-
-	return mcp.NewToolResultText(string(toolsJSON)), nil
 }
 
 // handleGenerateSite generates a Site class
