@@ -192,3 +192,56 @@ Rough scope: 25 Fowler operations across 10 phases. If commits are per-operation
 Recommend splitting into two shippable milestones:
 - **Milestone 1** (Phases A–D, F, I): trinity extraction + schema-first + slim entrypoint. Fully reversible if problems surface. No behavior change.
 - **Milestone 2** (Phases E, G, H, J): adapter isolation + OTel + timeouts + test backfill. Adds real capability (observability, reliability). Requires deployment coordination.
+
+---
+
+## Plan Amendments
+
+Discoveries made while executing the plan, appended here rather than rewriting the sections above.
+
+### Phase C blast radius: 4 satellites per handler, not 1
+
+Every private `handleFoo` method has four sites that must be updated in the same Extract-Class op,
+not one:
+
+1. **Definition** — `internal/server/handler.go` (the private method itself)
+2. **Testing wrapper** — `internal/server/testing.go` has a `HandleFoo` public wrapper for every private
+   handler; the integration suite calls these directly (`handler.HandleGenerateSite(ctx, request)`)
+3. **Handler unit test** — `internal/server/handler_test.go` (thin — only tests `NewHandler`)
+4. **Integration test** — `internal/integration/e2e_test.go` (calls the `HandleFoo` wrappers)
+
+**Chosen approach (option b, not option a from briefing):** keep the `HandleFoo` public wrappers as
+thin delegations to the new `*Tool.Execute(...)`. Rationale: `e2e_test.go` (1200+ lines) is the
+regression-protection surface for response-shape preservation. Deleting the wrappers would require
+rewriting every e2e test to reach into `internal/tools/` — that's exactly the "break the safety net
+before the refactor" anti-pattern. Phase J (Milestone 2) will still backfill fresh unit tests on the
+new `*Tool` types independently; keeping the wrappers costs one line each and buys us continuous green
+tests through the entire refactor.
+
+### Tool interface shape (Phase B)
+
+Chosen shape:
+
+```go
+type Tool interface {
+    Name() string
+    Description() string
+    InputSchema() mcp.ToolInputSchema
+    Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
+}
+```
+
+`OutputSchema()` is deliberately NOT added in Phase B. Adding it in Phase B would force every tool to
+return `nil` until Phase F fills it in, which fails the compiler's usefulness — the interface would
+lie about what's implemented. Phase F will extend `Tool` with `OutputSchema()` and populate all tools
+in the same op sequence.
+
+### Milestone 1 operation count
+
+Realistic count: ~25 ops, not 12. Breakdown:
+- Phase B: 3 ops
+- Phase C: 15 ops (one Extract Class per tool)
+- Phase D: 3 ops
+- Phase F: 2 ops (one for schema builders, one for output schemas across all tools)
+- Phase I: 2 ops
+Briefing's `<n>/<12>` was a placeholder; actual denominator is ~25.
