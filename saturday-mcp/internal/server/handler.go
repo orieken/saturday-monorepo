@@ -43,6 +43,7 @@ type Handler struct {
 	// implementing domain.Tool. Handler currently composes them; Phase I moves
 	// registration + composition into a dedicated provider.
 	generateSiteTool *tools.GenerateSiteTool
+	generatePageTool *tools.GeneratePageTool
 }
 
 // NewHandler creates a new server handler
@@ -99,6 +100,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		testExecutor:        testExecutor,
 
 		generateSiteTool: tools.NewGenerateSiteTool(logger, siteGen),
+		generatePageTool: tools.NewGeneratePageTool(logger, pageGen),
 	}, nil
 }
 
@@ -117,61 +119,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.generateSiteTool.InputSchema(),
 	}, h.generateSiteTool.Execute)
 
-	// Register generate_page tool
+	// Register generate_page tool (extracted — Phase C op 7)
 	s.AddTool(mcp.Tool{
-		Name:        "generate_page",
-		Description: "Generate a Page class with element registration",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"name", "path", "elements"},
-			Properties: map[string]interface{}{
-				"name": map[string]interface{}{
-					"type":        "string",
-					"description": "Name of the page class",
-				},
-				"path": map[string]interface{}{
-					"type":        "string",
-					"description": "URL path for the page",
-				},
-				"elements": map[string]interface{}{
-					"type":        "array",
-					"description": "List of elements on the page",
-					"items": map[string]interface{}{
-						"type": "object",
-						"required": []string{"name", "selector"},
-						"properties": map[string]interface{}{
-							"name": map[string]interface{}{
-								"type":        "string",
-								"description": "Element name",
-							},
-							"selector": map[string]interface{}{
-								"type":        "string",
-								"description": "CSS selector for the element",
-							},
-							"type": map[string]interface{}{
-								"type":        "string",
-								"description": "Element type (button, input, link, select, checkbox, radio)",
-								"enum":        []string{"button", "input", "link", "select", "checkbox", "radio"},
-							},
-						},
-					},
-				},
-				"description": map[string]interface{}{
-					"type":        "string",
-					"description": "Optional description of the page",
-				},
-				"writeToFile": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to write the generated code to a file (default: false)",
-					"default":     false,
-				},
-				"outputPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Base directory for output files (required if writeToFile is true)",
-				},
-			},
-		},
-	}, h.handleGeneratePage)
+		Name:        h.generatePageTool.Name(),
+		Description: h.generatePageTool.Description(),
+		InputSchema: h.generatePageTool.InputSchema(),
+	}, h.generatePageTool.Execute)
 
 	// Register generate_flow tool
 	s.AddTool(mcp.Tool{
@@ -743,82 +696,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleGeneratePage generates a Page class
-func (h *Handler) handleGeneratePage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling generate_page request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	
-	// Extract file writing parameters
-	writeToFile, _ := args["writeToFile"].(bool)
-	outputPath, _ := args["outputPath"].(string)
-	
-	// Parse page generation request
-	var req models.PageGenerationRequest
-	argsJSON, err := json.Marshal(args)
-	if err != nil {
-		h.logger.Error("Failed to marshal arguments", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid arguments: %v", err)), nil
-	}
-
-	if err := json.Unmarshal(argsJSON, &req); err != nil {
-		h.logger.Error("Failed to unmarshal request", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid request format: %v", err)), nil
-	}
-
-	// Generate page
-	resp, err := h.generator.PageGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Page generation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Generation failed: %v", err)), nil
-	}
-
-	// Write to file if requested
-	var filePath string
-	if writeToFile {
-		if outputPath == "" {
-			return mcp.NewToolResultError("outputPath is required when writeToFile is true"), nil
-		}
-
-		writer := filewriter.NewFileWriter(outputPath, filewriter.WriteModeOverwrite, false)
-		
-		// Determine output directory (e.g., lib/pages/)
-		relativePath := filepath.Join("lib", "pages", resp.FileName)
-		
-		if err := writer.WriteFile(relativePath, resp.Code); err != nil {
-			h.logger.Error("Failed to write file", "error", err, "path", relativePath)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to write file: %v", err)), nil
-		}
-
-		fullPath, _ := writer.GetFullPath(relativePath)
-		filePath = fullPath
-		h.logger.Info("File written successfully", "path", fullPath)
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"success":  true,
-		"code":     resp.Code,
-		"fileName": resp.FileName,
-		"metadata": resp.Metadata,
-	}
-
-	if writeToFile {
-		result["filePath"] = filePath
-		result["written"] = true
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Page generated successfully", "fileName", resp.FileName, "written", writeToFile)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleGenerateFlow generates a Flow class
