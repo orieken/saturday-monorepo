@@ -42,10 +42,11 @@ type Handler struct {
 	// Extracted tools (Phase C of mcp-add-plan). Each field is a *tools.FooTool
 	// implementing domain.Tool. Handler currently composes them; Phase I moves
 	// registration + composition into a dedicated provider.
-	generateSiteTool  *tools.GenerateSiteTool
-	generatePageTool  *tools.GeneratePageTool
-	generateFlowTool  *tools.GenerateFlowTool
-	generateStepsTool *tools.GenerateStepsTool
+	generateSiteTool    *tools.GenerateSiteTool
+	generatePageTool    *tools.GeneratePageTool
+	generateFlowTool    *tools.GenerateFlowTool
+	generateStepsTool   *tools.GenerateStepsTool
+	generateElementTool *tools.GenerateElementTool
 }
 
 // NewHandler creates a new server handler
@@ -101,10 +102,11 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		usageAnalyzer:       usageAnalyzer,
 		testExecutor:        testExecutor,
 
-		generateSiteTool:  tools.NewGenerateSiteTool(logger, siteGen),
-		generatePageTool:  tools.NewGeneratePageTool(logger, pageGen),
-		generateFlowTool:  tools.NewGenerateFlowTool(logger, flowGen),
-		generateStepsTool: tools.NewGenerateStepsTool(logger, stepGen),
+		generateSiteTool:    tools.NewGenerateSiteTool(logger, siteGen),
+		generatePageTool:    tools.NewGeneratePageTool(logger, pageGen),
+		generateFlowTool:    tools.NewGenerateFlowTool(logger, flowGen),
+		generateStepsTool:   tools.NewGenerateStepsTool(logger, stepGen),
+		generateElementTool: tools.NewGenerateElementTool(logger, elementGen),
 	}, nil
 }
 
@@ -144,45 +146,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.generateStepsTool.InputSchema(),
 	}, h.generateStepsTool.Execute)
 
-	// Register generate_element tool
+	// Register generate_element tool (extracted — Phase C op 10)
 	s.AddTool(mcp.Tool{
-		Name:        "generate_element",
-		Description: "Generate a custom Element/Component class",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"name", "rootSelector"},
-			Properties: map[string]interface{}{
-				"name": map[string]interface{}{
-					"type":        "string",
-					"description": "Name of the element component",
-				},
-				"rootSelector": map[string]interface{}{
-					"type":        "string",
-					"description": "Selector for the root element",
-				},
-				"methods": map[string]interface{}{
-					"type":        "array",
-					"description": "Optional list of method names",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-				"description": map[string]interface{}{
-					"type":        "string",
-					"description": "Optional description",
-				},
-				"writeToFile": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to write the generated code to a file (default: false)",
-					"default":     false,
-				},
-				"outputPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Base directory for output files (required if writeToFile is true)",
-				},
-			},
-		},
-	}, h.handleGenerateElement)
+		Name:        h.generateElementTool.Name(),
+		Description: h.generateElementTool.Description(),
+		InputSchema: h.generateElementTool.InputSchema(),
+	}, h.generateElementTool.Execute)
 
 	// Register generate_service tool
 	s.AddTool(mcp.Tool{
@@ -624,82 +593,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleGenerateElement generates an Element class
-func (h *Handler) handleGenerateElement(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling generate_element request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	
-	// Extract file writing parameters
-	writeToFile, _ := args["writeToFile"].(bool)
-	outputPath, _ := args["outputPath"].(string)
-	
-	// Parse generation request
-	var req models.ElementGenerationRequest
-	argsJSON, err := json.Marshal(args)
-	if err != nil {
-		h.logger.Error("Failed to marshal arguments", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid arguments: %v", err)), nil
-	}
-
-	if err := json.Unmarshal(argsJSON, &req); err != nil {
-		h.logger.Error("Failed to unmarshal request", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid request format: %v", err)), nil
-	}
-
-	// Generate code
-	resp, err := h.generator.ElementGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Element generation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Generation failed: %v", err)), nil
-	}
-
-	// Write to file if requested
-	var filePath string
-	if writeToFile {
-		if outputPath == "" {
-			return mcp.NewToolResultError("outputPath is required when writeToFile is true"), nil
-		}
-
-		writer := filewriter.NewFileWriter(outputPath, filewriter.WriteModeOverwrite, false)
-		
-		// Determine output directory (e.g., lib/components/)
-		relativePath := filepath.Join("lib", "components", resp.FileName)
-		
-		if err := writer.WriteFile(relativePath, resp.Code); err != nil {
-			h.logger.Error("Failed to write file", "error", err, "path", relativePath)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to write file: %v", err)), nil
-		}
-
-		fullPath, _ := writer.GetFullPath(relativePath)
-		filePath = fullPath
-		h.logger.Info("File written successfully", "path", fullPath)
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"success":  true,
-		"code":     resp.Code,
-		"fileName": resp.FileName,
-		"metadata": resp.Metadata,
-	}
-
-	if writeToFile {
-		result["filePath"] = filePath
-		result["written"] = true
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Element generated successfully", "fileName", resp.FileName, "written", writeToFile)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleGenerateService generates a Service class

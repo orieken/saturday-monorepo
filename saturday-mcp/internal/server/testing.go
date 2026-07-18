@@ -40,9 +40,10 @@ func (h *Handler) HandleValidatePatterns(ctx context.Context, request mcp.CallTo
 	return h.handleValidatePatterns(ctx, request)
 }
 
-// HandleGenerateElement is an exported wrapper for testing
+// HandleGenerateElement is an exported wrapper for testing; delegates to
+// tools.GenerateElementTool (Phase C op 10).
 func (h *Handler) HandleGenerateElement(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleGenerateElement(ctx, request)
+	return h.generateElementTool.Execute(ctx, request)
 }
 
 // HandleGenerateService is an exported wrapper for testing
