@@ -18,9 +18,10 @@ func (h *Handler) HandleGeneratePage(ctx context.Context, request mcp.CallToolRe
 	return h.generatePageTool.Execute(ctx, request)
 }
 
-// HandleGenerateFlow is an exported wrapper for testing
+// HandleGenerateFlow is an exported wrapper for testing; delegates to
+// tools.GenerateFlowTool (Phase C op 8).
 func (h *Handler) HandleGenerateFlow(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleGenerateFlow(ctx, request)
+	return h.generateFlowTool.Execute(ctx, request)
 }
 
 // HandleGenerateSteps is an exported wrapper for testing
