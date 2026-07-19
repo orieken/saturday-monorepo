@@ -15,28 +15,11 @@ import (
 // op 21.
 
 // Tools returns every domain.Tool the handler exposes to MCP clients.
-// Extracted workflows appear here as tools.WorkflowTool wrappers so
-// registration is uniform. Order defines the tool-list order MCP
-// advertises.
+// The concrete ordering is decided once inside buildTools; this method
+// only surfaces the slice for the registration loop and any consumer
+// (tests, diagnostics) that wants to walk the full inventory.
 func (h *Handler) Tools() []domain.Tool {
-	return []domain.Tool{
-		h.generateSiteTool,
-		h.generatePageTool,
-		h.generateFlowTool,
-		h.generateStepsTool,
-		h.generateElementTool,
-		h.generateServiceTool,
-		h.migrateCodeTool,
-		h.analyzePerformanceTool,
-		h.generateDocumentationTool,
-		h.analyzeFrameworkTool,
-		h.validatePatternsTool,
-		h.suggestImprovementsTool,
-		h.analyzeImpactTool,
-		h.runTestsTool,
-		h.parseTestFailureTool,
-		h.prioritizeTestsTool,
-	}
+	return h.tools
 }
 
 // RegisterTools registers every tool returned by h.Tools() with the MCP
