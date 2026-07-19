@@ -33,10 +33,7 @@ func (t *AnalyzeImpactTool) InputSchema() mcp.ToolInputSchema {
 		Type:     "object",
 		Required: []string{"projectPath", "targetFile"},
 		Properties: map[string]interface{}{
-			"projectPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Absolute path to the project root",
-			},
+			"projectPath": projectPathProperty(),
 			"targetFile": map[string]interface{}{
 				"type":        "string",
 				"description": "Relative path of the file to modify",

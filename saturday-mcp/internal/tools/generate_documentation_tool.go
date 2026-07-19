@@ -42,10 +42,11 @@ func (t *GenerateDocumentationTool) InputSchema() mcp.ToolInputSchema {
 		Type:     "object",
 		Required: []string{"projectPath", "outputPath"},
 		Properties: map[string]interface{}{
-			"projectPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Absolute path to the project root",
-			},
+			"projectPath": projectPathProperty(),
+			// NOTE: unlike other generator tools, generate_documentation
+			// treats outputPath as an unconditional full file path, not a
+			// base directory — so it does not share the outputPathProperty
+			// helper the generator tools use alongside writeToFile.
 			"outputPath": map[string]interface{}{
 				"type":        "string",
 				"description": "Absolute path for the output markdown file",

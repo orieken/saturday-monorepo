@@ -29,16 +29,7 @@ func (t *AnalyzePerformanceTool) Description() string {
 }
 
 func (t *AnalyzePerformanceTool) InputSchema() mcp.ToolInputSchema {
-	return mcp.ToolInputSchema{
-		Type:     "object",
-		Required: []string{"projectPath"},
-		Properties: map[string]interface{}{
-			"projectPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Absolute path to the project root",
-			},
-		},
-	}
+	return projectPathOnlySchema()
 }
 
 // Execute runs the performance analyzer. Response shape preserved verbatim

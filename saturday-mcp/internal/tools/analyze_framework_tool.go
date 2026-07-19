@@ -33,10 +33,7 @@ func (t *AnalyzeFrameworkTool) InputSchema() mcp.ToolInputSchema {
 		Type:     "object",
 		Required: []string{"projectPath"},
 		Properties: map[string]interface{}{
-			"projectPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Absolute path to the project root",
-			},
+			"projectPath": projectPathProperty(),
 			"patterns": map[string]interface{}{
 				"type":        "array",
 				"description": "Optional list of patterns to look for",

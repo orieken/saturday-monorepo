@@ -47,19 +47,9 @@ func (t *GenerateFlowTool) InputSchema() mcp.ToolInputSchema {
 					"type": "string",
 				},
 			},
-			"description": map[string]interface{}{
-				"type":        "string",
-				"description": "Optional description of the flow",
-			},
-			"writeToFile": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether to write the generated code to a file (default: false)",
-				"default":     false,
-			},
-			"outputPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Base directory for output files (required if writeToFile is true)",
-			},
+			"description": descriptionProperty("Optional description of the flow"),
+			"writeToFile": writeToFileProperty(),
+			"outputPath":  outputPathProperty(),
 		},
 	}
 }

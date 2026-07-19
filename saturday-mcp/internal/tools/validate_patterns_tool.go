@@ -33,10 +33,7 @@ func (t *ValidatePatternsTool) InputSchema() mcp.ToolInputSchema {
 		Type:     "object",
 		Required: []string{"projectPath"},
 		Properties: map[string]interface{}{
-			"projectPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Absolute path to the project root",
-			},
+			"projectPath": projectPathProperty(),
 			"checkTypes": map[string]interface{}{
 				"type":        "array",
 				"description": "Optional kinds of checks to run (naming, inheritance, structure)",

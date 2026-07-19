@@ -65,19 +65,9 @@ func (t *GenerateStepsTool) InputSchema() mcp.ToolInputSchema {
 				"enum":        []string{"typescript", "javascript"},
 				"default":     "typescript",
 			},
-			"description": map[string]interface{}{
-				"type":        "string",
-				"description": "Optional description",
-			},
-			"writeToFile": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether to write the generated code to a file (default: false)",
-				"default":     false,
-			},
-			"outputPath": map[string]interface{}{
-				"type":        "string",
-				"description": "Base directory for output files (required if writeToFile is true)",
-			},
+			"description": descriptionProperty("Optional description"),
+			"writeToFile": writeToFileProperty(),
+			"outputPath":  outputPathProperty(),
 		},
 	}
 }
