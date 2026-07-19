@@ -46,6 +46,7 @@ type Handler struct {
 	generateStepsTool   *tools.GenerateStepsTool
 	generateElementTool *tools.GenerateElementTool
 	generateServiceTool *tools.GenerateServiceTool
+	migrateCodeTool     *tools.MigrateCodeTool
 }
 
 // NewHandler creates a new server handler
@@ -107,6 +108,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		generateStepsTool:   tools.NewGenerateStepsTool(logger, stepGen),
 		generateElementTool: tools.NewGenerateElementTool(logger, elementGen),
 		generateServiceTool: tools.NewGenerateServiceTool(logger, serviceGen),
+		migrateCodeTool:     tools.NewMigrateCodeTool(logger, migrationGen),
 	}, nil
 }
 
@@ -160,27 +162,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.generateServiceTool.InputSchema(),
 	}, h.generateServiceTool.Execute)
 
-	// Register migrate_code tool
+	// Register migrate_code tool (extracted — Phase C op 12)
 	s.AddTool(mcp.Tool{
-		Name:        "migrate_code",
-		Description: "Analyze and migrate legacy code to Saturday Framework patterns",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"sourceCode"},
-			Properties: map[string]interface{}{
-				"sourceCode": map[string]interface{}{
-					"type":        "string",
-					"description": "Legacy Playwright source code to migrate",
-				},
-				"type": map[string]interface{}{
-					"type":        "string",
-					"description": "Type of migration (page or test)",
-					"enum":        []string{"page", "test"},
-					"default":     "page",
-				},
-			},
-		},
-	}, h.handleMigrateCode)
+		Name:        h.migrateCodeTool.Name(),
+		Description: h.migrateCodeTool.Description(),
+		InputSchema: h.migrateCodeTool.InputSchema(),
+	}, h.migrateCodeTool.Execute)
 
 	// Register analyze_performance tool
 	s.AddTool(mcp.Tool{
@@ -547,50 +534,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleMigrateCode migrates legacy code
-func (h *Handler) handleMigrateCode(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling migrate_code request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	
-	// Parse request manually since sourceCode might be complex
-	sourceCode, _ := args["sourceCode"].(string)
-	migrationType, ok := args["type"].(string)
-	if !ok || migrationType == "" {
-		migrationType = "page"
-	}
-
-	req := models.MigrationRequest{
-		SourceCode: sourceCode,
-		Type:       migrationType,
-	}
-
-	// Generate migrated code
-	resp, err := h.generator.MigrationGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Migration failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Migration failed: %v", err)), nil
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"success":  true,
-		"code":     resp.Code,
-		"fileName": resp.FileName,
-		"metadata": resp.Metadata,
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Code migrated successfully")
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleAnalyzeFramework analyzes existing framework structure

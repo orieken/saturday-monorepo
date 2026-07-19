@@ -57,9 +57,10 @@ func (h *Handler) HandleSuggestImprovements(ctx context.Context, request mcp.Cal
 	return h.handleSuggestImprovements(ctx, request)
 }
 
-// HandleMigrateCode is an exported wrapper for testing
+// HandleMigrateCode is an exported wrapper for testing; delegates to
+// tools.MigrateCodeTool (Phase C op 12).
 func (h *Handler) HandleMigrateCode(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleMigrateCode(ctx, request)
+	return h.migrateCodeTool.Execute(ctx, request)
 }
 
 // HandleAnalyzePerformance is an exported wrapper for testing
