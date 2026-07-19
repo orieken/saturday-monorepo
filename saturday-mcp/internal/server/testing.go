@@ -94,7 +94,8 @@ func (h *Handler) HandlePrioritizeTests(ctx context.Context, request mcp.CallToo
 	return h.handlePrioritizeTests(ctx, request)
 }
 
-// HandleParseTestFailure is an exported wrapper for testing
+// HandleParseTestFailure is an exported wrapper for testing; delegates to
+// tools.ParseTestFailureTool (Phase C op 19).
 func (h *Handler) HandleParseTestFailure(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleParseTestFailure(ctx, request)
+	return h.parseTestFailureTool.Execute(ctx, request)
 }

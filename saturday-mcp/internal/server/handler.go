@@ -52,6 +52,7 @@ type Handler struct {
 	validatePatternsTool      *tools.ValidatePatternsTool
 	suggestImprovementsTool   *tools.SuggestImprovementsTool
 	analyzeImpactTool         *tools.AnalyzeImpactTool
+	parseTestFailureTool      *tools.ParseTestFailureTool
 }
 
 // NewHandler creates a new server handler
@@ -120,6 +121,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		validatePatternsTool:      tools.NewValidatePatternsTool(logger, validatorTool),
 		suggestImprovementsTool:   tools.NewSuggestImprovementsTool(logger, improvementAnalyzer),
 		analyzeImpactTool:         tools.NewAnalyzeImpactTool(logger, graphAnalyzer),
+		parseTestFailureTool:      tools.NewParseTestFailureTool(logger, logAnalyzer),
 	}, nil
 }
 
@@ -246,21 +248,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		},
 	}, h.handleRunTests)
 
-	// Register parse_test_failure tool
+	// Register parse_test_failure tool (extracted — Phase C op 19)
 	s.AddTool(mcp.Tool{
-		Name:        "parse_test_failure",
-		Description: "Parse standard output from Playwright tests to identify failing files and lines",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"output"},
-			Properties: map[string]interface{}{
-				"output": map[string]interface{}{
-					"type":        "string",
-					"description": "Raw output string from run_tests",
-				},
-			},
-		},
-	}, h.handleParseTestFailure)
+		Name:        h.parseTestFailureTool.Name(),
+		Description: h.parseTestFailureTool.Description(),
+		InputSchema: h.parseTestFailureTool.InputSchema(),
+	}, h.parseTestFailureTool.Execute)
 
 	// Register prioritize_tests tool
 	s.AddTool(mcp.Tool{
@@ -323,31 +316,6 @@ func (h *Handler) handleRunTests(ctx context.Context, request mcp.CallToolReques
 	}
 
 	h.logger.Info("Tests executed", "success", result.Success, "summary", result.Summary)
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
-
-// handleParseTestFailure parses test logs
-func (h *Handler) handleParseTestFailure(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling parse_test_failure request")
-
-	output, ok := request.Params.Arguments["output"].(string)
-	if !ok || output == "" {
-		return mcp.NewToolResultError("output argument is required"), nil
-	}
-
-	failures, err := h.logAnalyzer.Parse(output)
-	if err != nil {
-		h.logger.Error("Failed to parse output", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Parse failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(failures)
-	if err != nil {
-		h.logger.Error("Failed to marshal failures", "error", err)
-		return mcp.NewToolResultError("Failed to format failures"), nil
-	}
-
-	h.logger.Info("Parsed test failures", "count", len(failures))
 	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
