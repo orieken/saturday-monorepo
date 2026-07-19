@@ -54,9 +54,10 @@ func (h *Handler) HandleGenerateService(ctx context.Context, request mcp.CallToo
 	return h.generateServiceTool.Execute(ctx, request)
 }
 
-// HandleSuggestImprovements is an exported wrapper for testing
+// HandleSuggestImprovements is an exported wrapper for testing; delegates to
+// tools.SuggestImprovementsTool (Phase C op 17).
 func (h *Handler) HandleSuggestImprovements(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleSuggestImprovements(ctx, request)
+	return h.suggestImprovementsTool.Execute(ctx, request)
 }
 
 // HandleMigrateCode is an exported wrapper for testing; delegates to

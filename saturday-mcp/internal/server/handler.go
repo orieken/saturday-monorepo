@@ -50,6 +50,7 @@ type Handler struct {
 	generateDocumentationTool *tools.GenerateDocumentationTool
 	analyzeFrameworkTool      *tools.AnalyzeFrameworkTool
 	validatePatternsTool      *tools.ValidatePatternsTool
+	suggestImprovementsTool   *tools.SuggestImprovementsTool
 }
 
 // NewHandler creates a new server handler
@@ -116,6 +117,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		generateDocumentationTool: tools.NewGenerateDocumentationTool(logger, docGen),
 		analyzeFrameworkTool:      tools.NewAnalyzeFrameworkTool(logger, analyzer),
 		validatePatternsTool:      tools.NewValidatePatternsTool(logger, validatorTool),
+		suggestImprovementsTool:   tools.NewSuggestImprovementsTool(logger, improvementAnalyzer),
 	}, nil
 }
 
@@ -204,21 +206,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.validatePatternsTool.InputSchema(),
 	}, h.validatePatternsTool.Execute)
 
-	// Register suggest_improvements tool
+	// Register suggest_improvements tool (extracted — Phase C op 17)
 	s.AddTool(mcp.Tool{
-		Name:        "suggest_improvements",
-		Description: "Suggest code improvements based on Saturday framework best practices",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-			},
-		},
-	}, h.handleSuggestImprovements)
+		Name:        h.suggestImprovementsTool.Name(),
+		Description: h.suggestImprovementsTool.Description(),
+		InputSchema: h.suggestImprovementsTool.InputSchema(),
+	}, h.suggestImprovementsTool.Execute)
 
 	// Register analyze_impact tool
 	s.AddTool(mcp.Tool{
@@ -489,33 +482,5 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 	return nil
 }
 
-// handleSuggestImprovements suggests code improvements
-func (h *Handler) handleSuggestImprovements(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling suggest_improvements request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-
-	if projectPath == "" {
-		return mcp.NewToolResultError("projectPath is required"), nil
-	}
-
-	// Analyze for improvements
-	result, err := h.improvementAnalyzer.Analyze(projectPath)
-	if err != nil {
-		h.logger.Error("Improvement analysis failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Analysis failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Improvement suggestions generated successfully", "path", projectPath, "count", len(result.Suggestions))
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
 
 
