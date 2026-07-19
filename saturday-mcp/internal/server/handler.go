@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/executor"
-	"github.com/orieken/saturday-mcp/internal/filewriter"
 	"github.com/orieken/saturday-mcp/internal/generators"
 	"github.com/orieken/saturday-mcp/internal/logging"
 	"github.com/orieken/saturday-mcp/internal/models"
@@ -47,6 +45,7 @@ type Handler struct {
 	generateFlowTool    *tools.GenerateFlowTool
 	generateStepsTool   *tools.GenerateStepsTool
 	generateElementTool *tools.GenerateElementTool
+	generateServiceTool *tools.GenerateServiceTool
 }
 
 // NewHandler creates a new server handler
@@ -107,6 +106,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		generateFlowTool:    tools.NewGenerateFlowTool(logger, flowGen),
 		generateStepsTool:   tools.NewGenerateStepsTool(logger, stepGen),
 		generateElementTool: tools.NewGenerateElementTool(logger, elementGen),
+		generateServiceTool: tools.NewGenerateServiceTool(logger, serviceGen),
 	}, nil
 }
 
@@ -153,58 +153,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.generateElementTool.InputSchema(),
 	}, h.generateElementTool.Execute)
 
-	// Register generate_service tool
+	// Register generate_service tool (extracted — Phase C op 11)
 	s.AddTool(mcp.Tool{
-		Name:        "generate_service",
-		Description: "Generate an API Service class",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"name", "baseUrl", "endpoints"},
-			Properties: map[string]interface{}{
-				"name": map[string]interface{}{
-					"type":        "string",
-					"description": "Name of the service",
-				},
-				"baseUrl": map[string]interface{}{
-					"type":        "string",
-					"description": "Base URL for the service",
-				},
-				"endpoints": map[string]interface{}{
-					"type":        "array",
-					"description": "List of API endpoints",
-					"items": map[string]interface{}{
-						"type": "object",
-						"required": []string{"name", "method", "path"},
-						"properties": map[string]interface{}{
-							"name": map[string]interface{}{
-								"type": "string",
-							},
-							"method": map[string]interface{}{
-								"type": "string",
-								"enum": []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-							},
-							"path": map[string]interface{}{
-								"type": "string",
-							},
-						},
-					},
-				},
-				"description": map[string]interface{}{
-					"type":        "string",
-					"description": "Optional description",
-				},
-				"writeToFile": map[string]interface{}{
-					"type":        "boolean",
-					"description": "Whether to write the generated code to a file (default: false)",
-					"default":     false,
-				},
-				"outputPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Base directory for output files (required if writeToFile is true)",
-				},
-			},
-		},
-	}, h.handleGenerateService)
+		Name:        h.generateServiceTool.Name(),
+		Description: h.generateServiceTool.Description(),
+		InputSchema: h.generateServiceTool.InputSchema(),
+	}, h.generateServiceTool.Execute)
 
 	// Register migrate_code tool
 	s.AddTool(mcp.Tool{
@@ -593,82 +547,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleGenerateService generates a Service class
-func (h *Handler) handleGenerateService(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling generate_service request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	
-	// Extract file writing parameters
-	writeToFile, _ := args["writeToFile"].(bool)
-	outputPath, _ := args["outputPath"].(string)
-	
-	// Parse generation request
-	var req models.ServiceGenerationRequest
-	argsJSON, err := json.Marshal(args)
-	if err != nil {
-		h.logger.Error("Failed to marshal arguments", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid arguments: %v", err)), nil
-	}
-
-	if err := json.Unmarshal(argsJSON, &req); err != nil {
-		h.logger.Error("Failed to unmarshal request", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid request format: %v", err)), nil
-	}
-
-	// Generate code
-	resp, err := h.generator.ServiceGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Service generation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Generation failed: %v", err)), nil
-	}
-
-	// Write to file if requested
-	var filePath string
-	if writeToFile {
-		if outputPath == "" {
-			return mcp.NewToolResultError("outputPath is required when writeToFile is true"), nil
-		}
-
-		writer := filewriter.NewFileWriter(outputPath, filewriter.WriteModeOverwrite, false)
-		
-		// Determine output directory (e.g., lib/services/)
-		relativePath := filepath.Join("lib", "services", resp.FileName)
-		
-		if err := writer.WriteFile(relativePath, resp.Code); err != nil {
-			h.logger.Error("Failed to write file", "error", err, "path", relativePath)
-			return mcp.NewToolResultError(fmt.Sprintf("Failed to write file: %v", err)), nil
-		}
-
-		fullPath, _ := writer.GetFullPath(relativePath)
-		filePath = fullPath
-		h.logger.Info("File written successfully", "path", fullPath)
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"success":  true,
-		"code":     resp.Code,
-		"fileName": resp.FileName,
-		"metadata": resp.Metadata,
-	}
-
-	if writeToFile {
-		result["filePath"] = filePath
-		result["written"] = true
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Service generated successfully", "fileName", resp.FileName, "written", writeToFile)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleMigrateCode migrates legacy code

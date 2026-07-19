@@ -46,9 +46,10 @@ func (h *Handler) HandleGenerateElement(ctx context.Context, request mcp.CallToo
 	return h.generateElementTool.Execute(ctx, request)
 }
 
-// HandleGenerateService is an exported wrapper for testing
+// HandleGenerateService is an exported wrapper for testing; delegates to
+// tools.GenerateServiceTool (Phase C op 11).
 func (h *Handler) HandleGenerateService(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleGenerateService(ctx, request)
+	return h.generateServiceTool.Execute(ctx, request)
 }
 
 // HandleSuggestImprovements is an exported wrapper for testing
