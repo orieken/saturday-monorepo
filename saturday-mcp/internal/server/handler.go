@@ -49,6 +49,7 @@ type Handler struct {
 	analyzePerformanceTool    *tools.AnalyzePerformanceTool
 	generateDocumentationTool *tools.GenerateDocumentationTool
 	analyzeFrameworkTool      *tools.AnalyzeFrameworkTool
+	validatePatternsTool      *tools.ValidatePatternsTool
 }
 
 // NewHandler creates a new server handler
@@ -114,6 +115,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		analyzePerformanceTool:    tools.NewAnalyzePerformanceTool(logger, performanceAnalyzer),
 		generateDocumentationTool: tools.NewGenerateDocumentationTool(logger, docGen),
 		analyzeFrameworkTool:      tools.NewAnalyzeFrameworkTool(logger, analyzer),
+		validatePatternsTool:      tools.NewValidatePatternsTool(logger, validatorTool),
 	}, nil
 }
 
@@ -195,28 +197,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.analyzeFrameworkTool.InputSchema(),
 	}, h.analyzeFrameworkTool.Execute)
 
-	// Register validate_patterns tool
+	// Register validate_patterns tool (extracted — Phase C op 16)
 	s.AddTool(mcp.Tool{
-		Name:        "validate_patterns",
-		Description: "Validate code against Saturday framework patterns",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-				"checkTypes": map[string]interface{}{
-					"type":        "array",
-					"description": "Optional kinds of checks to run (naming, inheritance, structure)",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-			},
-		},
-	}, h.handleValidatePatterns)
+		Name:        h.validatePatternsTool.Name(),
+		Description: h.validatePatternsTool.Description(),
+		InputSchema: h.validatePatternsTool.InputSchema(),
+	}, h.validatePatternsTool.Execute)
 
 	// Register suggest_improvements tool
 	s.AddTool(mcp.Tool{
@@ -501,35 +487,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleValidatePatterns validates code patterns
-func (h *Handler) handleValidatePatterns(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling validate_patterns request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-
-	if projectPath == "" {
-		return mcp.NewToolResultError("projectPath is required"), nil
-	}
-
-	// Validate patterns
-	result, err := h.validator.Validate(projectPath)
-	if err != nil {
-		h.logger.Error("Validation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Validation failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Validation completed successfully", "path", projectPath, "valid", result.Valid)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleSuggestImprovements suggests code improvements
