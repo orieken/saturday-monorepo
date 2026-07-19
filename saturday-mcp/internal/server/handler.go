@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -45,9 +44,10 @@ type Handler struct {
 	generateFlowTool    *tools.GenerateFlowTool
 	generateStepsTool   *tools.GenerateStepsTool
 	generateElementTool *tools.GenerateElementTool
-	generateServiceTool    *tools.GenerateServiceTool
-	migrateCodeTool        *tools.MigrateCodeTool
-	analyzePerformanceTool *tools.AnalyzePerformanceTool
+	generateServiceTool       *tools.GenerateServiceTool
+	migrateCodeTool           *tools.MigrateCodeTool
+	analyzePerformanceTool    *tools.AnalyzePerformanceTool
+	generateDocumentationTool *tools.GenerateDocumentationTool
 }
 
 // NewHandler creates a new server handler
@@ -108,9 +108,10 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		generateFlowTool:    tools.NewGenerateFlowTool(logger, flowGen),
 		generateStepsTool:   tools.NewGenerateStepsTool(logger, stepGen),
 		generateElementTool: tools.NewGenerateElementTool(logger, elementGen),
-		generateServiceTool:    tools.NewGenerateServiceTool(logger, serviceGen),
-		migrateCodeTool:        tools.NewMigrateCodeTool(logger, migrationGen),
-		analyzePerformanceTool: tools.NewAnalyzePerformanceTool(logger, performanceAnalyzer),
+		generateServiceTool:       tools.NewGenerateServiceTool(logger, serviceGen),
+		migrateCodeTool:           tools.NewMigrateCodeTool(logger, migrationGen),
+		analyzePerformanceTool:    tools.NewAnalyzePerformanceTool(logger, performanceAnalyzer),
+		generateDocumentationTool: tools.NewGenerateDocumentationTool(logger, docGen),
 	}, nil
 }
 
@@ -178,25 +179,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.analyzePerformanceTool.InputSchema(),
 	}, h.analyzePerformanceTool.Execute)
 
-	// Register generate_documentation tool
+	// Register generate_documentation tool (extracted — Phase C op 14)
 	s.AddTool(mcp.Tool{
-		Name:        "generate_documentation",
-		Description: "Generate markdown documentation for the project",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath", "outputPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-				"outputPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path for the output markdown file",
-				},
-			},
-		},
-	}, h.handleGenerateDocumentation)
+		Name:        h.generateDocumentationTool.Name(),
+		Description: h.generateDocumentationTool.Description(),
+		InputSchema: h.generateDocumentationTool.InputSchema(),
+	}, h.generateDocumentationTool.Execute)
 
 	// Register analyze_framework tool
 	s.AddTool(mcp.Tool{
@@ -616,51 +604,4 @@ func (h *Handler) handleSuggestImprovements(ctx context.Context, request mcp.Cal
 	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
-// handleGenerateDocumentation generates project documentation
-func (h *Handler) handleGenerateDocumentation(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling generate_documentation request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-	outputPath, _ := args["outputPath"].(string)
-
-	if projectPath == "" || outputPath == "" {
-		return mcp.NewToolResultError("projectPath and outputPath are required"), nil
-	}
-
-	req := models.DocumentationRequest{
-		ProjectPath: projectPath,
-		OutputPath:  outputPath,
-	}
-
-	// Generate documentation
-	resp, err := h.generator.DocumentationGenerator.Generate(req)
-	if err != nil {
-		h.logger.Error("Documentation generation failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Generation failed: %v", err)), nil
-	}
-
-	// Write to file
-	if err := os.WriteFile(outputPath, []byte(resp.Code), 0644); err != nil {
-		h.logger.Error("Failed to write documentation file", "path", outputPath, "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to write file: %v", err)), nil
-	}
-
-	h.logger.Info("Documentation generated successfully", "path", outputPath)
-	
-	// Return success
-	result := map[string]interface{}{
-		"success": true,
-		"path":    outputPath,
-		"pages":   resp.Metadata["pageCount"],
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
 
