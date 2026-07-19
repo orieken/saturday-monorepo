@@ -48,6 +48,7 @@ type Handler struct {
 	migrateCodeTool           *tools.MigrateCodeTool
 	analyzePerformanceTool    *tools.AnalyzePerformanceTool
 	generateDocumentationTool *tools.GenerateDocumentationTool
+	analyzeFrameworkTool      *tools.AnalyzeFrameworkTool
 }
 
 // NewHandler creates a new server handler
@@ -112,6 +113,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		migrateCodeTool:           tools.NewMigrateCodeTool(logger, migrationGen),
 		analyzePerformanceTool:    tools.NewAnalyzePerformanceTool(logger, performanceAnalyzer),
 		generateDocumentationTool: tools.NewGenerateDocumentationTool(logger, docGen),
+		analyzeFrameworkTool:      tools.NewAnalyzeFrameworkTool(logger, analyzer),
 	}, nil
 }
 
@@ -186,28 +188,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.generateDocumentationTool.InputSchema(),
 	}, h.generateDocumentationTool.Execute)
 
-	// Register analyze_framework tool
+	// Register analyze_framework tool (extracted — Phase C op 15)
 	s.AddTool(mcp.Tool{
-		Name:        "analyze_framework",
-		Description: "Analyze existing framework structure and patterns",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-				"patterns": map[string]interface{}{
-					"type":        "array",
-					"description": "Optional list of patterns to look for",
-					"items": map[string]interface{}{
-						"type": "string",
-					},
-				},
-			},
-		},
-	}, h.handleAnalyzeFramework)
+		Name:        h.analyzeFrameworkTool.Name(),
+		Description: h.analyzeFrameworkTool.Description(),
+		InputSchema: h.analyzeFrameworkTool.InputSchema(),
+	}, h.analyzeFrameworkTool.Execute)
 
 	// Register validate_patterns tool
 	s.AddTool(mcp.Tool{
@@ -515,35 +501,6 @@ func (h *Handler) RegisterPrompts(s *server.MCPServer) error {
 
 	h.logger.Info("Prompts registered successfully")
 	return nil
-}
-
-// handleAnalyzeFramework analyzes existing framework structure
-func (h *Handler) handleAnalyzeFramework(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling analyze_framework request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-
-	if projectPath == "" {
-		return mcp.NewToolResultError("projectPath is required"), nil
-	}
-
-	// Run analysis
-	result, err := h.analyzer.Analyze(projectPath)
-	if err != nil {
-		h.logger.Error("Analysis failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Analysis failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Analysis completed successfully", "path", projectPath)
-	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
 // handleValidatePatterns validates code patterns

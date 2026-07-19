@@ -30,9 +30,10 @@ func (h *Handler) HandleGenerateSteps(ctx context.Context, request mcp.CallToolR
 	return h.generateStepsTool.Execute(ctx, request)
 }
 
-// HandleAnalyzeFramework is an exported wrapper for testing
+// HandleAnalyzeFramework is an exported wrapper for testing; delegates to
+// tools.AnalyzeFrameworkTool (Phase C op 15).
 func (h *Handler) HandleAnalyzeFramework(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleAnalyzeFramework(ctx, request)
+	return h.analyzeFrameworkTool.Execute(ctx, request)
 }
 
 // HandleValidatePatterns is an exported wrapper for testing
