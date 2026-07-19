@@ -45,8 +45,9 @@ type Handler struct {
 	generateFlowTool    *tools.GenerateFlowTool
 	generateStepsTool   *tools.GenerateStepsTool
 	generateElementTool *tools.GenerateElementTool
-	generateServiceTool *tools.GenerateServiceTool
-	migrateCodeTool     *tools.MigrateCodeTool
+	generateServiceTool    *tools.GenerateServiceTool
+	migrateCodeTool        *tools.MigrateCodeTool
+	analyzePerformanceTool *tools.AnalyzePerformanceTool
 }
 
 // NewHandler creates a new server handler
@@ -107,8 +108,9 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		generateFlowTool:    tools.NewGenerateFlowTool(logger, flowGen),
 		generateStepsTool:   tools.NewGenerateStepsTool(logger, stepGen),
 		generateElementTool: tools.NewGenerateElementTool(logger, elementGen),
-		generateServiceTool: tools.NewGenerateServiceTool(logger, serviceGen),
-		migrateCodeTool:     tools.NewMigrateCodeTool(logger, migrationGen),
+		generateServiceTool:    tools.NewGenerateServiceTool(logger, serviceGen),
+		migrateCodeTool:        tools.NewMigrateCodeTool(logger, migrationGen),
+		analyzePerformanceTool: tools.NewAnalyzePerformanceTool(logger, performanceAnalyzer),
 	}, nil
 }
 
@@ -169,21 +171,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.migrateCodeTool.InputSchema(),
 	}, h.migrateCodeTool.Execute)
 
-	// Register analyze_performance tool
+	// Register analyze_performance tool (extracted — Phase C op 13)
 	s.AddTool(mcp.Tool{
-		Name:        "analyze_performance",
-		Description: "Analyze code for performance bottlenecks (concurrent)",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-			},
-		},
-	}, h.handleAnalyzePerformance)
+		Name:        h.analyzePerformanceTool.Name(),
+		Description: h.analyzePerformanceTool.Description(),
+		InputSchema: h.analyzePerformanceTool.InputSchema(),
+	}, h.analyzePerformanceTool.Execute)
 
 	// Register generate_documentation tool
 	s.AddTool(mcp.Tool{
@@ -620,35 +613,6 @@ func (h *Handler) handleSuggestImprovements(ctx context.Context, request mcp.Cal
 	}
 
 	h.logger.Info("Improvement suggestions generated successfully", "path", projectPath, "count", len(result.Suggestions))
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
-
-// handleAnalyzePerformance analyzes performance
-func (h *Handler) handleAnalyzePerformance(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling analyze_performance request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-
-	if projectPath == "" {
-		return mcp.NewToolResultError("projectPath is required"), nil
-	}
-
-	// Analyze for performance
-	result, err := h.performanceAnalyzer.Analyze(projectPath)
-	if err != nil {
-		h.logger.Error("Performance analysis failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Analysis failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Performance analysis generated successfully", "path", projectPath, "issues", len(result.Suggestions))
 	return mcp.NewToolResultText(string(resultJSON)), nil
 }
 
