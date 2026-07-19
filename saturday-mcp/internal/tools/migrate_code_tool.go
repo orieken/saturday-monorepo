@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/generators"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -46,6 +47,13 @@ func (t *MigrateCodeTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the shared GenerationResult response shape.
+// migrate_code omits filePath/written since it never writes to disk, but
+// the schema fields being optional means the shared type still fits.
+func (t *MigrateCodeTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&GenerationResult{})
 }
 
 // Execute runs the migration generator. Response shape preserved verbatim

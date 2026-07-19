@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
+	"github.com/orieken/saturday-mcp/internal/models"
 )
 
 // ValidatePatternsTool validates a project's code against Saturday framework
@@ -43,6 +45,11 @@ func (t *ValidatePatternsTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the models.ValidationResponse response shape.
+func (t *ValidatePatternsTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&models.ValidationResponse{})
 }
 
 // Execute runs the pattern validator. Response shape preserved verbatim

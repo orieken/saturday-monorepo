@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
+	"github.com/orieken/saturday-mcp/internal/models"
 )
 
 // SuggestImprovementsTool suggests code improvements based on Saturday
@@ -30,6 +32,11 @@ func (t *SuggestImprovementsTool) Description() string {
 
 func (t *SuggestImprovementsTool) InputSchema() mcp.ToolInputSchema {
 	return projectPathOnlySchema()
+}
+
+// OutputSchema advertises the models.ImprovementResponse response shape.
+func (t *SuggestImprovementsTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&models.ImprovementResponse{})
 }
 
 // Execute runs the improvement analyzer. Response shape preserved verbatim

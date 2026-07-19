@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/filewriter"
 	"github.com/orieken/saturday-mcp/internal/generators"
@@ -72,6 +73,11 @@ func (t *GeneratePageTool) InputSchema() mcp.ToolInputSchema {
 			"outputPath":  outputPathProperty(),
 		},
 	}
+}
+
+// OutputSchema advertises the shared GenerationResult response shape.
+func (t *GeneratePageTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&GenerationResult{})
 }
 
 // Execute runs the page generator and optionally writes the output.

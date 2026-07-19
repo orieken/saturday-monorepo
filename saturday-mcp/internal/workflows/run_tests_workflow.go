@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/executor"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -63,6 +64,11 @@ func (w *RunTestsWorkflow) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the models.TestExecutionResult response shape.
+func (w *RunTestsWorkflow) OutputSchema() *jsonschema.Schema {
+	return jsonschema.Reflect(&models.TestExecutionResult{})
 }
 
 // Run executes the workflow. Response shape preserved from the old

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -39,6 +40,11 @@ func (t *ParseTestFailureTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the []analyzers.TestFailureInfo response shape.
+func (t *ParseTestFailureTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&[]analyzers.TestFailureInfo{})
 }
 
 // Execute runs the log analyzer. Response shape preserved verbatim from

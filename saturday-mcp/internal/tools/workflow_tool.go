@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/domain"
 )
@@ -34,6 +35,10 @@ func (t *WorkflowTool) Description() string { return t.workflow.Description() }
 
 // InputSchema delegates to the underlying workflow.
 func (t *WorkflowTool) InputSchema() mcp.ToolInputSchema { return t.workflow.InputSchema() }
+
+// OutputSchema delegates to the underlying workflow so the Tool and
+// Workflow interfaces stay symmetric under the adapter.
+func (t *WorkflowTool) OutputSchema() *jsonschema.Schema { return t.workflow.OutputSchema() }
 
 // Execute forwards the MCP tool call to the workflow's Run method.
 func (t *WorkflowTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {

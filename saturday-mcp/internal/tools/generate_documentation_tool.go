@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/generators"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -53,6 +54,13 @@ func (t *GenerateDocumentationTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the DocumentationResult response shape —
+// distinct from GenerationResult because generate_documentation returns
+// {success, path, pages} rather than the code-generator envelope.
+func (t *GenerateDocumentationTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&DocumentationResult{})
 }
 
 // Execute runs the documentation generator and writes the result to disk.

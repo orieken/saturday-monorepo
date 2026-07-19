@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -34,6 +35,10 @@ type Workflow interface {
 	Name() string
 	Description() string
 	InputSchema() mcp.ToolInputSchema
+	// OutputSchema mirrors Tool.OutputSchema so the WorkflowTool adapter
+	// (internal/tools/workflow_tool.go) can delegate straight through and
+	// keep the two interfaces symmetric. Added in mcp-add-plan Phase F.
+	OutputSchema() *jsonschema.Schema
 	Run(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
 }
 

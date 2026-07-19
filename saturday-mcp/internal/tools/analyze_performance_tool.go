@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
+	"github.com/orieken/saturday-mcp/internal/models"
 )
 
 // AnalyzePerformanceTool scans a project for performance bottlenecks using
@@ -30,6 +32,12 @@ func (t *AnalyzePerformanceTool) Description() string {
 
 func (t *AnalyzePerformanceTool) InputSchema() mcp.ToolInputSchema {
 	return projectPathOnlySchema()
+}
+
+// OutputSchema advertises the models.ImprovementResponse response shape
+// (the analyzer emits ValidationIssue records under a "suggestions" key).
+func (t *AnalyzePerformanceTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&models.ImprovementResponse{})
 }
 
 // Execute runs the performance analyzer. Response shape preserved verbatim

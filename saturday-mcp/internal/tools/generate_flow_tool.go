@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/filewriter"
 	"github.com/orieken/saturday-mcp/internal/generators"
@@ -52,6 +53,11 @@ func (t *GenerateFlowTool) InputSchema() mcp.ToolInputSchema {
 			"outputPath":  outputPathProperty(),
 		},
 	}
+}
+
+// OutputSchema advertises the shared GenerationResult response shape.
+func (t *GenerateFlowTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&GenerationResult{})
 }
 
 // Execute runs the flow generator and optionally writes the output.

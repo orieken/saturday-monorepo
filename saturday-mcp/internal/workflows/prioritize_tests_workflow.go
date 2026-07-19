@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -58,6 +59,11 @@ func (w *PrioritizeTestsWorkflow) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the []analyzers.PagePriority response shape.
+func (w *PrioritizeTestsWorkflow) OutputSchema() *jsonschema.Schema {
+	return jsonschema.Reflect(&[]analyzers.PagePriority{})
 }
 
 // Run executes the workflow. Response shape preserved from the old

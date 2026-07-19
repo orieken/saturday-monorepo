@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
@@ -40,6 +41,11 @@ func (t *AnalyzeImpactTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the ImpactResult response shape.
+func (t *AnalyzeImpactTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&ImpactResult{})
 }
 
 // Execute builds a dependency graph and analyzes the impact of modifying

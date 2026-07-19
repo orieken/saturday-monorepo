@@ -12,6 +12,7 @@ package domain
 import (
 	"context"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -28,14 +29,18 @@ import (
 //     mcp.CallToolRequest so that argument parsing stays close to the tool
 //     that owns the schema, rather than being centralized in the server layer.
 //
-// Phase F of the mcp-add plan will extend this interface with an
-// OutputSchema() method once every tool has a typed response struct to
-// generate from; it is deliberately absent here so the interface does not
-// lie about what is implemented today.
+// OutputSchema is generated from the typed response struct each tool
+// serializes, using github.com/invopop/jsonschema (see internal/tools/
+// responses.go). mcp-go v0.8.0's mcp.Tool struct does not currently
+// carry an outputSchema field, so the value returned here is not
+// auto-advertised to MCP clients yet — it exists as an in-code
+// declarative contract that a future mcp-go upgrade (or a middleware
+// wrapping tool registration) can surface. Phase F op 14 added it.
 type Tool interface {
 	Name() string
 	Description() string
 	InputSchema() mcp.ToolInputSchema
+	OutputSchema() *jsonschema.Schema
 	Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
 }
 

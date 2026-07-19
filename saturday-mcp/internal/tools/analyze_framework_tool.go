@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/logging"
+	"github.com/orieken/saturday-mcp/internal/models"
 )
 
 // AnalyzeFrameworkTool analyzes the existing framework structure and
@@ -43,6 +45,11 @@ func (t *AnalyzeFrameworkTool) InputSchema() mcp.ToolInputSchema {
 			},
 		},
 	}
+}
+
+// OutputSchema advertises the models.AnalysisResult response shape.
+func (t *AnalyzeFrameworkTool) OutputSchema() *jsonschema.Schema {
+	return reflectSchema(&models.AnalysisResult{})
 }
 
 // Execute runs the framework analyzer. Response shape preserved verbatim
