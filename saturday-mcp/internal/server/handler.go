@@ -51,6 +51,7 @@ type Handler struct {
 	analyzeFrameworkTool      *tools.AnalyzeFrameworkTool
 	validatePatternsTool      *tools.ValidatePatternsTool
 	suggestImprovementsTool   *tools.SuggestImprovementsTool
+	analyzeImpactTool         *tools.AnalyzeImpactTool
 }
 
 // NewHandler creates a new server handler
@@ -118,6 +119,7 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		analyzeFrameworkTool:      tools.NewAnalyzeFrameworkTool(logger, analyzer),
 		validatePatternsTool:      tools.NewValidatePatternsTool(logger, validatorTool),
 		suggestImprovementsTool:   tools.NewSuggestImprovementsTool(logger, improvementAnalyzer),
+		analyzeImpactTool:         tools.NewAnalyzeImpactTool(logger, graphAnalyzer),
 	}, nil
 }
 
@@ -213,25 +215,12 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.suggestImprovementsTool.InputSchema(),
 	}, h.suggestImprovementsTool.Execute)
 
-	// Register analyze_impact tool
+	// Register analyze_impact tool (extracted — Phase C op 18)
 	s.AddTool(mcp.Tool{
-		Name:        "analyze_impact",
-		Description: "Analyze the impact of modifying a specific file (dependency graph)",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath", "targetFile"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-				"targetFile": map[string]interface{}{
-					"type":        "string",
-					"description": "Relative path of the file to modify",
-				},
-			},
-		},
-	}, h.handleAnalyzeImpact)
+		Name:        h.analyzeImpactTool.Name(),
+		Description: h.analyzeImpactTool.Description(),
+		InputSchema: h.analyzeImpactTool.InputSchema(),
+	}, h.analyzeImpactTool.Execute)
 
 	// Register run_tests tool
 	s.AddTool(mcp.Tool{
@@ -400,50 +389,6 @@ func (h *Handler) handlePrioritizeTests(ctx context.Context, request mcp.CallToo
 }
 
 
-
-// handleAnalyzeImpact analyzes file modification impact
-func (h *Handler) handleAnalyzeImpact(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling analyze_impact request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	projectPath, _ := args["projectPath"].(string)
-	targetFile, _ := args["targetFile"].(string)
-
-	if projectPath == "" || targetFile == "" {
-		return mcp.NewToolResultError("projectPath and targetFile are required"), nil
-	}
-
-	// 1. Build Graph
-	graph, err := h.graphAnalyzer.Build(projectPath)
-	if err != nil {
-		h.logger.Error("Graph build failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to build dependency graph: %v", err)), nil
-	}
-
-	// 2. Analyze Impact
-	impactedFiles, err := h.graphAnalyzer.AnalyzeImpact(graph, targetFile)
-	if err != nil {
-		h.logger.Error("Impact analysis failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Analysis failed: %v", err)), nil
-	}
-
-	// Format response
-	result := map[string]interface{}{
-		"target":   targetFile,
-		"impacted": impactedFiles,
-		"count":    len(impactedFiles),
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Impact analysis completed successfully", "target", targetFile, "impacted_count", len(impactedFiles))
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
 
 // RegisterResources registers all available resources with the MCP server
 func (h *Handler) RegisterResources(s *server.MCPServer) error {

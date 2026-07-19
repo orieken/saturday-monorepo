@@ -78,9 +78,10 @@ func (h *Handler) HandleGenerateDocumentation(ctx context.Context, request mcp.C
 	return h.generateDocumentationTool.Execute(ctx, request)
 }
 
-// HandleAnalyzeImpact is an exported wrapper for testing
+// HandleAnalyzeImpact is an exported wrapper for testing; delegates to
+// tools.AnalyzeImpactTool (Phase C op 18).
 func (h *Handler) HandleAnalyzeImpact(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleAnalyzeImpact(ctx, request)
+	return h.analyzeImpactTool.Execute(ctx, request)
 }
 
 // HandleRunTests is an exported wrapper for testing
