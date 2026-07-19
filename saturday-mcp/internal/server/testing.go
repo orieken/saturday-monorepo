@@ -84,14 +84,18 @@ func (h *Handler) HandleAnalyzeImpact(ctx context.Context, request mcp.CallToolR
 	return h.analyzeImpactTool.Execute(ctx, request)
 }
 
-// HandleRunTests is an exported wrapper for testing
+// HandleRunTests is an exported wrapper for testing; delegates to the
+// extracted tools.WorkflowTool wrapping workflows.RunTestsWorkflow
+// (Phase D op 3).
 func (h *Handler) HandleRunTests(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handleRunTests(ctx, request)
+	return h.runTestsTool.Execute(ctx, request)
 }
 
-// HandlePrioritizeTests is an exported wrapper for testing
+// HandlePrioritizeTests is an exported wrapper for testing; delegates to
+// the extracted tools.WorkflowTool wrapping workflows.PrioritizeTestsWorkflow
+// (Phase D op 3).
 func (h *Handler) HandlePrioritizeTests(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	return h.handlePrioritizeTests(ctx, request)
+	return h.prioritizeTestsTool.Execute(ctx, request)
 }
 
 // HandleParseTestFailure is an exported wrapper for testing; delegates to

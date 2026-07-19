@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,13 +11,12 @@ import (
 	"github.com/orieken/saturday-mcp/internal/executor"
 	"github.com/orieken/saturday-mcp/internal/generators"
 	"github.com/orieken/saturday-mcp/internal/logging"
-	"github.com/orieken/saturday-mcp/internal/models"
-	"github.com/orieken/saturday-mcp/internal/observability"
 	"github.com/orieken/saturday-mcp/internal/prompts"
 	"github.com/orieken/saturday-mcp/internal/resources"
 	"github.com/orieken/saturday-mcp/internal/templates"
 	"github.com/orieken/saturday-mcp/internal/tools"
 	"github.com/orieken/saturday-mcp/internal/validators"
+	"github.com/orieken/saturday-mcp/internal/workflows"
 )
 
 // Handler manages the Saturday MCP server operations
@@ -53,6 +51,13 @@ type Handler struct {
 	suggestImprovementsTool   *tools.SuggestImprovementsTool
 	analyzeImpactTool         *tools.AnalyzeImpactTool
 	parseTestFailureTool      *tools.ParseTestFailureTool
+
+	// Extracted workflows adapted to domain.Tool via tools.WorkflowTool
+	// (Phase D op 3). The Workflow types themselves live under
+	// internal/workflows/; the *WorkflowTool wrapper here exists purely
+	// so RegisterTools can treat them identically to single-step tools.
+	runTestsTool        *tools.WorkflowTool
+	prioritizeTestsTool *tools.WorkflowTool
 }
 
 // NewHandler creates a new server handler
@@ -122,6 +127,9 @@ func NewHandler(logger *logging.Logger) (*Handler, error) {
 		suggestImprovementsTool:   tools.NewSuggestImprovementsTool(logger, improvementAnalyzer),
 		analyzeImpactTool:         tools.NewAnalyzeImpactTool(logger, graphAnalyzer),
 		parseTestFailureTool:      tools.NewParseTestFailureTool(logger, logAnalyzer),
+
+		runTestsTool:        tools.NewWorkflowTool(workflows.NewRunTestsWorkflow(logger, testExecutor)),
+		prioritizeTestsTool: tools.NewWorkflowTool(workflows.NewPrioritizeTestsWorkflow(logger, usageAnalyzer)),
 	}, nil
 }
 
@@ -224,29 +232,13 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.analyzeImpactTool.InputSchema(),
 	}, h.analyzeImpactTool.Execute)
 
-	// Register run_tests tool
+	// Register run_tests workflow (extracted — Phase D op 3, adapted via
+	// tools.WorkflowTool so registration is identical to a single-step tool)
 	s.AddTool(mcp.Tool{
-		Name:        "run_tests",
-		Description: "Execute tests and capture output",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"projectPath"},
-			Properties: map[string]interface{}{
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to the project root",
-				},
-				"command": map[string]interface{}{
-					"type":        "string",
-					"description": "Test command (default: npx playwright test)",
-				},
-				"filter": map[string]interface{}{
-					"type":        "string",
-					"description": "Grep filter for tests",
-				},
-			},
-		},
-	}, h.handleRunTests)
+		Name:        h.runTestsTool.Name(),
+		Description: h.runTestsTool.Description(),
+		InputSchema: h.runTestsTool.InputSchema(),
+	}, h.runTestsTool.Execute)
 
 	// Register parse_test_failure tool (extracted — Phase C op 19)
 	s.AddTool(mcp.Tool{
@@ -255,108 +247,16 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 		InputSchema: h.parseTestFailureTool.InputSchema(),
 	}, h.parseTestFailureTool.Execute)
 
-	// Register prioritize_tests tool
+	// Register prioritize_tests workflow (extracted — Phase D op 3)
 	s.AddTool(mcp.Tool{
-		Name:        "prioritize_tests",
-		Description: "Rank test coverage needs based on production usage metrics",
-		InputSchema: mcp.ToolInputSchema{
-			Type:     "object",
-			Required: []string{"metricsFile"},
-			Properties: map[string]interface{}{
-				"metricsFile": map[string]interface{}{
-					"type":        "string",
-					"description": "Absolute path to metrics.json file",
-				},
-				"projectPath": map[string]interface{}{
-					"type":        "string",
-					"description": "Optional path to project to match files",
-				},
-			},
-		},
-	}, h.handlePrioritizeTests)
+		Name:        h.prioritizeTestsTool.Name(),
+		Description: h.prioritizeTestsTool.Description(),
+		InputSchema: h.prioritizeTestsTool.InputSchema(),
+	}, h.prioritizeTestsTool.Execute)
 
 	h.logger.Info("Tools registered successfully")
 	return nil
 }
-
-// ... existing code ...
-
-// handleRunTests executes tests
-func (h *Handler) handleRunTests(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling run_tests request")
-
-	// Parse arguments
-	args := request.Params.Arguments
-	var req models.TestExecutionRequest
-	argsJSON, err := json.Marshal(args)
-	if err != nil {
-		h.logger.Error("Failed to marshal arguments", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid arguments: %v", err)), nil
-	}
-
-	if err := json.Unmarshal(argsJSON, &req); err != nil {
-		h.logger.Error("Failed to unmarshal request", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Invalid request format: %v", err)), nil
-	}
-
-	if req.ProjectPath == "" {
-		return mcp.NewToolResultError("projectPath is required"), nil
-	}
-
-	result, err := h.testExecutor.Run(req)
-	if err != nil {
-		h.logger.Error("Test execution failed", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Test execution failed: %v", err)), nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		h.logger.Error("Failed to marshal result", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to format result: %v", err)), nil
-	}
-
-	h.logger.Info("Tests executed", "success", result.Success, "summary", result.Summary)
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
-
-// handlePrioritizeTests ranks testing needs
-func (h *Handler) handlePrioritizeTests(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	h.logger.Info("Handling prioritize_tests request")
-
-	metricsFile, ok := request.Params.Arguments["metricsFile"].(string)
-	if !ok || metricsFile == "" {
-		return mcp.NewToolResultError("metricsFile argument is required"), nil
-	}
-
-	// 1. Load Metrics
-	provider := observability.NewFileMetricsProvider(metricsFile)
-	metrics, err := provider.GetPageMetrics()
-	if err != nil {
-		h.logger.Error("Failed to read metrics", "error", err)
-		return mcp.NewToolResultError(fmt.Sprintf("Failed to load metrics: %v", err)), nil
-	}
-
-	// 2. Analyze
-	priorities := h.usageAnalyzer.Analyze(metrics)
-
-	// 3. (Optional) Match with Codebase
-	// projectPath, hasProject := request.Params.Arguments["projectPath"].(string)
-	// if hasProject && projectPath != "" {
-	//    files, _ := listFiles(projectPath)
-	//    priorities = h.usageAnalyzer.MatchWithCodebase(priorities, files)
-	// }
-
-	resultJSON, err := json.Marshal(priorities)
-	if err != nil {
-		h.logger.Error("Failed to marshal priorities", "error", err)
-		return mcp.NewToolResultError("Failed to format priorities"), nil
-	}
-
-	h.logger.Info("Prioritized tests", "count", len(priorities))
-	return mcp.NewToolResultText(string(resultJSON)), nil
-}
-
-
 
 // RegisterResources registers all available resources with the MCP server
 func (h *Handler) RegisterResources(s *server.MCPServer) error {
