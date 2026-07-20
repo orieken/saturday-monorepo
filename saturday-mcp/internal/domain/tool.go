@@ -31,11 +31,10 @@ import (
 //
 // OutputSchema is generated from the typed response struct each tool
 // serializes, using github.com/invopop/jsonschema (see internal/tools/
-// responses.go). mcp-go v0.8.0's mcp.Tool struct does not currently
-// carry an outputSchema field, so the value returned here is not
-// auto-advertised to MCP clients yet — it exists as an in-code
-// declarative contract that a future mcp-go upgrade (or a middleware
-// wrapping tool registration) can surface. Phase F op 14 added it.
+// responses.go). RegisterTools marshals the returned schema onto
+// mcp.Tool.RawOutputSchema so it participates in MCP tool discovery.
+// Phase F op 14 added the interface method; the mcp-go v0.56.0 upgrade
+// wired it into the registration path.
 type Tool interface {
 	Name() string
 	Description() string

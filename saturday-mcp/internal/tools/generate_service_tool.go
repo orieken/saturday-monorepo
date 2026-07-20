@@ -82,7 +82,7 @@ func (t *GenerateServiceTool) OutputSchema() *jsonschema.Schema {
 func (t *GenerateServiceTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling generate_service request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 
 	writeToFile, _ := args["writeToFile"].(bool)
 	outputPath, _ := args["outputPath"].(string)

@@ -10,11 +10,9 @@ import "github.com/invopop/jsonschema"
 // against a real Go type instead of an untyped map. See mcp-add-plan
 // Phase F op 14.
 //
-// mcp-go v0.8.0's mcp.Tool struct does not currently carry an
-// outputSchema field, so nothing wires these schemas into the MCP
-// advertisement automatically. They exist in code today as a declarative
-// contract — future mcp-go upgrades (or a middleware that inspects
-// OutputSchema()) can surface them.
+// Schemas are marshaled onto mcp.Tool.RawOutputSchema by RegisterTools,
+// so they participate in MCP tool discovery. Response shapes stay in
+// lockstep with the schema because they are the same Go types.
 
 // GenerationResult is the response returned by every code-generation
 // tool: the six Saturday scaffold generators and migrate_code. filePath

@@ -45,7 +45,7 @@ func (t *AnalyzePerformanceTool) OutputSchema() *jsonschema.Schema {
 func (t *AnalyzePerformanceTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling analyze_performance request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	projectPath, _ := args["projectPath"].(string)
 
 	if projectPath == "" {

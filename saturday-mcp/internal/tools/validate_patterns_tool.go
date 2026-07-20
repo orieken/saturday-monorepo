@@ -57,7 +57,7 @@ func (t *ValidatePatternsTool) OutputSchema() *jsonschema.Schema {
 func (t *ValidatePatternsTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling validate_patterns request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	projectPath, _ := args["projectPath"].(string)
 
 	if projectPath == "" {

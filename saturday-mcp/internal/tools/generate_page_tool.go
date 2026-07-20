@@ -85,7 +85,7 @@ func (t *GeneratePageTool) OutputSchema() *jsonschema.Schema {
 func (t *GeneratePageTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling generate_page request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 
 	writeToFile, _ := args["writeToFile"].(bool)
 	outputPath, _ := args["outputPath"].(string)

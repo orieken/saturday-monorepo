@@ -76,7 +76,7 @@ func (w *RunTestsWorkflow) OutputSchema() *jsonschema.Schema {
 func (w *RunTestsWorkflow) Run(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	w.logger.Info("Handling run_tests request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	var req models.TestExecutionRequest
 	argsJSON, err := json.Marshal(args)
 	if err != nil {

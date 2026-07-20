@@ -93,7 +93,7 @@ func (t *GenerateSiteTool) OutputSchema() *jsonschema.Schema {
 func (t *GenerateSiteTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling generate_site request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 
 	writeToFile, _ := args["writeToFile"].(bool)
 	outputPath, _ := args["outputPath"].(string)

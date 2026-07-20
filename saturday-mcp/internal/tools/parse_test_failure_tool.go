@@ -52,7 +52,7 @@ func (t *ParseTestFailureTool) OutputSchema() *jsonschema.Schema {
 func (t *ParseTestFailureTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling parse_test_failure request")
 
-	output, ok := request.Params.Arguments["output"].(string)
+	output, ok := request.GetArguments()["output"].(string)
 	if !ok || output == "" {
 		return mcp.NewToolResultError("output argument is required"), nil
 	}

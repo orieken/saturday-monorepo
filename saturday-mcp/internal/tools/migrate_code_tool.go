@@ -61,7 +61,7 @@ func (t *MigrateCodeTool) OutputSchema() *jsonschema.Schema {
 func (t *MigrateCodeTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling migrate_code request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 
 	sourceCode, _ := args["sourceCode"].(string)
 	migrationType, ok := args["type"].(string)

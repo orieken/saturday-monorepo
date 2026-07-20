@@ -71,7 +71,7 @@ func (w *PrioritizeTestsWorkflow) OutputSchema() *jsonschema.Schema {
 func (w *PrioritizeTestsWorkflow) Run(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	w.logger.Info("Handling prioritize_tests request")
 
-	metricsFile, ok := request.Params.Arguments["metricsFile"].(string)
+	metricsFile, ok := request.GetArguments()["metricsFile"].(string)
 	if !ok || metricsFile == "" {
 		return mcp.NewToolResultError("metricsFile argument is required"), nil
 	}
@@ -91,7 +91,7 @@ func (w *PrioritizeTestsWorkflow) Run(ctx context.Context, request mcp.CallToolR
 	priorities := w.usageAnalyzer.Analyze(metrics)
 
 	// 3. (Optional) Match with Codebase
-	// projectPath, hasProject := request.Params.Arguments["projectPath"].(string)
+	// projectPath, hasProject := request.GetArguments()["projectPath"].(string)
 	// if hasProject && projectPath != "" {
 	//    files, _ := listFiles(projectPath)
 	//    priorities = w.usageAnalyzer.MatchWithCodebase(priorities, files)

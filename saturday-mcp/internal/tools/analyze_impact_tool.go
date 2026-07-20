@@ -54,7 +54,7 @@ func (t *AnalyzeImpactTool) OutputSchema() *jsonschema.Schema {
 func (t *AnalyzeImpactTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling analyze_impact request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	projectPath, _ := args["projectPath"].(string)
 	targetFile, _ := args["targetFile"].(string)
 

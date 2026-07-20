@@ -44,7 +44,7 @@ func (t *SuggestImprovementsTool) OutputSchema() *jsonschema.Schema {
 func (t *SuggestImprovementsTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling suggest_improvements request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	projectPath, _ := args["projectPath"].(string)
 
 	if projectPath == "" {

@@ -68,7 +68,7 @@ func (t *GenerateDocumentationTool) OutputSchema() *jsonschema.Schema {
 func (t *GenerateDocumentationTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling generate_documentation request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	projectPath, _ := args["projectPath"].(string)
 	outputPath, _ := args["outputPath"].(string)
 

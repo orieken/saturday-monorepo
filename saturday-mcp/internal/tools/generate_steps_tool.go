@@ -83,7 +83,7 @@ func (t *GenerateStepsTool) OutputSchema() *jsonschema.Schema {
 func (t *GenerateStepsTool) Execute(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	t.logger.Info("Handling generate_steps request")
 
-	args := request.Params.Arguments
+	args := request.GetArguments()
 	writeToFile, _ := args["writeToFile"].(bool)
 	outputPath, _ := args["outputPath"].(string)
 

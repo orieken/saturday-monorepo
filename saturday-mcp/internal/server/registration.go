@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -23,19 +24,27 @@ func (h *Handler) Tools() []domain.Tool {
 }
 
 // RegisterTools registers every tool returned by h.Tools() with the MCP
-// server. mcp-go v0.8.0's mcp.Tool struct does not accept an output
-// schema field, so tool.OutputSchema() is not passed here yet — see
-// domain.Tool doc for the forward-looking rationale.
+// server. Each tool's declarative OutputSchema (produced by invopop/jsonschema
+// against the tool's typed response struct) is marshaled onto the MCP
+// Tool.RawOutputSchema field so clients can discover the response shape.
 func (h *Handler) RegisterTools(s *server.MCPServer) error {
 	h.logger.Info("Registering tools")
 
 	for _, t := range h.Tools() {
 		tool := t
-		s.AddTool(mcp.Tool{
+		mcpTool := mcp.Tool{
 			Name:        tool.Name(),
 			Description: tool.Description(),
 			InputSchema: tool.InputSchema(),
-		}, tool.Execute)
+		}
+		if outSchema := tool.OutputSchema(); outSchema != nil {
+			if raw, err := json.Marshal(outSchema); err == nil {
+				mcpTool.RawOutputSchema = raw
+			} else {
+				h.logger.Warn("Failed to marshal output schema", "tool", tool.Name(), "error", err)
+			}
+		}
+		s.AddTool(mcpTool, tool.Execute)
 	}
 
 	h.logger.Info("Tools registered successfully")
@@ -48,7 +57,7 @@ func (h *Handler) RegisterResources(s *server.MCPServer) error {
 	h.logger.Info("Registering resources")
 
 	for _, r := range h.resourceProvider.List() {
-		s.AddResource(r, func(ctx context.Context, request mcp.ReadResourceRequest) ([]interface{}, error) {
+		s.AddResource(r, func(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 			return h.resourceProvider.Read(request.Params.URI)
 		})
 	}

@@ -50,7 +50,7 @@ func (p *Provider) List() []mcp.Resource {
 }
 
 // Read returns the content of a specific resource
-func (p *Provider) Read(uri string) ([]interface{}, error) {
+func (p *Provider) Read(uri string) ([]mcp.ResourceContents, error) {
 	// Parse URI
 	// Format: saturday://templates/{name}
 	if !strings.HasPrefix(uri, ResourceScheme+"://") {
@@ -73,13 +73,11 @@ func (p *Provider) Read(uri string) ([]interface{}, error) {
 			return nil, fmt.Errorf("failed to load template %s: %w", name, err)
 		}
 
-		return []interface{}{
+		return []mcp.ResourceContents{
 			mcp.TextResourceContents{
-				ResourceContents: mcp.ResourceContents{
-					URI:      uri,
-					MIMEType: "text/plain",
-				},
-				Text: string(content),
+				URI:      uri,
+				MIMEType: "text/plain",
+				Text:     string(content),
 			},
 		}, nil
 	}
