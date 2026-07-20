@@ -3,20 +3,20 @@ package analyzers
 import (
 	"testing"
 
-	"github.com/orieken/saturday-mcp/internal/observability"
+	"github.com/orieken/saturday-mcp/internal/domain/metrics"
 )
 
 func TestUsageAnalyzer_Analyze(t *testing.T) {
 	analyzer := NewUsageAnalyzer(nil)
 
-	metrics := []observability.PageMetric{
+	metricsData := []metrics.PageMetric{
 		{Path: "/login", Visits: 1000, ErrorRate: 0.0},        // Score: 1000
 		{Path: "/checkout", Visits: 500, ErrorRate: 5.0},      // Score: 525
 		{Path: "/home", Visits: 5000, ErrorRate: 0.1},         // Score: 5005
 		{Path: "/broken", Visits: 100, ErrorRate: 50.0},       // Score: 150
 	}
 
-	priorities := analyzer.Analyze(metrics)
+	priorities := analyzer.Analyze(metricsData)
 
 	if len(priorities) != 4 {
 		t.Fatalf("Expected 4 results, got %d", len(priorities))

@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/orieken/saturday-mcp/internal/adapters/filesystem"
+	"github.com/orieken/saturday-mcp/internal/adapters/metricsfile"
 	"github.com/orieken/saturday-mcp/internal/adapters/testrunner"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/domain"
@@ -45,6 +46,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 	usageAnalyzer := analyzers.NewUsageAnalyzer(logger)
 	testRunner := testrunner.NewExecRunner(logger)
 	fs := filesystem.NewOSFileSystem()
+	metricsReader := metricsfile.NewFileReader()
 
 	return []domain.Tool{
 		tools.NewGenerateSiteTool(logger, siteGen),
@@ -62,7 +64,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewAnalyzeImpactTool(logger, graphAnalyzer),
 		tools.NewWorkflowTool(workflows.NewRunTestsWorkflow(logger, testRunner)),
 		tools.NewParseTestFailureTool(logger, logAnalyzer),
-		tools.NewWorkflowTool(workflows.NewPrioritizeTestsWorkflow(logger, usageAnalyzer)),
+		tools.NewWorkflowTool(workflows.NewPrioritizeTestsWorkflow(logger, usageAnalyzer, metricsReader)),
 	}
 }
 

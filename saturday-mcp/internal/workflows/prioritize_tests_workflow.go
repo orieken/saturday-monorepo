@@ -8,31 +8,31 @@ import (
 	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
+	"github.com/orieken/saturday-mcp/internal/domain/metrics"
 	"github.com/orieken/saturday-mcp/internal/logging"
-	"github.com/orieken/saturday-mcp/internal/observability"
 )
 
 // PrioritizeTestsWorkflow orchestrates a metrics-driven ranking of test
-// coverage priorities: load PageMetric records from a JSON file, run them
-// through UsageAnalyzer, and serialize the result for the MCP client.
-// Extracted from server.Handler.handlePrioritizeTests per mcp-add-plan
-// Phase D.
+// coverage priorities: load PageMetric records via a metrics.Reader,
+// run them through UsageAnalyzer, and serialize the result for the MCP
+// client. Extracted from server.Handler.handlePrioritizeTests per
+// mcp-add-plan Phase D and adapter-isolated in Phase E op 13.
 //
-// Milestone 2 concern: Run still calls observability.NewFileMetricsProvider
-// inline. That is the "direct instantiation of infrastructure" concern
-// architecture-guardrails.md flags — Phase E will introduce a
-// domain.MetricsReader interface, inject it via the constructor, and let
-// the wiring layer choose the file-backed adapter. Keeping the direct call
-// here preserves the exact behavior server.Handler had, so Milestone 1
-// stays behavior-neutral.
+// The reader collaborator is the domain metrics.Reader interface, not a
+// concrete file adapter — the workflow no longer imports adapters,
+// closing the "direct instantiation of infrastructure" gap the plan
+// flagged (Pattern Conformance row #2). The file path per invocation
+// still travels through the tool input; the Reader interface takes it
+// as a per-call arg so one Reader instance serves many requests.
 type PrioritizeTestsWorkflow struct {
 	logger        *logging.Logger
 	usageAnalyzer *analyzers.UsageAnalyzer
+	reader        metrics.Reader
 }
 
 // NewPrioritizeTestsWorkflow wires the workflow with its collaborators.
-func NewPrioritizeTestsWorkflow(logger *logging.Logger, usageAnalyzer *analyzers.UsageAnalyzer) *PrioritizeTestsWorkflow {
-	return &PrioritizeTestsWorkflow{logger: logger, usageAnalyzer: usageAnalyzer}
+func NewPrioritizeTestsWorkflow(logger *logging.Logger, usageAnalyzer *analyzers.UsageAnalyzer, reader metrics.Reader) *PrioritizeTestsWorkflow {
+	return &PrioritizeTestsWorkflow{logger: logger, usageAnalyzer: usageAnalyzer, reader: reader}
 }
 
 // Name is the MCP tool identifier the WorkflowTool adapter advertises.
@@ -76,19 +76,17 @@ func (w *PrioritizeTestsWorkflow) Run(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError("metricsFile argument is required"), nil
 	}
 
-	// 1. Load Metrics
-	// Phase E TODO: replace this direct construction with an injected
-	// domain.MetricsReader; today it matches the pre-extraction handler
-	// exactly so no behavior changes.
-	provider := observability.NewFileMetricsProvider(metricsFile)
-	metrics, err := provider.GetPageMetrics()
+	// 1. Load Metrics via the injected domain.Reader — no infrastructure
+	// import inside this workflow. Phase E op 13 closed the direct-adapter
+	// construction gap the prior code had.
+	pageMetrics, err := w.reader.ReadPageMetrics(metricsFile)
 	if err != nil {
 		w.logger.Error("Failed to read metrics", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to load metrics: %v", err)), nil
 	}
 
 	// 2. Analyze
-	priorities := w.usageAnalyzer.Analyze(metrics)
+	priorities := w.usageAnalyzer.Analyze(pageMetrics)
 
 	// 3. (Optional) Match with Codebase
 	// projectPath, hasProject := request.GetArguments()["projectPath"].(string)

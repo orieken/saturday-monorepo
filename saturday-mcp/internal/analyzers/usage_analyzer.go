@@ -3,8 +3,8 @@ package analyzers
 import (
 	"sort"
 
+	"github.com/orieken/saturday-mcp/internal/domain/metrics"
 	"github.com/orieken/saturday-mcp/internal/logging"
-	"github.com/orieken/saturday-mcp/internal/observability"
 )
 
 // UsageAnalyzer ranks pages based on production metrics
@@ -28,7 +28,7 @@ func NewUsageAnalyzer(logger *logging.Logger) *UsageAnalyzer {
 }
 
 // Analyze ranks pages from raw metrics
-func (a *UsageAnalyzer) Analyze(metrics []observability.PageMetric) []PagePriority {
+func (a *UsageAnalyzer) Analyze(metricsData []metrics.PageMetric) []PagePriority {
 	var priorities []PagePriority
 
 	// Normalize data for scoring
@@ -37,7 +37,7 @@ func (a *UsageAnalyzer) Analyze(metrics []observability.PageMetric) []PagePriori
 	
 	// Find max visits for normalization (optional, but let's keep it simple first)
 	
-	for _, m := range metrics {
+	for _, m := range metricsData {
 		// Example scoring logic
 		// Visits: 1000, ErrorRate: 0.05 (5%) -> Score: 1000 * 1.05 = 1050
 		score := float64(m.Visits) * (1.0 + (m.ErrorRate / 100.0))
