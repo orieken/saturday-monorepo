@@ -245,3 +245,67 @@ Realistic count: ~25 ops, not 12. Breakdown:
 - Phase F: 2 ops (one for schema builders, one for output schemas across all tools)
 - Phase I: 2 ops
 Briefing's `<n>/<12>` was a placeholder; actual denominator is ~25.
+
+---
+
+## Retrofit Complete
+
+Closed out 2026-07-20. All 25 plan ops shipped plus a mcp-go SDK upgrade
+that unblocked Phase F's OutputSchema goal. 62 commits total from
+`75f4bba` (Phase A op 1) through `26c961c` (Phase J Batch 4 final op).
+
+### What shipped
+
+| Phase | Ops | Notes |
+|---|---|---|
+| A — Dead code cleanup | 2 | Root `main.go` deleted; `handleListTools` removed (4-satellite blast radius) |
+| B — Trinity interfaces | 3 | `domain.Tool`, `domain.Persona`, `domain.Workflow` |
+| C — Tool extraction | 14 | 14 tools extracted from the 880-LOC `handler.go` God Object into `internal/tools/*_tool.go` |
+| D — Workflow extraction | 3 | `RunTestsWorkflow` + `PrioritizeTestsWorkflow` + `WorkflowTool` adapter |
+| E — Adapter isolation | 3 | `TestRunner`, `FileWriter` interfaces + adapters; `observability/` split into `domain/metrics/` + `adapters/metricsfile/` |
+| F — Schema-first | 2 | Shared input-schema builders + typed output schemas via `invopop/jsonschema` |
+| G — OTel observability | 4 | `domain.Tracer` interface + OTel/noop adapters + tracing middleware + entrypoint wiring |
+| H — Timeouts | 1 | 300s default with per-request override on `run_tests` |
+| I — Slim entrypoint | 2 | `registration.go` extracted; `Handler` reduced to functional-option composite |
+| J — Test backfill | 20 | 7 Part 1 (adapters/middleware/workflows) + 13 Part 2 (tools, in 4 batches of 5/2/4/2) |
+| mcp-go upgrade | 1 | v0.8.0 → v0.56.0; wired `OutputSchema` into `RawOutputSchema` at registration; Go directive 1.23.2 → 1.25.5 |
+
+### Structural impact
+
+- `internal/server/handler.go`: **880 → 51 LOC** (94% reduction).
+- `internal/server/` gained `registration.go` (80 LOC) and `tracing_middleware.go`; adding a tool is now: drop a file in `internal/tools/`, append to the provider slice — no server-package edit.
+- New packages: `internal/domain/{tool,persona,workflow,tracer,testrunner,filesystem,metrics}.go`, `internal/tools/` (15 tool types + shared `schemas.go`/`responses.go`/`testfixtures_test.go`), `internal/workflows/`, `internal/adapters/{testrunner,filesystem,metricsfile,otel}/`.
+- Deleted packages: `internal/executor/` (moved to `adapters/testrunner/`), `internal/observability/` (renamed to `internal/domain/metrics/`).
+
+### Test coverage (per `go test -cover ./...`)
+
+| Package | Before | After |
+|---|---|---|
+| `internal/adapters/testrunner` | 86.1% (executor parity test) | 97.2% |
+| `internal/adapters/filesystem` | — | 100.0% |
+| `internal/adapters/metricsfile` | — | 100.0% |
+| `internal/adapters/otel` | — | 94.9% |
+| `internal/server` | 34.0% | 45.4% (tracing_middleware itself 100%) |
+| `internal/workflows` | — | 87.1% |
+| `internal/tools` | — | 86.7% |
+
+### Design deviations from plan (all justified in commit bodies)
+
+- **E3 rename → split**: `observability/` became TWO packages (`domain/metrics/` + `adapters/metricsfile/`) rather than a flat rename — cleaner Clean Arch split; `MetricsProvider` also renamed to `Reader` and made stateless for constructor injection.
+- **G1 EndSpan signature extended mid-phase** to accept variadic post-hoc attributes — needed for tool.success/tool.error_class recording in G3.
+- **Handler API uses functional-option pattern** (`NewHandler(logger, WithTracer(...))`) — preserves 20+ existing e2e test call sites unchanged and keeps the noopTracer default private to the server package (avoids server→adapters/otel inward arrow).
+- **Phase C wrappers kept as thin delegations** instead of deleted — preserves `e2e_test.go` as the response-shape regression net through the whole refactor.
+
+### Known gaps (not blockers)
+
+- `internal/tools/workflow_tool.go` at 0% coverage — the shim wrapping workflows as MCP tools. Not in Phase J's tool-backfill scope; workflows themselves are covered via `internal/workflows/` tests.
+- `internal/tools/parse_test_failure_tool.go` at 78.9% — honest ceiling. `TestLogAnalyzer.Parse` cannot error (single `return failures, nil`), and the tool takes a concrete type rather than an interface, so the defensive-branch statements are unreachable without source modification.
+- `internal/server/handler.go` and `registration.go` still only exercised via `e2e_test.go` (indirect). Direct unit tests would need a test double for `*server.MCPServer` — deferred.
+
+### Follow-ups worth doing separately
+
+1. **ADR-001** for `invopop/jsonschema` adoption (Phase F design decision, out-of-scope for this retrofit).
+2. **ADR-002** for OTel-gRPC exporter default (Phase G design decision).
+3. **Milestone 2 concerns that never entered scope**: none — the plan called out E/G/H/J only, all shipped.
+4. **`workflow_tool.go` coverage** could be raised by 2 small tests (happy path + error propagation from `Workflow.Run`).
+
