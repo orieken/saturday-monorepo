@@ -29,5 +29,5 @@ func NewNoopTracer() *NoopTracer {
 // Callers still defer end(err) unconditionally; the shape matches the
 // real tracer so switching between them is invisible to call sites.
 func (t *NoopTracer) StartSpan(ctx context.Context, _ string, _ ...domain.SpanAttribute) (context.Context, domain.EndSpan) {
-	return ctx, func(error) {}
+	return ctx, func(error, ...domain.SpanAttribute) {}
 }

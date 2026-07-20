@@ -104,7 +104,10 @@ func (t *OTelTracer) Shutdown(ctx context.Context) error {
 func (t *OTelTracer) StartSpan(ctx context.Context, name string, attrs ...domain.SpanAttribute) (context.Context, domain.EndSpan) {
 	ctx, span := t.tracer.Start(ctx, name, oteltrace.WithAttributes(spanAttributes(attrs)...))
 	start := time.Now()
-	return ctx, func(err error) {
+	return ctx, func(err error, extraAttrs ...domain.SpanAttribute) {
+		if len(extraAttrs) > 0 {
+			span.SetAttributes(spanAttributes(extraAttrs)...)
+		}
 		span.SetAttributes(attribute.Int64("duration_ms", time.Since(start).Milliseconds()))
 		if err != nil {
 			span.RecordError(err)

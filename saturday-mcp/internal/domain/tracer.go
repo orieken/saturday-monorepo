@@ -37,8 +37,11 @@ func Bool(key string, value bool) SpanAttribute {
 // EndSpan closes a span opened by Tracer.StartSpan. Callers use it via
 // `ctx, end := tracer.StartSpan(...); defer end(err)` — passing the
 // terminal error (nil on success) lets the adapter record it on the
-// span before finishing. Idempotent: calling twice is a no-op.
-type EndSpan func(err error)
+// span before finishing. Extra attributes discovered during the span's
+// life (tool.success, tool.error_class, per-step outcome) can be
+// attached at close time via the variadic attrs. Idempotent: calling
+// twice is a no-op.
+type EndSpan func(err error, extraAttrs ...SpanAttribute)
 
 // Tracer is the domain seam for emitting spans. All span emission goes
 // through this interface; no code outside internal/adapters/otel/ ever

@@ -27,6 +27,11 @@ func (h *Handler) Tools() []domain.Tool {
 // server. Each tool's declarative OutputSchema (produced by invopop/jsonschema
 // against the tool's typed response struct) is marshaled onto the MCP
 // Tool.RawOutputSchema field so clients can discover the response shape.
+//
+// Every tool's Execute is wrapped in withTracing before registration —
+// no per-tool Execute method emits spans of its own. Zero span calls
+// leak into the domain layer this way; the middleware is the only
+// span-boundary source for tool invocations.
 func (h *Handler) RegisterTools(s *server.MCPServer) error {
 	h.logger.Info("Registering tools")
 
@@ -44,7 +49,7 @@ func (h *Handler) RegisterTools(s *server.MCPServer) error {
 				h.logger.Warn("Failed to marshal output schema", "tool", tool.Name(), "error", err)
 			}
 		}
-		s.AddTool(mcpTool, tool.Execute)
+		s.AddTool(mcpTool, withTracing(h.tracer, tool.Name(), tool.Execute))
 	}
 
 	h.logger.Info("Tools registered successfully")
