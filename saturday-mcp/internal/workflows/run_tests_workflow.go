@@ -11,29 +11,30 @@ import (
 
 	"github.com/invopop/jsonschema"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/orieken/saturday-mcp/internal/executor"
+	"github.com/orieken/saturday-mcp/internal/domain"
 	"github.com/orieken/saturday-mcp/internal/logging"
 	"github.com/orieken/saturday-mcp/internal/models"
 )
 
 // RunTestsWorkflow orchestrates a full test-execution pass: parse the tool
-// request into a TestExecutionRequest, delegate to executor.TestExecutor,
+// request into a TestExecutionRequest, delegate to a domain.TestRunner,
 // then serialize the result for the MCP client. Behavior is verbatim from
 // server.Handler.handleRunTests so the e2e_test.go regression surface
 // continues to pass.
 //
-// Milestone 2 (Phase E) will introduce a domain.TestRunner interface and
-// swap the concrete *executor.TestExecutor collaborator for it, along with
-// the context timeout Phase H requires. This file deliberately keeps the
-// concrete collaborator today so the Milestone 1 diff stays behavior-only.
+// The runner collaborator is the domain.TestRunner interface, not the
+// concrete os/exec adapter. Phase E op 11 introduced this seam so the
+// workflow no longer imports internal/executor (or its Phase E successor
+// internal/adapters/testrunner) — and so unit tests can inject a fake
+// runner. Timeout policy is applied inside the runner's context.
 type RunTestsWorkflow struct {
-	logger       *logging.Logger
-	testExecutor *executor.TestExecutor
+	logger *logging.Logger
+	runner domain.TestRunner
 }
 
 // NewRunTestsWorkflow wires the workflow with its collaborators.
-func NewRunTestsWorkflow(logger *logging.Logger, testExecutor *executor.TestExecutor) *RunTestsWorkflow {
-	return &RunTestsWorkflow{logger: logger, testExecutor: testExecutor}
+func NewRunTestsWorkflow(logger *logging.Logger, runner domain.TestRunner) *RunTestsWorkflow {
+	return &RunTestsWorkflow{logger: logger, runner: runner}
 }
 
 // Name is the MCP tool identifier the WorkflowTool adapter advertises.
@@ -93,7 +94,7 @@ func (w *RunTestsWorkflow) Run(ctx context.Context, request mcp.CallToolRequest)
 		return mcp.NewToolResultError("projectPath is required"), nil
 	}
 
-	result, err := w.testExecutor.Run(req)
+	result, err := w.runner.Run(ctx, req)
 	if err != nil {
 		w.logger.Error("Test execution failed", "error", err)
 		return mcp.NewToolResultError(fmt.Sprintf("Test execution failed: %v", err)), nil

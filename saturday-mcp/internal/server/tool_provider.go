@@ -1,9 +1,9 @@
 package server
 
 import (
+	"github.com/orieken/saturday-mcp/internal/adapters/testrunner"
 	"github.com/orieken/saturday-mcp/internal/analyzers"
 	"github.com/orieken/saturday-mcp/internal/domain"
-	"github.com/orieken/saturday-mcp/internal/executor"
 	"github.com/orieken/saturday-mcp/internal/generators"
 	"github.com/orieken/saturday-mcp/internal/logging"
 	"github.com/orieken/saturday-mcp/internal/templates"
@@ -42,7 +42,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 	graphAnalyzer := analyzers.NewGraphAnalyzer(logger)
 	logAnalyzer := analyzers.NewTestLogAnalyzer(logger)
 	usageAnalyzer := analyzers.NewUsageAnalyzer(logger)
-	testExecutor := executor.NewTestExecutor(logger)
+	testRunner := testrunner.NewExecRunner(logger)
 
 	return []domain.Tool{
 		tools.NewGenerateSiteTool(logger, siteGen),
@@ -58,7 +58,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewValidatePatternsTool(logger, patternValidator),
 		tools.NewSuggestImprovementsTool(logger, improvementAnalyzer),
 		tools.NewAnalyzeImpactTool(logger, graphAnalyzer),
-		tools.NewWorkflowTool(workflows.NewRunTestsWorkflow(logger, testExecutor)),
+		tools.NewWorkflowTool(workflows.NewRunTestsWorkflow(logger, testRunner)),
 		tools.NewParseTestFailureTool(logger, logAnalyzer),
 		tools.NewWorkflowTool(workflows.NewPrioritizeTestsWorkflow(logger, usageAnalyzer)),
 	}

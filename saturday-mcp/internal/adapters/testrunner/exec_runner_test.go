@@ -1,6 +1,7 @@
-package executor
+package testrunner
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -8,17 +9,16 @@ import (
 	"github.com/orieken/saturday-mcp/internal/models"
 )
 
-func TestTestExecutor_Run(t *testing.T) {
+func TestExecRunner_Run(t *testing.T) {
 	logger := logging.NewLogger(os.Stderr)
-	executor := NewTestExecutor(logger)
+	runner := NewExecRunner(logger)
 
-	// Test with a simple echo command to simulate success
 	req := models.TestExecutionRequest{
 		ProjectPath: ".",
 		Command:     "echo 'Test Passed'",
 	}
 
-	result, err := executor.Run(req)
+	result, err := runner.Run(context.Background(), req)
 	if err != nil {
 		t.Fatalf("Run failed: %v", err)
 	}
@@ -31,13 +31,12 @@ func TestTestExecutor_Run(t *testing.T) {
 		t.Error("Expected output")
 	}
 
-	// Test with a failing command
 	reqFail := models.TestExecutionRequest{
 		ProjectPath: ".",
-		Command:     "false", // returns exit code 1
+		Command:     "false",
 	}
 
-	resultFail, _ := executor.Run(reqFail)
+	resultFail, _ := runner.Run(context.Background(), reqFail)
 	if resultFail.Success {
 		t.Error("Expected failure for false command")
 	}
