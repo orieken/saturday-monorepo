@@ -1,37 +1,86 @@
 # Saturday MCP Server
 
-A Model Context Protocol (MCP) server for the Saturday testing framework that provides code generation, analysis, and validation tools.
+A Model Context Protocol (MCP) server for the Saturday testing framework that provides code
+generation, analysis, and validation tools.
 
 ## Overview
 
-The Saturday MCP Server enables AI assistants (like Claude) to generate and analyze Saturday framework code through a standardized protocol. It provides tools for:
+The Saturday MCP Server enables AI assistants (like Claude) to generate and analyze Saturday
+framework code through a standardized protocol. It exposes three kinds of MCP capabilities:
 
-- **Code Generation**: Sites, Pages, Flows, Elements, Services, Step Definitions
-- **Analysis**: Framework structure, pattern compliance, metrics
-- **Validation**: Schema validation, pattern validation, naming conventions
+- **Tools** — single-shot operations (generate a page, validate patterns, analyze impact)
+- **Workflows** — multi-step orchestrations exposed as tools (run tests, prioritize tests)
+- **Personas** — MCP prompts that inject Saturday expertise into the LLM (`saturday_sme`,
+  `migrate_test`, `self_heal_test`, …)
 
-### 🎯 Platform Support
+### Platform Support
 
-**Works with multiple IDEs and AI assistants:**
-- ✅ **Claude Desktop** (recommended)
-- ✅ **VS Code** (with GitHub Copilot, v1.102+)
-- ✅ **Cursor IDE**
-- ✅ **JetBrains IDEs** (IntelliJ, PyCharm, WebStorm, etc. - v2025.2+)
-- ⚠️ **Antigravity** (likely supported)
-- ✅ **Windsurf**
+Works with multiple IDEs and AI assistants:
+- Claude Desktop (recommended)
+- VS Code (with GitHub Copilot, v1.102+)
+- Cursor IDE
+- JetBrains IDEs (IntelliJ, PyCharm, WebStorm — v2025.2+)
+- Windsurf
+- Antigravity (likely supported)
 
-📖 **[Full IDE Compatibility Guide](./docs/IDE_COMPATIBILITY.md)**
+See [docs/IDE_COMPATIBILITY.md](./docs/IDE_COMPATIBILITY.md) for the full compatibility matrix.
+
+## Architecture
+
+The server follows Clean Architecture with a three-part domain vocabulary — the "trinity":
+**Tool**, **Persona**, **Workflow** — defined as interfaces in `internal/domain/`. Every
+external dependency (filesystem, subprocess execution, metrics file reader, OTel exporter) sits
+behind a domain interface with a concrete implementation under `internal/adapters/`.
+
+```
+cmd/saturday-mcp/main.go       # entrypoint: OTel setup, handler wiring, stdio serve
+internal/domain/               # Tool / Persona / Workflow / Tracer / TestRunner / FileSystem interfaces
+internal/tools/                # one file per MCP tool (implements domain.Tool)
+internal/workflows/            # multi-step orchestrations (implements domain.Workflow)
+internal/adapters/             # concrete implementations behind domain interfaces
+  ├─ testrunner/               # os/exec wrapper with context timeouts
+  ├─ filesystem/               # os-backed FileSystem
+  ├─ metricsfile/              # metrics.Reader implementation over JSON files
+  └─ otel/                     # OTel-gRPC tracer + Noop tracer
+internal/server/               # MCP protocol layer — registration, tracing middleware, thin Handler composite
+internal/generators/           # code generators (Site, Page, Flow, Steps, Element, Service, Migration, Documentation)
+internal/analyzers/            # framework/pattern/impact/performance/usage analyzers
+internal/templates/            # embedded template registry + processor + cache
+internal/prompts/              # persona provider (MCP prompt implementations)
+internal/resources/            # MCP resource provider (exposes templates)
+internal/validators/           # request schema validation
+internal/models/               # request/response models + JSON schemas
+```
+
+Every tool invocation is wrapped in an OTel span by `internal/server/tracing_middleware.go` at
+registration time — no tool's `Execute` emits spans of its own, keeping the domain layer free of
+observability coupling.
+
+Adding a new tool is: drop a file under `internal/tools/` that implements `domain.Tool`, then
+append it to the slice in `internal/server/tool_provider.go`. Nothing else changes.
+
+For the full walkthrough — layer diagram, extension points, cross-references to ADRs — see
+[docs/architecture.md](./docs/architecture.md). For the retrofit that produced this shape, see
+[mcp-add-plan.md](./mcp-add-plan.md). For key design decisions, see
+[docs/adrs/ADR-001](./docs/adrs/ADR-001-use-invopop-jsonschema-tool-output-schemas.md) (output
+schema generation) and
+[docs/adrs/ADR-002](./docs/adrs/ADR-002-default-otlp-grpc-otel-trace-export.md) (OTel export
+default).
 
 ## Installation
 
 ### Option 1: Download Pre-compiled Binaries (Recommended)
-You can download the pre-compiled `saturday-mcp` and `saturday` CLI binaries for macOS, Linux, and Windows from the [GitHub Releases page](https://github.com/orieken/saturday-mcp/releases).
+
+Download the pre-compiled `saturday-mcp` and `saturday` CLI binaries for macOS, Linux, and
+Windows from the [GitHub Releases page](https://github.com/orieken/saturday-mcp/releases).
 
 1. Download the archive for your operating system and architecture.
-2. Extract the archive and move the binary to a location in your system `$PATH` (e.g., `/usr/local/bin`).
+2. Extract the archive and move the binary to a location in your system `$PATH` (e.g.,
+   `/usr/local/bin`).
 
 ### Option 2: Build from Source
-If you have Go 1.22+ installed, you can build the binaries from source:
+
+If you have Go 1.25+ installed, you can build the binaries from source:
 
 ```bash
 cd saturday-mcp
@@ -43,20 +92,37 @@ go build -o bin/saturday ./cmd/cli
 ## Running the Server
 
 If installed via binaries (Option 1):
+
 ```bash
 saturday-mcp
 ```
 
 If built from source (Option 2):
+
 ```bash
 ./bin/saturday-mcp
 ```
 
-The server will start and listen for MCP protocol messages on stdin/stdout.
+The server listens for MCP protocol messages on stdin/stdout.
+
+## Configuration
+
+The server takes zero required configuration and runs fully offline by default. Two optional env
+vars control OpenTelemetry trace export:
+
+| Env var                        | Effect                                                            | Default  |
+|--------------------------------|-------------------------------------------------------------------|----------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | Host:port of an OTLP-gRPC collector. Unset ⇒ no-op tracer.        | (unset)  |
+| `OTEL_EXPORTER_OTLP_INSECURE`  | `true`/`1`/`yes`/`on` enables plaintext gRPC (local collectors).  | `false`  |
+
+If exporter construction fails at startup (e.g. malformed endpoint), the server logs the error
+and falls back to the no-op tracer rather than refusing to start. See
+[ADR-002](./docs/adrs/ADR-002-default-otlp-grpc-otel-trace-export.md) for the rationale.
 
 ## CLI Usage
 
-The Saturday CLI provides command-line access to all MCP server functionality without requiring an MCP client.
+The Saturday CLI provides command-line access to all MCP server functionality without requiring
+an MCP client.
 
 ### Installation
 
@@ -81,94 +147,75 @@ go build -o bin/saturday ./cmd/cli
 ./bin/saturday docs ./my-project ./docs/API.md
 ```
 
-📖 **[Full CLI Documentation](./CLI.md)**
+See [CLI.md](./CLI.md) for the full CLI reference.
 
-## Development Status
+## Tool Inventory
 
-### ✅ TODO-001: Project Setup & MCP Server Bootstrap (COMPLETED)
-- [x] Go module initialization
-- [x] MCP SDK integration
-- [x] Server entry point (`cmd/saturday-mcp/main.go`)
-- [x] Logging infrastructure
-- [x] Server handler with tool registration
-- [x] Basic `list_tools` implementation
-- [x] Unit tests for logging and server components
+The server registers 16 MCP tools (14 single-step tools plus 2 workflows) alongside its
+resources and personas.
 
-### ✅ TODO-002: Template System Foundation (COMPLETED)
-- [x] Template registry with thread-safe operations
-- [x] Template loader with embedded filesystem support
-- [x] Template processor with caching
-- [x] Template cache with TTL and cleanup
-- [x] Helper functions (pascalCase, camelCase, snakeCase, kebabCase, etc.)
-- [x] Sample templates (page, site)
-- [x] Comprehensive unit tests
-- [x] Integration tests
+### Tools
 
-### ✅ TODO-003: Input Validation & Schema System (COMPLETED)
-- [x] Request models for all generation operations
-- [x] Response models for results and errors
-- [x] Validator with go-playground/validator
-- [x] Custom validation rules (validName, validSelector)
-- [x] User-friendly error messages
-- [x] JSON schemas for requests
-- [x] Comprehensive unit tests
-- [x] 56.2% test coverage
+| Name                     | Purpose                                                        |
+|--------------------------|----------------------------------------------------------------|
+| `generate_site`          | Generate a Site class with page and flow registration          |
+| `generate_page`          | Generate a Page class with element registration                |
+| `generate_flow`          | Generate a Flow class for multi-step user journeys             |
+| `generate_steps`         | Generate Cucumber step definitions from Gherkin patterns       |
+| `generate_element`       | Generate a custom Element/Component class                      |
+| `generate_service`       | Generate an API Service class                                  |
+| `migrate_code`           | Migrate legacy code (Cypress/Selenium/raw Playwright) to Saturday |
+| `analyze_framework`      | Analyze existing framework structure and patterns              |
+| `analyze_performance`    | Analyze code for performance bottlenecks                       |
+| `analyze_impact`         | Analyze the blast radius of modifying a specific file          |
+| `validate_patterns`      | Validate code against Saturday framework patterns              |
+| `suggest_improvements`   | Suggest code improvements based on Saturday best practices     |
+| `generate_documentation` | Generate markdown documentation for a project                  |
+| `parse_test_failure`     | Parse Playwright test output to identify failing files/lines   |
 
-### ✅ TODO-004: Site Generator (COMPLETED)
-- [x] SiteGenerator implementation
-- [x] Integration with template system
-- [x] Integration with validation system
-- [x] Request validation before generation
-- [x] Metadata generation
-- [x] Filename generation with kebab-case
-- [x] Comprehensive unit tests
-- [x] 83.3% test coverage
+### Workflows
 
-### ✅ TODO-004.5: MCP Server Integration (COMPLETED)
-- [x] Wire up all generators to MCP server
-- [x] Add `generate_page` tool handler
-- [x] Add `generate_flow` tool handler
-- [x] Add `generate_steps` tool handler
-- [x] JSON request/response handling
-- [x] Error handling and logging
-- [x] Tool schema definitions
-- [x] Integration with template + validation systems
-- [x] File writing support for all tools
-- [x] Comprehensive E2E integration tests
+Workflows compose multiple use-cases into a coherent pipeline and are exposed to MCP clients as
+tools via a thin `WorkflowTool` adapter (see `internal/tools/workflow_tool.go`).
 
-### 🎊 Phase 2 Complete!
-**All core code generators (Site, Page, Flow, Steps) are implemented, tested, and integrated with MCP!**
+| Name                | Purpose                                                            |
+|---------------------|--------------------------------------------------------------------|
+| `run_tests`         | Execute a test command (with configurable timeout) and capture output |
+| `prioritize_tests`  | Load usage metrics + rank test coverage needs by production usage  |
 
-### ✅ TODO-008 & 009: Framework Analyzer & Validation Tools (COMPLETED)
-- [x] Framework Analyzer (`analyze_framework`)
-- [x] Pattern Validator (`validate_patterns`)
-- [x] Improvement Suggester (`suggest_improvements`)
-- [x] Performance Analyzer (`analyze_performance`)
-- [x] Integration with MCP server handlers
-- [x] Comprehensive unit tests
+### Resources
 
-### ✅ TODO-010: Resource & Prompt Providers (COMPLETED)
-- [x] Prompt Provider (`plan_feature`, `explain_framework`)
-- [x] New Prompts (`debug_error`, `generate_gherkin`)
-- [x] Resource Provider foundation
-- [x] Comprehensive unit tests
+Templates are exposed as MCP resources under the `saturday://` scheme:
 
-### 🚀 Phase 6: The AI Agent Evolution (In Progress)
-- [x] **TODO-018: Knowledge Graph** (`analyze_impact`)
-- [x] **TODO-019: Test Execution** (`run_tests`)
-- [x] **TODO-020: Visual Intelligence** (`visual_page_object` prompt)
-- [x] **TODO-021: Observability Integration** (`prioritize_tests`)
+- `saturday://templates/site`
+- `saturday://templates/page`
+- `saturday://templates/flow`
+- `saturday://templates/steps`
 
-### 📋 Planned
-- TODO-012-017: Advanced Features (Superseded by Phase 6)
+### Personas (MCP Prompts)
 
-## Architecture & Agent Workflows
+Personas transform the LLM into a Saturday subject-matter expert for a specific workflow:
 
-The Saturday MCP Server doesn't just generate scaffolding—it exposes **Autonomous Tester Agents** when loaded into capable clients (like Claude Desktop). By combining the framework rules of this MCP with the browser-control capabilities of the standard **Playwright MCP**, AI assistants can read live DOM state to build robust tests or self-heal broken ones.
+- `saturday_sme` — Injects Saturday Framework principles (Page Objects, Fluent Flows, OTel).
+- `migrate_test` — Migrates legacy tests (Cypress/Selenium) into Saturday page objects using
+  the live DOM (via the Playwright MCP).
+- `self_heal_test` — Evaluates a failure log, inspects the DOM, and patches the testing codebase.
+- `otel_metrics_expert` — Observability architect that adds span counters to flows.
+- `plan_feature` — Helps plan the implementation of a new feature (Pages, Flows, Steps).
+- `explain_framework` — Explains Saturday's core architectural concepts.
+- `debug_error` — Analyzes test failures and suggests debugging steps.
+- `generate_gherkin` — Generates structured BDD scenarios from requirements.
+- `visual_page_object` — Generates a Page Object from a UI screenshot.
+- `implement_feature` — Orchestrates the "Autonomous QA" workflow to implement a feature end-to-end.
+
+## Agent Workflows
+
+The Saturday MCP Server doesn't just generate scaffolding — it exposes **Autonomous Tester
+Agents** when loaded into capable clients (like Claude Desktop). By combining the framework
+rules of this MCP with the browser-control capabilities of the standard **Playwright MCP**, AI
+assistants can read live DOM state to build robust tests or self-heal broken ones.
 
 ### The Self-Healing Workflow (`self_heal_test`)
-
-When a test flakes or breaks due to a UI change, the `self_heal_test` prompt orchestrates the following repair protocol:
 
 ```mermaid
 sequenceDiagram
@@ -176,7 +223,7 @@ sequenceDiagram
     participant Client as Claude Desktop
     participant SatMCP as Saturday MCP
     participant PlayMCP as Playwright MCP
-    
+
     Dev->>Client: "Test X failed with log Y"
     Client->>SatMCP: Request prompt: self_heal_test
     SatMCP-->>Client: Returns Agent Context & Protocol
@@ -192,15 +239,13 @@ sequenceDiagram
 
 ### The Migration Workflow (`migrate_test`)
 
-Transitioning from Cyress, raw Playwright, or Selenium is fully automated by the Migration Specialist agent:
-
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
     participant Client as Claude Desktop
     participant SatMCP as Saturday MCP
     participant PlayMCP as Playwright MCP
-    
+
     Dev->>Client: "Migrate this Cypress test..."
     Client->>SatMCP: Request prompt: migrate_test
     SatMCP-->>Client: Returns Saturday Architecture Rules
@@ -214,64 +259,139 @@ sequenceDiagram
     Client-->>Dev: "Migration Complete (Page, Flow, Feature)"
 ```
 
-### Server Architecture Overview
+## Tool Examples
 
+### `generate_site`
 
-
+```json
+{
+  "name": "generate_site",
+  "arguments": {
+    "name": "myApp",
+    "baseUrl": "https://myapp.com",
+    "pages": ["home", "dashboard", "profile"],
+    "flows": ["login", "checkout"],
+    "description": "My application site",
+    "writeToFile": true,
+    "outputPath": "/path/to/project"
+  }
+}
 ```
-saturday-mcp/
-├── cmd/
-│   └── saturday-mcp/
-│       └── main.go              # Server entry point
-├── internal/
-│   ├── logging/
-│   │   ├── logger.go            # Structured logging
-│   │   └── logger_test.go
-│   ├── server/
-│   │   ├── handler.go           # MCP server handler
-│   │   ├── testing.go           # Test wrappers
-│   │   └── handler_test.go
-│   ├── templates/               # ✅ TODO-002
-│   │   ├── registry.go          # Template registration
-│   │   ├── loader.go            # Template loading from embedded FS
-│   │   ├── processor.go         # Template execution
-│   │   ├── cache.go             # Template caching
-│   │   ├── helpers.go           # Template helper functions
-│   │   ├── data/                # Embedded template files
-│   │   │   ├── page.tmpl
-│   │   │   ├── site.tmpl
-│   │   │   ├── flow.tmpl
-│   │   │   └── steps.tmpl
-│   │   └── *_test.go            # Comprehensive tests
-│   ├── validators/              # ✅ TODO-003
-│   │   ├── validator.go         # Request validation
-│   │   └── validator_test.go
-│   ├── models/                  # ✅ TODO-003
-│   │   ├── requests.go          # Request models
-│   │   ├── responses.go         # Response models
-│   │   └── schemas/             # JSON schemas
-│   │       ├── page-generation.json
-│   │       └── site-generation.json
-│   ├── generators/              # ✅ TODO-004-007
-│   │   ├── generator.go         # Generator facade
-│   │   ├── site_generator.go    # Site class generation
-│   │   ├── page_generator.go    # Page class generation
-│   │   ├── flow_generator.go    # Flow class generation
-│   │   ├── step_generator.go    # Step definition generation
-│   │   └── *_test.go            # Comprehensive tests
-│   ├── filewriter/              # ✅ TODO-004.6
-│   │   ├── filewriter.go        # File writing utilities
-│   │   └── filewriter_test.go
-│   ├── integration/             # ✅ TODO-004.7
-│   │   └── e2e_test.go          # End-to-end tests
-│   ├── analyzers/               # TODO-008
-│   └── utils/                   # Utilities
-├── docs/                        # Architecture & implementation docs
-│   ├── IMPLEMENTATION_REVIEW.md
-│   ├── TODO-004.5-COMPLETE.md
-│   └── IDE_COMPATIBILITY.md
-└── go.mod
+
+### `generate_page`
+
+```json
+{
+  "name": "generate_page",
+  "arguments": {
+    "name": "loginPage",
+    "path": "/login",
+    "elements": [
+      { "name": "usernameInput", "selector": "#username", "type": "input" },
+      { "name": "passwordInput", "selector": "#password", "type": "input" },
+      { "name": "submitButton",  "selector": "button[type='submit']", "type": "button" }
+    ],
+    "description": "Login page",
+    "writeToFile": true,
+    "outputPath": "/path/to/project"
+  }
+}
 ```
+
+### `generate_flow`
+
+```json
+{
+  "name": "generate_flow",
+  "arguments": {
+    "name": "checkoutFlow",
+    "steps": [
+      "addItemToCart", "proceedToCheckout",
+      "enterShippingInfo", "enterPaymentInfo", "confirmOrder"
+    ],
+    "description": "Complete checkout process",
+    "writeToFile": true,
+    "outputPath": "/path/to/project"
+  }
+}
+```
+
+### `generate_steps`
+
+```json
+{
+  "name": "generate_steps",
+  "arguments": {
+    "steps": [
+      { "type": "Given", "pattern": "I am on the login page" },
+      { "type": "When",  "pattern": "I enter {string} and {string}" },
+      { "type": "Then",  "pattern": "I should see the dashboard" }
+    ],
+    "language": "typescript",
+    "description": "Login feature steps",
+    "writeToFile": true,
+    "outputPath": "/path/to/project"
+  }
+}
+```
+
+### `analyze_framework`
+
+```json
+{
+  "name": "analyze_framework",
+  "arguments": { "projectPath": "/path/to/project" }
+}
+```
+
+### `analyze_impact`
+
+```json
+{
+  "name": "analyze_impact",
+  "arguments": {
+    "projectPath": "/path/to/project",
+    "targetFile": "lib/pages/LoginPage.ts"
+  }
+}
+```
+
+### `run_tests` (workflow)
+
+```json
+{
+  "name": "run_tests",
+  "arguments": {
+    "projectPath": "/path/to/project",
+    "filter": "login"
+  }
+}
+```
+
+## Development
+
+### Adding a New Tool
+
+1. Create `internal/tools/my_new_tool.go` implementing `domain.Tool` (`Name`, `Description`,
+   `InputSchema`, `OutputSchema`, `Execute`).
+2. Define its response struct in `internal/tools/responses.go` — `OutputSchema()` returns
+   `jsonschema.Reflect(&MyNewResponse{})`.
+3. Wire it into the slice in `internal/server/tool_provider.go` (`buildTools`).
+4. Add unit tests in `internal/tools/my_new_tool_test.go` using the shared fixtures in
+   `internal/tools/testfixtures_test.go`.
+
+That's it — no server package changes. Tracing wraps every registered tool automatically. See
+[docs/architecture.md](./docs/architecture.md) for the full extension guide.
+
+### Adding a New Workflow
+
+Same shape, under `internal/workflows/`, implementing `domain.Workflow`. Register it with
+`tools.NewWorkflowTool(workflows.NewMyWorkflow(...))` in `buildTools`.
+
+### Adding a New Adapter
+
+Define the interface in `internal/domain/`; implement under `internal/adapters/<name>/`; inject
+into consumers via constructor.
 
 ## Testing
 
@@ -289,338 +409,11 @@ go test -v ./...
 go test ./internal/integration -v
 ```
 
-### Test Coverage
-- **filewriter**: 85.4%
-- **generators**: 90.2%
-- **logging**: 100.0%
-- **templates**: 91.9%
-- **validators**: 56.2%
-
-## Available Tools
-
-### ✅ Implemented Tools
-
-#### `list_tools`
-List all available Saturday framework tools with their implementation status.
-
-**Example:**
-```json
-{
-  "name": "list_tools",
-  "arguments": {}
-}
-```
-
-#### `generate_site`
-Generate a Site class with page and flow registration.
-
-**Example:**
-```json
-{
-  "name": "generate_site",
-  "arguments": {
-    "name": "myApp",
-    "baseUrl": "https://myapp.com",
-    "pages": ["home", "dashboard", "profile"],
-    "flows": ["login", "checkout"],
-    "description": "My application site",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `generate_page`
-Generate a Page class with element registration.
-
-**Example:**
-```json
-{
-  "name": "generate_page",
-  "arguments": {
-    "name": "loginPage",
-    "path": "/login",
-    "elements": [
-      {
-        "name": "usernameInput",
-        "selector": "#username",
-        "type": "input"
-      },
-      {
-        "name": "passwordInput",
-        "selector": "#password",
-        "type": "input"
-      },
-      {
-        "name": "submitButton",
-        "selector": "button[type='submit']",
-        "type": "button"
-      }
-    ],
-    "description": "Login page",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `generate_flow`
-Generate a Flow class for multi-step user journeys.
-
-**Example:**
-```json
-{
-  "name": "generate_flow",
-  "arguments": {
-    "name": "checkoutFlow",
-    "steps": [
-      "addItemToCart",
-      "proceedToCheckout",
-      "enterShippingInfo",
-      "enterPaymentInfo",
-      "confirmOrder"
-    ],
-    "description": "Complete checkout process",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `generate_steps`
-Generate Cucumber step definitions from Gherkin patterns.
-
-**Example:**
-```json
-{
-  "name": "generate_steps",
-  "arguments": {
-    "steps": [
-      {
-        "type": "Given",
-        "pattern": "I am on the login page"
-      },
-      {
-        "type": "When",
-        "pattern": "I enter {string} and {string}"
-      },
-      {
-        "type": "Then",
-        "pattern": "I should see the dashboard"
-      }
-    ],
-    "language": "typescript",
-    "description": "Login feature steps",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `generate_element`
-Generate a custom Element/Component class.
-
-**Example:**
-```json
-{
-  "name": "generate_element",
-  "arguments": {
-    "name": "NavBar",
-    "rootSelector": "nav.main-nav",
-    "methods": ["clickHome", "search"],
-    "description": "Navigation bar component",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `generate_service`
-Generate an API Service class.
-
-**Example:**
-```json
-{
-  "name": "generate_service",
-  "arguments": {
-    "name": "User",
-    "baseUrl": "https://api.example.com",
-    "endpoints": [
-      {
-        "name": "GetUser",
-        "method": "GET",
-        "path": "/users/1"
-      },
-      {
-        "name": "CreateUser",
-        "method": "POST",
-        "path": "/users"
-      }
-    ],
-    "description": "User management service",
-    "writeToFile": true,
-    "outputPath": "/path/to/project"
-  }
-}
-```
-
-#### `analyze_framework`
-Analyze existing framework structure and patterns.
-
-**Example:**
-```json
-{
-  "name": "analyze_framework",
-  "arguments": {
-    "projectPath": "/path/to/project"
-  }
-}
-```
-
-#### `suggest_improvements`
-Suggest code improvements based on Saturday framework best practices.
-
-**Example:**
-```json
-{
-  "name": "suggest_improvements",
-  "arguments": {
-    "projectPath": "/path/to/project"
-  }
-}
-```
-
-#### `migrate_code`
-Analyze and migrate legacy code to Saturday Framework patterns.
-
-**Example:**
-```json
-{
-  "name": "migrate_code",
-  "arguments": {
-    "sourceCode": "test('example', async ({ page }) => { await page.click('#submit'); });",
-    "type": "page"
-  }
-}
-```
-
-#### `analyze_performance`
-Analyze code for performance bottlenecks (concurrent scanning).
-
-**Example:**
-```json
-{
-  "name": "analyze_performance",
-  "arguments": {
-    "projectPath": "/path/to/project"
-  }
-}
-```
-
-#### `analyze_impact`
-Analyze the impact of modifying a specific file (dependency graph).
-
-**Example:**
-```json
-{
-  "name": "analyze_impact",
-  "arguments": {
-    "projectPath": "/path/to/project",
-    "targetFile": "lib/pages/LoginPage.ts"
-  }
-}
-```
-
-#### `run_tests`
-Execute tests and capture output.
-
-**Example:**
-```json
-{
-  "name": "run_tests",
-  "arguments": {
-    "projectPath": "/path/to/project",
-    "filter": "login"
-  }
-}
-```
-
-#### `parse_test_failure`
-Parse standard output from Playwright tests to identify failing files and lines.
-
-**Example:**
-```json
-{
-  "name": "parse_test_failure",
-  "arguments": {
-    "output": "Error: ... at tests/login.spec.ts:15:5"
-  }
-}
-```
-
-#### `prioritize_tests`
-Rank test coverage needs based on production usage metrics.
-
-**Example:**
-```json
-{
-  "name": "prioritize_tests",
-  "arguments": {
-    "metricsFile": "/path/to/metrics.json"
-  }
-}
-```
-
-#### `generate_documentation`
-Generate markdown documentation for the project.
-
-**Example:**
-```json
-{
-  "name": "generate_documentation",
-  "arguments": {
-    "projectPath": "/path/to/project",
-    "outputPath": "/path/to/output/docs.md"
-  }
-}
-```
-
-#### `validate_patterns`
-Validate code against Saturday framework patterns (naming conventions, inheritance).
-
-**Example:**
-```json
-{
-  "name": "validate_patterns",
-  "arguments": {
-    "projectPath": "/path/to/project"
-  }
-}
-```
-
-### 📚 Available Resources
-
-The server exposes internal templates for reference:
-
-- **`saturday://templates/site`**: Template for Site class
-- **`saturday://templates/page`**: Template for Page class
-- **`saturday://templates/flow`**: Template for Flow class
-- **`saturday://templates/steps`**: Template for Cucumber steps
-
-### 💡 Available Prompts / Agents
-
-The server provides pre-defined Prompts that transform an LLM into a Subject Matter Expert (SME) capable of executing specialized workflows:
-
-- **`saturday_sme`**: Injects Saturday Framework principles (Page Objects, Fluent Flows, OTel logging).
-- **`migrate_test`**: An agent workflow that migrates legacy tests (Cypress/Selenium) using the live DOM (via Playwright MCP) to generate robust Saturday Page Objects and Gherkin.
-- **`self_heal_test`**: An autonomous workflow that evaluates failure logs, navigates to the broken state, inspects the DOM, and patches the testing codebase.
-- **`otel_metrics_expert`**: An agent that acts as an observability architect to add custom span counters and tracking to your workflows.
-- **`plan_feature`**: Helps you plan the implementation of a new feature (Pages, Flows, Steps).
-- **`explain_framework`**: Explains the core architectural concepts of Saturday.
-- **`debug_error`**: Analyzes test failures and suggests debugging steps.
-- **`generate_gherkin`**: Generates structured BDD scenarios from requirements.
-- **`visual_page_object`**: Generates a Page Object from a UI screenshot (requires attaching image).
-- **`implement_feature`**: Orchestrates the "Autonomous QA" workflow to implement a feature from scratch.
+Framework-wide targets from [CLAUDE.md](./CLAUDE.md): **≥ 85% unit test coverage** and
+**cyclomatic complexity < 7** per function. Shared test fixtures live in
+`internal/tools/testfixtures_test.go` (per-tool mocks) and `internal/integration/e2e_test.go`
+(cross-tool acceptance surface — the regression-protection net that survived the retrofit
+untouched).
 
 ## MCP Client Configuration
 
@@ -633,6 +426,22 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "saturday": {
       "command": "/path/to/saturday-mcp/bin/saturday-mcp"
+    }
+  }
+}
+```
+
+To enable trace export, add env:
+
+```json
+{
+  "mcpServers": {
+    "saturday": {
+      "command": "/path/to/saturday-mcp/bin/saturday-mcp",
+      "env": {
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "localhost:4317",
+        "OTEL_EXPORTER_OTLP_INSECURE": "true"
+      }
     }
   }
 }
@@ -654,7 +463,9 @@ Configure in `.vscode/settings.json`:
 
 ## Contributing
 
-See `docs/` for detailed architecture and implementation guides.
+See [docs/architecture.md](./docs/architecture.md) for the layered design and extension guide,
+and [mcp-add-plan.md](./mcp-add-plan.md) for the retrofit history that produced the current
+shape.
 
 ## License
 
