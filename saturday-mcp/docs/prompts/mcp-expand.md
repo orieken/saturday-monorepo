@@ -20,9 +20,13 @@ Adding a new tool is now: drop a file in `internal/tools/`, register in the Hand
 
 `/Users/oscarrieken/Projects/Rieken/ai-assistant-dot-files` has the context-engineering framework: rules, agents, skills, blueprints, KIs. Many of its capabilities are the shape MCP tools want.
 
-## DECISION TO MAKE FIRST (ask before drafting the plan)
+## Scope decision (resolved 2026-07-22)
 
-**Scope**: should saturday-mcp grow into a broad "framework MCP" (useful for any language/codebase using the framework), or stay Saturday-focused and add only what directly helps Saturday users? This determines the tool inventory. Do not draft the plan until this is answered.
+**Chosen scope**: **Broad framework-MCP** — saturday-mcp becomes the framework's MCP surface, exposing analytical tools, personas, and search capabilities useful for any language/codebase using the framework. NOT just Saturday-specific tooling.
+
+Rationale: better long-term positioning; makes saturday-mcp the reference implementation of an MCP that surfaces framework capabilities to any MCP client (Claude Code, Claude Desktop, Cursor, etc.).
+
+**Open sub-question for the fresh chat to raise with the user** (not yet decided): rename `saturday-mcp` → something more accurate to the broader scope (e.g., `context-mcp`, `framework-mcp`, `craftsmanship-mcp`). Real cost — affects MCP client configs, the parent monorepo directory, and the go.mod module path. Reasonable to defer the rename until Milestone 1 ships and the broad-scope reality is visible; the current name doesn't functionally block anything.
 
 ## Candidate MCP capabilities to add — categorized by fit
 
@@ -75,11 +79,12 @@ Adding a new tool is now: drop a file in `internal/tools/`, register in the Hand
 
 ## What to do
 
-1. Decide the scope question (broad framework-MCP vs Saturday-focused)
-2. Prune the candidate list to what's actually going to ship first — recommend a Milestone 1 of 4-6 tools, not all of them
+1. ~~Decide the scope question~~ — resolved above (broad framework-MCP)
+2. Prune the candidate list to what's actually going to ship in Milestone 1 — recommend 4-6 tools, not all of them. Suggest starting with the analytical tools since they're purest input→output (analyze_complexity, check_accessibility, check_ubiquitous_language) plus search_ki (highest-leverage generic tool).
 3. For each Milestone 1 tool: draft the same structure Phase B/C used in mcp-add (Tool interface implementation, typed input/output structs via invopop, shared helpers, unit tests, OTel span emission via existing middleware)
 4. Produce an `mcp-expand-plan.md` (mirroring `mcp-add-plan.md`'s structure) at the saturday-mcp repo root before writing any code
-5. Follow the same commit discipline: one op per commit, conventional commits, NEVER `git add -A` (parent monorepo has 100+ unrelated files), verify `go build && go test` after each commit
+5. Raise the rename sub-question (see scope-decision section above) — recommend deferring until after Milestone 1
+6. Follow the same commit discipline: one op per commit, conventional commits, NEVER `git add -A` (parent monorepo has 100+ unrelated files), verify `go build && go test` after each commit
 
 ## Repo hygiene
 
@@ -89,4 +94,4 @@ Adding a new tool is now: drop a file in `internal/tools/`, register in the Hand
 
 ## Start here
 
-Ask the user the scope question first. Then draft the plan. Do not write any code before the plan is approved.
+Scope is already resolved (broad framework-MCP — see section above). Proceed directly to drafting `mcp-expand-plan.md`. Do not write any code before the plan is approved. When the plan is ready, raise the rename sub-question and the Milestone 1 tool selection for user approval before starting execution.
