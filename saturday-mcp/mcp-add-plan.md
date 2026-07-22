@@ -272,7 +272,7 @@ that unblocked Phase F's OutputSchema goal. 62 commits total from
 
 ### Structural impact
 
-- `internal/server/handler.go`: **880 → 51 LOC** (94% reduction).
+- `internal/server/handler.go`: **880 → 93 LOC** (89% reduction — Milestone 1 slimmed it to 51 LOC; Milestone 2 Phase G op 4 added ~42 LOC back for the `WithTracer` functional-option constructor + private `noopTracer` fallback).
 - `internal/server/` gained `registration.go` (80 LOC) and `tracing_middleware.go`; adding a tool is now: drop a file in `internal/tools/`, append to the provider slice — no server-package edit.
 - New packages: `internal/domain/{tool,persona,workflow,tracer,testrunner,filesystem,metrics}.go`, `internal/tools/` (15 tool types + shared `schemas.go`/`responses.go`/`testfixtures_test.go`), `internal/workflows/`, `internal/adapters/{testrunner,filesystem,metricsfile,otel}/`.
 - Deleted packages: `internal/executor/` (moved to `adapters/testrunner/`), `internal/observability/` (renamed to `internal/domain/metrics/`).
