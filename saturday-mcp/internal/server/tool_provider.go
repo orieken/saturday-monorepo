@@ -1,6 +1,9 @@
 package server
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/orieken/saturday-mcp/internal/adapters/filesystem"
 	"github.com/orieken/saturday-mcp/internal/adapters/metricsfile"
 	"github.com/orieken/saturday-mcp/internal/adapters/testrunner"
@@ -73,6 +76,26 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewCheckAccessibilityTool(logger, accessibilityAnalyzer),
 		tools.NewCheckUbiquitousLanguageTool(logger, ubiquitousLanguageAnalyzer),
 		tools.NewVerifyDependenciesTool(logger, dependencyBoundaryAnalyzer),
+		tools.NewSearchKITool(logger, tools.NewKICorpusRetriever(frameworkCorpusPaths())),
+	}
+}
+
+// frameworkCorpusPaths resolves the shared/knowledge/ and docs/adrs/
+// roots of the ai-assistant-dot-files install so search_ki can walk
+// them. Reads AI_ASSISTANT_DOTFILES_PATH env; returns nil (empty corpus)
+// when unset — the tool then reports zero hits with a diagnostic note
+// rather than failing, matching mcp-expand-plan §3 Op 6's stance that
+// LLM-as-retriever must degrade gracefully when the corpus isn't
+// configured. Follow-up: when AOS Phase 3 lands shared/rag/, discovery
+// moves there and this helper becomes a thin adapter over it.
+func frameworkCorpusPaths() []string {
+	root := os.Getenv("AI_ASSISTANT_DOTFILES_PATH")
+	if root == "" {
+		return nil
+	}
+	return []string{
+		filepath.Join(root, "shared", "knowledge"),
+		filepath.Join(root, "docs", "adrs"),
 	}
 }
 
