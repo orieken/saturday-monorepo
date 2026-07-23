@@ -37,6 +37,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 	migrationGen := generators.NewMigrationGenerator(processor, validator)
 	docGen := generators.NewDocumentationGenerator(processor, validator)
 
+	complexityAnalyzer := analyzers.NewComplexityAnalyzer()
 	frameworkAnalyzer := analyzers.NewFrameworkAnalyzer(logger)
 	patternValidator := analyzers.NewPatternValidator(logger)
 	improvementAnalyzer := analyzers.NewImprovementAnalyzer(logger)
@@ -65,6 +66,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewWorkflowTool(workflows.NewRunTestsWorkflow(logger, testRunner)),
 		tools.NewParseTestFailureTool(logger, logAnalyzer),
 		tools.NewWorkflowTool(workflows.NewPrioritizeTestsWorkflow(logger, usageAnalyzer, metricsReader)),
+		tools.NewAnalyzeComplexityTool(logger, complexityAnalyzer),
 	}
 }
 
