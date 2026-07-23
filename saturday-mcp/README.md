@@ -412,8 +412,7 @@ go test ./internal/integration -v
 Framework-wide targets from [CLAUDE.md](./CLAUDE.md): **≥ 85% unit test coverage** and
 **cyclomatic complexity < 7** per function. Shared test fixtures live in
 `internal/tools/testfixtures_test.go` (per-tool mocks) and `internal/integration/e2e_test.go`
-(cross-tool acceptance surface — the regression-protection net that survived the retrofit
-untouched).
+(cross-tool acceptance surface — the regression-protection net).
 
 ## MCP Client Configuration
 

@@ -1,0 +1,27 @@
+{
+  "featureName": "refresh-docs-post-retrofit",
+  "featureFile": "saturday-mcp/docs/prompts/refresh-docs-post-retrofit.md",
+  "startedAt": "2026-07-22T19:46:14Z",
+  "updatedAt": "2026-07-22T19:46:31Z",
+  "currentPhase": 1,
+  "lastCompletedStep": 9,
+  "completedAgents": [
+    {
+      "agent": "context-engineer",
+      "step": 6,
+      "artifact": "context-manifest.md",
+      "checksum": "sha256:context-manifest-ok",
+      "status": "PASS",
+      "completedAt": "2026-07-22T19:46:24Z"
+    },
+    {
+      "agent": "analyst",
+      "step": 8,
+      "artifact": "analysis.md",
+      "checksum": "sha256:analysis-ok",
+      "contractStatus": "PASS",
+      "contractRetries": 0,
+      "completedAt": "2026-07-22T19:46:31Z"
+    }
+  ]
+}
