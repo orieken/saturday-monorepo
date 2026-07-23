@@ -20,12 +20,16 @@ import (
 	"strings"
 )
 
-// skippedDirNames lists directory basenames the walk should never descend
+// SkippedDirNames lists directory basenames the walk should never descend
 // into. Consolidates the historically-per-file `skippedDirs` maps into a
 // single package-level set so a change here immediately affects every
 // analyzer. Kept as a set (map[T]struct{}) rather than a slice so
 // membership checks are O(1) and read as a set at the call site.
-var skippedDirNames = map[string]struct{}{
+//
+// Exported so cross-package callers (see internal/tools/bm25_retriever.go,
+// which walks an installed project's docs corpus and needs the same skip
+// set) get one source of truth rather than a second copy that can drift.
+var SkippedDirNames = map[string]struct{}{
 	"node_modules": {},
 	".git":         {},
 	"dist":         {},
@@ -34,17 +38,17 @@ var skippedDirNames = map[string]struct{}{
 	".venv":        {},
 }
 
-// skipUninterestingDir returns filepath.SkipDir for directory names the
-// walk should skip: any name in skippedDirNames, plus any hidden
+// SkipUninterestingDir returns filepath.SkipDir for directory names the
+// walk should skip: any name in SkippedDirNames, plus any hidden
 // dot-directory below the root. The root itself is exempt from the
 // dot-directory rule so a caller can scan a project whose absolute path
 // happens to include a hidden ancestor (e.g. `~/.dotfiles/project`).
 //
-// Signature intentionally matches the closure the two prior analyzers
-// each used before this extraction, so the callsite change is a straight
-// swap — no arg-shape churn at the call sites.
-func skipUninterestingDir(root, current, name string) error {
-	if _, skip := skippedDirNames[name]; skip {
+// Exported (from `skipUninterestingDir`) so internal/tools/ callers can
+// reuse the same walk-skip discipline the analyzers use — see
+// bm25_retriever.go for the second consumer.
+func SkipUninterestingDir(root, current, name string) error {
+	if _, skip := SkippedDirNames[name]; skip {
 		return filepath.SkipDir
 	}
 	if strings.HasPrefix(name, ".") && current != root {

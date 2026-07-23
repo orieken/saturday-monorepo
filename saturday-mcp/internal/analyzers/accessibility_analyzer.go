@@ -151,7 +151,7 @@ func (a *AccessibilityAnalyzer) collectFiles(path string, isDir bool) ([]string,
 			return nil
 		}
 		if info.IsDir() {
-			return skipUninterestingDir(path, p, info.Name())
+			return SkipUninterestingDir(path, p, info.Name())
 		}
 		if _, ok := scannedExtensions[strings.ToLower(filepath.Ext(p))]; ok {
 			files = append(files, p)

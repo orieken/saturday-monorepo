@@ -222,7 +222,7 @@ func (a *DependencyBoundaryAnalyzer) collectSourceFiles(root string) ([]string, 
 			return nil
 		}
 		if entry.IsDir() {
-			return skipUninterestingDir(root, p, entry.Name())
+			return SkipUninterestingDir(root, p, entry.Name())
 		}
 		if _, ok := scannedImportExtensions[strings.ToLower(filepath.Ext(p))]; ok {
 			files = append(files, p)
