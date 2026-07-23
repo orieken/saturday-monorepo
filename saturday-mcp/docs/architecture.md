@@ -9,8 +9,8 @@ implementation under `internal/adapters/`. Dependencies always point inward.
 
 This shape is the outcome of the `mcp-add` retrofit — see
 [../mcp-add-plan.md](../mcp-add-plan.md) for the historical trace of how the codebase moved from
-a single 880-LOC `handler.go` God Object into the current layered structure. The two design
-decisions worth their own record are captured as:
+a monolithic `handler.go` composite into the current layered structure. Key architectural
+decisions are recorded in:
 
 - [ADR-001](./adrs/ADR-001-use-invopop-jsonschema-tool-output-schemas.md) — declarative tool
   output schemas via `invopop/jsonschema`.
@@ -162,7 +162,7 @@ Every external dependency lives behind a domain interface:
 | Domain interface        | Adapter                                | Notes                                              |
 |-------------------------|----------------------------------------|----------------------------------------------------|
 | `domain.TestRunner`     | `adapters/testrunner/exec_runner.go`   | `os/exec` wrapper with `context.WithTimeout`       |
-| `domain.FileSystem`     | `adapters/filesystem/os_filesystem.go` | Backs `generate_documentation` — no more direct `os.WriteFile` |
+| `domain.FileSystem`     | `adapters/filesystem/os_filesystem.go` | Backs `generate_documentation` — no direct `os.WriteFile` |
 | `domain/metrics.Reader` | `adapters/metricsfile/file_reader.go`  | JSON-file page-metric reader for `prioritize_tests`|
 | `domain.Tracer`         | `adapters/otel/otel_tracer.go`         | OTLP-gRPC exporter; noop fallback in `adapters/otel/noop_tracer.go` |
 
@@ -191,7 +191,7 @@ are constructed once and passed to the tools/workflows that need them).
   `shared/rules/architecture-guardrails.md` #8).
 - `testing.go` — public `HandleFoo` wrappers that the integration suite in
   `internal/integration/e2e_test.go` calls directly. Kept as thin delegations to the
-  underlying `*Tool.Execute` so the ~1200-LOC e2e suite continues to serve as the
+  underlying `*Tool.Execute` so the integration suite continues to serve as the
   response-shape regression net.
 
 ## Extension Points
@@ -271,14 +271,13 @@ reaching into `internal/tools/`, so it doubles as the response-shape regression 
 
 Framework-wide targets (see [CLAUDE.md](../CLAUDE.md)):
 
-- Unit test coverage ≥ 85% per package (adapters and workflows meet this comfortably; some
-  server-package files are covered indirectly via e2e).
+- Unit test coverage ≥ 85% per package (adapters and workflows meet this comfortably; all tools meet this target).
 - Cyclomatic complexity < 7 per function.
 
 ## Historical Context
 
 The trinity vocabulary, adapter layer, output schemas, and OTel wiring all landed via the
-`mcp-add` retrofit — a full sweep over the pre-retrofit codebase where `handler.go` was an
-880-LOC God Object registering everything directly. [../mcp-add-plan.md](../mcp-add-plan.md)
-carries the full plan (Phases A–J), the operation-by-operation history, deviations from the
-plan (with rationale), and the known gaps that remain as follow-up work.
+`mcp-add` retrofit — a full sweep over the pre-retrofit codebase where `handler.go` was a
+composite registering everything directly. [../mcp-add-plan.md](../mcp-add-plan.md) carries the
+full plan (Phases A–J), the operation-by-operation history, deviations from the plan (with
+rationale), and the known gaps that remain as follow-up work.
