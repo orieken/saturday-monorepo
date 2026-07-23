@@ -1208,3 +1208,451 @@ func TestE2E_ParseTestFailure(t *testing.T) {
 		t.Errorf("Expected line 25, got %v", f["line"])
 	}
 }
+
+// -----------------------------------------------------------------------------
+// mcp-expand M1 Op 8 — six new tools land in the tool inventory.
+//
+// Each test below invokes one of the six M1 tools end-to-end through its
+// Handle* wrapper, verifies the round-tripped JSON parses into the expected
+// response struct, and asserts on at least one populated field. The two
+// search tools additionally pin the "symmetric-shape-but-narrower" contract:
+// KIMatch carries Tags, DocMatch deliberately does NOT.
+// -----------------------------------------------------------------------------
+
+// TestE2E_AnalyzeComplexity walks a small fixture project and asserts the
+// tool reports the intentionally-over-complex function.
+func TestE2E_AnalyzeComplexity(t *testing.T) {
+	tmpDir := t.TempDir()
+	code := `package sample
+
+func Complex(x int) int {
+	if x > 0 {
+		if x > 10 {
+			if x > 20 {
+				return 3
+			}
+			return 2
+		}
+		return 1
+	}
+	return 0
+}
+`
+	if err := os.WriteFile(filepath.Join(tmpDir, "sample.go"), []byte(code), 0644); err != nil {
+		t.Fatalf("Failed to write fixture: %v", err)
+	}
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "analyze_complexity"
+	request.Params.Arguments = map[string]interface{}{
+		"projectPath":   tmpDir,
+		"maxComplexity": float64(2),
+		"maxLines":      float64(30),
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleAnalyzeComplexity(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	if response["projectPath"] != tmpDir {
+		t.Errorf("Expected projectPath %s, got %v", tmpDir, response["projectPath"])
+	}
+	violations, ok := response["violationsCount"].(float64)
+	if !ok || violations < 1 {
+		t.Errorf("Expected at least one violation, got %v", response["violationsCount"])
+	}
+}
+
+// TestE2E_CheckAccessibility runs the tool against a single fixture file
+// that has obvious a11y defects and asserts violations surface.
+func TestE2E_CheckAccessibility(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "index.html")
+	// Missing <img alt=""> is a canonical a11y violation.
+	if err := os.WriteFile(filePath, []byte(`<html><body><img src="a.png"></body></html>`), 0644); err != nil {
+		t.Fatalf("Failed to write fixture: %v", err)
+	}
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "check_accessibility"
+	request.Params.Arguments = map[string]interface{}{
+		"filePath": filePath,
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleCheckAccessibility(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	if response["path"] != filePath {
+		t.Errorf("Expected path %s, got %v", filePath, response["path"])
+	}
+	violations, ok := response["violationsCount"].(float64)
+	if !ok || violations < 1 {
+		t.Errorf("Expected at least one violation, got %v", response["violationsCount"])
+	}
+}
+
+// TestE2E_CheckUbiquitousLanguage writes a domain dictionary and a source
+// file using a forbidden synonym, then verifies the tool flags it.
+func TestE2E_CheckUbiquitousLanguage(t *testing.T) {
+	tmpDir := t.TempDir()
+	dict := filepath.Join(tmpDir, "DOMAIN_DICTIONARY.md")
+	dictBody := "# Domain Dictionary\n\n" +
+		"## 2. Entities\n\n" +
+		"| Term | Domain | Description | Synonyms to AVOID |\n" +
+		"|---|---|---|---|\n" +
+		"| **User** | Auth | End user of the system | `client`, `customer` (too generic) |\n"
+	if err := os.WriteFile(dict, []byte(dictBody), 0644); err != nil {
+		t.Fatalf("Failed to write dictionary: %v", err)
+	}
+	code := "package x\n// Look up a client record\n"
+	if err := os.WriteFile(filepath.Join(tmpDir, "code.go"), []byte(code), 0644); err != nil {
+		t.Fatalf("Failed to write code fixture: %v", err)
+	}
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "check_ubiquitous_language"
+	request.Params.Arguments = map[string]interface{}{
+		"projectPath":    tmpDir,
+		"dictionaryPath": dict,
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleCheckUbiquitousLanguage(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	if response["projectPath"] != tmpDir {
+		t.Errorf("Expected projectPath %s, got %v", tmpDir, response["projectPath"])
+	}
+	violations, ok := response["violationsCount"].(float64)
+	if !ok || violations < 1 {
+		t.Errorf("Expected at least one violation, got %v", response["violationsCount"])
+	}
+}
+
+// TestE2E_VerifyDependencies writes a Clean Architecture project skeleton
+// where the domain layer imports adapters (a boundary violation) and
+// asserts the tool catches it.
+func TestE2E_VerifyDependencies(t *testing.T) {
+	tmpDir := t.TempDir()
+	domainSrc := "package domain\n\n" +
+		"import (\n" +
+		"\t\"fmt\"\n" +
+		"\t\"github.com/example/project/adapters/db\"\n" +
+		")\n\n" +
+		"func New() { _ = fmt.Println; _ = db.Open }\n"
+	if err := os.MkdirAll(filepath.Join(tmpDir, "domain"), 0755); err != nil {
+		t.Fatalf("mkdir domain: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmpDir, "adapters/db"), 0755); err != nil {
+		t.Fatalf("mkdir adapters/db: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "domain/user.go"), []byte(domainSrc), 0644); err != nil {
+		t.Fatalf("Failed to write domain file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "adapters/db/postgres.go"), []byte("package db\n\nfunc Open() {}\n"), 0644); err != nil {
+		t.Fatalf("Failed to write adapter file: %v", err)
+	}
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "verify_dependencies"
+	request.Params.Arguments = map[string]interface{}{
+		"projectPath": tmpDir,
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleVerifyDependencies(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	violations, ok := response["violationsCount"].(float64)
+	if !ok || violations < 1 {
+		t.Errorf("Expected at least one violation, got %v", response["violationsCount"])
+	}
+	list, ok := response["violations"].([]interface{})
+	if !ok || len(list) < 1 {
+		t.Fatalf("Expected non-empty violations list, got %v", response["violations"])
+	}
+	first := list[0].(map[string]interface{})
+	if first["fromLayer"] != "domain" {
+		t.Errorf("Expected fromLayer=domain, got %v", first["fromLayer"])
+	}
+	if first["toLayer"] != "adapters" {
+		t.Errorf("Expected toLayer=adapters, got %v", first["toLayer"])
+	}
+}
+
+// TestE2E_SearchKI stands up a KI corpus at AI_ASSISTANT_DOTFILES_PATH so
+// NewHandler's frameworkCorpusPaths() picks it up, invokes search_ki, and
+// asserts:
+//   - at least one match returns
+//   - the KIMatch shape IS present in the JSON (Tags field populated)
+//
+// The "Tags is present" assertion pins the symmetric-shape-but-wider
+// contract vs search_docs — see TestE2E_SearchDocs for the mirror
+// assertion that Tags is ABSENT from DocMatch.
+func TestE2E_SearchKI(t *testing.T) {
+	corpusRoot := t.TempDir()
+	// frameworkCorpusPaths() walks <root>/shared/knowledge and <root>/docs/adrs.
+	// We populate shared/knowledge with a single KI that will match the query
+	// via both tag and title.
+	kiDir := filepath.Join(corpusRoot, "shared", "knowledge")
+	if err := os.MkdirAll(kiDir, 0755); err != nil {
+		t.Fatalf("mkdir shared/knowledge: %v", err)
+	}
+	kiBody := "---\n" +
+		"name: retrieval-strategy\n" +
+		"tags: [retrieval, corpus]\n" +
+		"domain: retrieval\n" +
+		"created: 2026-07-23\n" +
+		"---\n\n" +
+		"Notes on the corpus-aware retrieval strategy.\n"
+	if err := os.WriteFile(filepath.Join(kiDir, "retrieval-strategy.md"), []byte(kiBody), 0644); err != nil {
+		t.Fatalf("Failed to write KI fixture: %v", err)
+	}
+
+	t.Setenv("AI_ASSISTANT_DOTFILES_PATH", corpusRoot)
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "search_ki"
+	request.Params.Arguments = map[string]interface{}{
+		"query": "retrieval",
+		"tags":  []interface{}{"retrieval"},
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleSearchKI(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	// Parse into raw map to inspect the exact JSON shape (KIMatch.Tags).
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	if response["query"] != "retrieval" {
+		t.Errorf("Expected query=retrieval, got %v", response["query"])
+	}
+	hits, ok := response["totalHits"].(float64)
+	if !ok || hits < 1 {
+		t.Fatalf("Expected at least one hit, got %v", response["totalHits"])
+	}
+	matches, ok := response["matches"].([]interface{})
+	if !ok || len(matches) < 1 {
+		t.Fatalf("Expected non-empty matches, got %v", response["matches"])
+	}
+	first := matches[0].(map[string]interface{})
+	// Symmetric-shape contract: KIMatch carries Tags. If this ever regresses
+	// to "absent" it means the KI search silently lost its structured
+	// metadata — the whole reason search_ki exists as a separate tool from
+	// search_docs.
+	tagsRaw, ok := first["tags"]
+	if !ok {
+		t.Fatal("Expected KIMatch.Tags key to be present in JSON output")
+	}
+	tags, ok := tagsRaw.([]interface{})
+	if !ok || len(tags) == 0 {
+		t.Errorf("Expected KIMatch.Tags to be a non-empty array, got %v", tagsRaw)
+	}
+}
+
+// TestE2E_SearchDocs stands up a docs corpus, points the BM25 backend at a
+// per-test sqlite file via SATURDAY_MCP_DOCS_FTS_PATH, invokes search_docs,
+// and asserts:
+//   - at least one match returns
+//   - the DocMatch shape does NOT carry Tags (the symmetric-narrower
+//     contract vs KIMatch)
+//
+// Note: search_docs.Execute calls EnsureIndex on every invocation. That's
+// fine for the tiny corpora M1 targets; the per-call refresh keeps the
+// "just works" contract for callers.
+func TestE2E_SearchDocs(t *testing.T) {
+	corpus := t.TempDir()
+	docBody := "---\n" +
+		"name: OAuth token refresh runbook\n" +
+		"---\n\n" +
+		"When the OAuth token refresh flow fails, follow these steps.\n"
+	if err := os.WriteFile(filepath.Join(corpus, "runbook.md"), []byte(docBody), 0644); err != nil {
+		t.Fatalf("Failed to write doc fixture: %v", err)
+	}
+
+	// Route the BM25 sqlite file into a per-test tempdir so newSearchDocsTool
+	// initialises a real retriever (bypasses the .claude/ marker gate).
+	fts := filepath.Join(t.TempDir(), "docs-fts5.sqlite")
+	t.Setenv("SATURDAY_MCP_DOCS_FTS_PATH", fts)
+
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	request := mcp.CallToolRequest{}
+	request.Params.Name = "search_docs"
+	request.Params.Arguments = map[string]interface{}{
+		"query":    "OAuth token refresh",
+		"docsPath": corpus,
+	}
+
+	ctx := context.Background()
+	result, err := handler.HandleSearchDocs(ctx, request)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("Expected result, got nil")
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal([]byte(getTextContent(result)), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+	if success, ok := response["success"].(bool); !ok || !success {
+		t.Error("Expected success=true")
+	}
+	if response["query"] != "OAuth token refresh" {
+		t.Errorf("Expected query=OAuth token refresh, got %v", response["query"])
+	}
+	hits, ok := response["totalHits"].(float64)
+	if !ok || hits < 1 {
+		t.Fatalf("Expected at least one hit, got %v", response["totalHits"])
+	}
+	matches, ok := response["matches"].([]interface{})
+	if !ok || len(matches) < 1 {
+		t.Fatalf("Expected non-empty matches, got %v", response["matches"])
+	}
+	first := matches[0].(map[string]interface{})
+	if _, hasTags := first["tags"]; hasTags {
+		// Symmetric-narrower contract: DocMatch deliberately omits Tags
+		// because BM25 doesn't consume structured metadata. If Tags ever
+		// appears here, the search_docs shape has silently drifted toward
+		// KIMatch — which would mislead callers into thinking BM25 filters
+		// by tags.
+		t.Errorf("DocMatch must NOT expose tags in JSON; got %v", first["tags"])
+	}
+}
+
+// TestE2E_ToolInventory locks the tool count at 22 (16 pre-M1 + 6 M1) and
+// verifies every tool name we care about is registered. Adding a new tool
+// requires bumping this constant; that's the point — a bump is a
+// deliberate signal that the MCP tool inventory grew.
+func TestE2E_ToolInventory(t *testing.T) {
+	logger := logging.NewLogger(os.Stderr)
+	handler, err := server.NewHandler(logger)
+	if err != nil {
+		t.Fatalf("Failed to create handler: %v", err)
+	}
+
+	tools := handler.Tools()
+	if got, want := len(tools), 22; got != want {
+		t.Errorf("Tools count: got %d, want %d", got, want)
+	}
+
+	registered := make(map[string]struct{}, len(tools))
+	for _, tool := range tools {
+		registered[tool.Name()] = struct{}{}
+	}
+
+	// The six M1 tools shipped by Ops 2-7 must appear in the inventory.
+	m1 := []string{
+		"analyze_complexity",
+		"check_accessibility",
+		"check_ubiquitous_language",
+		"verify_dependencies",
+		"search_ki",
+		"search_docs",
+	}
+	for _, name := range m1 {
+		if _, ok := registered[name]; !ok {
+			t.Errorf("Expected tool %q in inventory", name)
+		}
+	}
+}

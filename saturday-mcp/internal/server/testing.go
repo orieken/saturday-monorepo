@@ -104,3 +104,33 @@ func (h *Handler) HandleRunTests(ctx context.Context, request mcp.CallToolReques
 func (h *Handler) HandlePrioritizeTests(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return h.dispatch(ctx, "prioritize_tests", request)
 }
+
+// HandleAnalyzeComplexity delegates to the analyze_complexity tool (mcp-expand M1 Op 2).
+func (h *Handler) HandleAnalyzeComplexity(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "analyze_complexity", request)
+}
+
+// HandleCheckAccessibility delegates to the check_accessibility tool (mcp-expand M1 Op 3).
+func (h *Handler) HandleCheckAccessibility(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "check_accessibility", request)
+}
+
+// HandleCheckUbiquitousLanguage delegates to the check_ubiquitous_language tool (mcp-expand M1 Op 4).
+func (h *Handler) HandleCheckUbiquitousLanguage(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "check_ubiquitous_language", request)
+}
+
+// HandleVerifyDependencies delegates to the verify_dependencies tool (mcp-expand M1 Op 5).
+func (h *Handler) HandleVerifyDependencies(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "verify_dependencies", request)
+}
+
+// HandleSearchKI delegates to the search_ki tool (mcp-expand M1 Op 6 — LLM-as-retriever).
+func (h *Handler) HandleSearchKI(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "search_ki", request)
+}
+
+// HandleSearchDocs delegates to the search_docs tool (mcp-expand M1 Op 7 — BM25 backend).
+func (h *Handler) HandleSearchDocs(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return h.dispatch(ctx, "search_docs", request)
+}
