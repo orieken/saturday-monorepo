@@ -113,3 +113,20 @@ func writeTSFile(t *testing.T, root, relPath, body string) {
 		t.Fatalf("write %s: %v", relPath, err)
 	}
 }
+
+// writeFile writes body to an absolute path, creating parent directories
+// as needed. Shared across every tool test that stands up a fake
+// project on disk with more than a single flat file (the
+// check_accessibility and check_ubiquitous_language tests, plus any
+// future analyzer tool tests). Promoted here from
+// check_accessibility_tool_test.go per mcp-expand M1 Op 4 handoff notes
+// — cleaner than duplicating the helper into every new test file.
+func writeFile(t *testing.T, path, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
+	}
+	if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
+}

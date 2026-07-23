@@ -208,19 +208,6 @@ func TestCheckAccessibilityTool_Execute_NonexistentPath(t *testing.T) {
 	}
 }
 
-// writeFile writes body to path, creating parent directories as needed.
-// Local to this test file (testfixtures_test.go's writeTSFile is TS-
-// specific in intent).
-func writeFile(t *testing.T, path, body string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		t.Fatalf("mkdir %s: %v", filepath.Dir(path), err)
-	}
-	if err := os.WriteFile(path, []byte(body), 0644); err != nil {
-		t.Fatalf("write %s: %v", path, err)
-	}
-}
-
 // assertRulesPresent fails the test if any expected rule ID is not
 // represented in the violations slice.
 func assertRulesPresent(t *testing.T, violations []AccessibilityViolation, want ...string) {
