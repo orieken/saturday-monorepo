@@ -135,6 +135,30 @@ type KISearchResult struct {
 	Matches    []KIMatch `json:"matches,omitempty"`
 }
 
+// DocMatch represents a single BM25-ranked docs-corpus hit. Deliberately
+// narrower than KIMatch — the BM25 retriever doesn't consume structured
+// metadata (tags/domain) so those fields would be misleadingly empty on
+// every response. Relevance is higher-is-better on the same scale
+// KIMatch uses, so downstream callers can sort a mixed list without
+// per-source normalization.
+type DocMatch struct {
+	Title     string  `json:"title"`
+	Path      string  `json:"path"`
+	Summary   string  `json:"summary"`
+	Relevance float64 `json:"relevance"`
+}
+
+// DocSearchResult is the response from search_docs. Mirrors the shape of
+// KISearchResult so the two search tools have symmetric output — a
+// caller that already parses one JSON body can parse the other by
+// swapping only the Match element type.
+type DocSearchResult struct {
+	Success   bool       `json:"success"`
+	Query     string     `json:"query"`
+	TotalHits int        `json:"totalHits"`
+	Matches   []DocMatch `json:"matches,omitempty"`
+}
+
 // reflectSchema wraps jsonschema.Reflect so every OutputSchema()
 // implementation reads the same one-liner. Using a package-level
 // jsonschema.Reflector with default settings keeps schema output

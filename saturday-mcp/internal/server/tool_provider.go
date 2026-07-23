@@ -77,7 +77,60 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewCheckUbiquitousLanguageTool(logger, ubiquitousLanguageAnalyzer),
 		tools.NewVerifyDependenciesTool(logger, dependencyBoundaryAnalyzer),
 		tools.NewSearchKITool(logger, tools.NewKICorpusRetriever(frameworkCorpusPaths())),
+		newSearchDocsTool(logger),
 	}
+}
+
+// newSearchDocsTool constructs the search_docs tool and its BM25
+// backend. Split out from buildTools so the failure branch (sqlite
+// setup failed on this install — permission denied, disk full, etc.)
+// stays readable: the tool ALWAYS registers, so the MCP tool inventory
+// stays stable across environments; a broken backend surfaces as a
+// per-call "no docs retriever configured" diagnostic rather than a
+// startup crash. Follow-up: retriever.Close() has no shutdown hook
+// today — process exit closes the sqlite handle (see modernc.org/sqlite
+// durability), and adding a proper Handler.Shutdown() is out of scope
+// for M1 Op 7b.
+func newSearchDocsTool(logger *logging.Logger) domain.Tool {
+	dbPath, ok := docsFTSDBPath()
+	if !ok {
+		logger.Info("BM25 retriever not initialised — no installed-project marker in CWD; search_docs will return no-corpus diagnostic responses")
+		return tools.NewSearchDocsTool(logger, nil, nil)
+	}
+	retriever, err := tools.NewBM25Retriever(dbPath)
+	if err != nil {
+		logger.Warn("BM25 retriever init failed — search_docs will return no-corpus diagnostic responses",
+			"dbPath", dbPath, "error", err)
+		return tools.NewSearchDocsTool(logger, nil, nil)
+	}
+	return tools.NewSearchDocsTool(logger, retriever, retriever)
+}
+
+// docsFTSDBPath resolves the sqlite-fts5 index location for the docs
+// corpus. Precedence:
+//  1. SATURDAY_MCP_DOCS_FTS_PATH env var — an explicit override; always
+//     returned when set (so a caller who's opted in can put the DB
+//     anywhere, including under a test's t.TempDir()).
+//  2. Otherwise, .claude/rag/docs-fts5.sqlite relative to CWD — but only
+//     when a .claude/ directory already exists at CWD (the marker that
+//     this process is running inside an installed project). Without the
+//     marker, returns ("", false) so newSearchDocsTool skips backend
+//     construction — this keeps unit tests from spuriously creating
+//     .claude/rag/ under every test-package directory.
+//  3. If CWD is unresolvable at all, returns ("", false) — the tool
+//     degrades to the no-corpus diagnostic path.
+func docsFTSDBPath() (string, bool) {
+	if override := os.Getenv("SATURDAY_MCP_DOCS_FTS_PATH"); override != "" {
+		return override, true
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", false
+	}
+	if _, err := os.Stat(filepath.Join(cwd, ".claude")); err != nil {
+		return "", false
+	}
+	return filepath.Join(cwd, ".claude", "rag", "docs-fts5.sqlite"), true
 }
 
 // frameworkCorpusPaths resolves the shared/knowledge/ and docs/adrs/
