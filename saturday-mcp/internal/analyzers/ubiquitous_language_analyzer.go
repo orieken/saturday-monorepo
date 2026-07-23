@@ -73,18 +73,6 @@ var scannedSourceExtensions = map[string]struct{}{
 	".cs":   {},
 }
 
-// skippedDirs lists directory names the walker never descends into.
-// Same exclusion set every other analyzer in this package uses, plus
-// build-artifact and virtual-env directories per Op 4 spec.
-var skippedDirs = map[string]struct{}{
-	"node_modules": {},
-	".git":         {},
-	"dist":         {},
-	"build":        {},
-	"vendor":       {},
-	".venv":        {},
-}
-
 // Pre-compiled regexes. Reused across every Analyze call.
 var (
 	backtickTermRe   = regexp.MustCompile("`([^`]+)`")
@@ -301,19 +289,6 @@ func (a *UbiquitousLanguageAnalyzer) collectSourceFiles(root string) ([]string, 
 		return nil, err
 	}
 	return files, nil
-}
-
-// skipUninterestingDir returns filepath.SkipDir for directories the walk
-// should never descend into. Extracted from the collectSourceFiles
-// closure to keep that closure small.
-func skipUninterestingDir(root, current, name string) error {
-	if _, skip := skippedDirs[name]; skip {
-		return filepath.SkipDir
-	}
-	if strings.HasPrefix(name, ".") && current != root {
-		return filepath.SkipDir
-	}
-	return nil
 }
 
 // scanFile reads file line-by-line and appends a LanguageViolation for

@@ -40,6 +40,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 	complexityAnalyzer := analyzers.NewComplexityAnalyzer()
 	accessibilityAnalyzer := analyzers.NewAccessibilityAnalyzer()
 	ubiquitousLanguageAnalyzer := analyzers.NewUbiquitousLanguageAnalyzer()
+	dependencyBoundaryAnalyzer := analyzers.NewDependencyBoundaryAnalyzer()
 	frameworkAnalyzer := analyzers.NewFrameworkAnalyzer(logger)
 	patternValidator := analyzers.NewPatternValidator(logger)
 	improvementAnalyzer := analyzers.NewImprovementAnalyzer(logger)
@@ -71,6 +72,7 @@ func buildTools(logger *logging.Logger, processor *templates.Processor) []domain
 		tools.NewAnalyzeComplexityTool(logger, complexityAnalyzer),
 		tools.NewCheckAccessibilityTool(logger, accessibilityAnalyzer),
 		tools.NewCheckUbiquitousLanguageTool(logger, ubiquitousLanguageAnalyzer),
+		tools.NewVerifyDependenciesTool(logger, dependencyBoundaryAnalyzer),
 	}
 }
 

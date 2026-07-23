@@ -151,7 +151,7 @@ func (a *AccessibilityAnalyzer) collectFiles(path string, isDir bool) ([]string,
 			return nil
 		}
 		if info.IsDir() {
-			return skipUninteresting(path, p, info.Name())
+			return skipUninterestingDir(path, p, info.Name())
 		}
 		if _, ok := scannedExtensions[strings.ToLower(filepath.Ext(p))]; ok {
 			files = append(files, p)
@@ -162,20 +162,6 @@ func (a *AccessibilityAnalyzer) collectFiles(path string, isDir bool) ([]string,
 		return nil, err
 	}
 	return files, nil
-}
-
-// skipUninteresting returns filepath.SkipDir for directories we should
-// never descend into (node_modules, hidden subdirectories) and nil to
-// keep walking otherwise. Extracted from the filepath.Walk closure to
-// keep that closure small.
-func skipUninteresting(root, current, name string) error {
-	if name == "node_modules" {
-		return filepath.SkipDir
-	}
-	if strings.HasPrefix(name, ".") && current != root {
-		return filepath.SkipDir
-	}
-	return nil
 }
 
 // analyzeFile runs every rule against one file. Labels are collected in
