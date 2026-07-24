@@ -8,6 +8,14 @@ Ready-to-fire handoff prompts for work on `saturday-mcp`. Each file is self-cont
 2. Copy the entire contents of the target prompt file into the message.
 3. The agent will have everything it needs: repo path, prior state, scope, guardrails, deliverable format.
 
+## Active Prompts (ready to fire in a fresh chat / subagent)
+
+| File | Scope | Estimated size |
+|---|---|---|
+| [mcp-expand-milestone-2.md](mcp-expand-milestone-2.md) | Plan + execute M2: retrieval tier 3 (`search_features` via sqlite-vec), `validate_migrations`, saturday/sunday test advisors, KI/ADR/doc generators | Large — Phase A plan draft + ~9 execution ops |
+| [mcp-expand-milestone-3.md](mcp-expand-milestone-3.md) | Plan + execute M3: 6 framework personas mirroring `shared/agents/*.md` + 2 composite workflows (review_pr, analyze_repo). **Depends on M2 landing first.** | Large — Phase A plan draft + ~10 execution ops |
+| [post-m1-followups.md](post-m1-followups.md) | Two small M1 leftovers: `/reindex-docs` skill + `Handler.Shutdown()` graceful-close hook | Small — 2 independent ops, either can go first |
+
 ## Completed Prompts (`docs/prompts/done/`)
 
 | File | Scope | Status |
@@ -16,18 +24,11 @@ Ready-to-fire handoff prompts for work on `saturday-mcp`. Each file is self-cont
 | [refresh-docs-post-retrofit.md](done/refresh-docs-post-retrofit.md) | Update `README.md` and `docs/architecture.md` to reflect post-retrofit trinity structure | Completed |
 | [mcp-expand.md](done/mcp-expand.md) | Framework-tooling expansion — Milestone 1 (6 analytical & search tools) | Completed |
 
-## Future Expansion Roadmap (`mcp-expand-plan.md`)
+## Recommended execution order
 
-The roadmap for upcoming work is documented in [`mcp-expand-plan.md`](../mcp-expand-plan.md):
-
-- **Milestone 2**: Advanced Verification & Generators
-  - `search_features` (semantic vector search via sqlite-vec over feature archives)
-  - `validate_migrations` (expand/contract SQL migration validator)
-  - `saturday_test_advisor` & `sunday_test_advisor` (test coverage gap auditors)
-  - `create_ki`, `create_adr`, `scaffold_docs` (structured markdown generators)
-- **Milestone 3**: Framework Personas & Composite Workflows
-  - Personas: `architect`, `code_reviewer`, `security_reviewer`, `accessibility_engineer`, `sre_engineer`, `performance_engineer`
-  - Workflows: `review_pr_workflow`, `analyze_repo_workflow`
+1. **post-m1-followups.md** first — small, closes M1 loose ends before M2 starts
+2. **mcp-expand-milestone-2.md** next — do Phase A (plan draft) → get user approval → Phase B execution
+3. **mcp-expand-milestone-3.md** last — same Phase A → approval → Phase B pattern
 
 ## Convention
 
