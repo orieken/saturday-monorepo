@@ -151,27 +151,33 @@ See [CLI.md](./CLI.md) for the full CLI reference.
 
 ## Tool Inventory
 
-The server registers 16 MCP tools (14 single-step tools plus 2 workflows) alongside its
+The server registers 22 MCP tools (20 single-step tools plus 2 workflows) alongside its
 resources and personas.
 
 ### Tools
 
-| Name                     | Purpose                                                        |
-|--------------------------|----------------------------------------------------------------|
-| `generate_site`          | Generate a Site class with page and flow registration          |
-| `generate_page`          | Generate a Page class with element registration                |
-| `generate_flow`          | Generate a Flow class for multi-step user journeys             |
-| `generate_steps`         | Generate Cucumber step definitions from Gherkin patterns       |
-| `generate_element`       | Generate a custom Element/Component class                      |
-| `generate_service`       | Generate an API Service class                                  |
-| `migrate_code`           | Migrate legacy code (Cypress/Selenium/raw Playwright) to Saturday |
-| `analyze_framework`      | Analyze existing framework structure and patterns              |
-| `analyze_performance`    | Analyze code for performance bottlenecks                       |
-| `analyze_impact`         | Analyze the blast radius of modifying a specific file          |
-| `validate_patterns`      | Validate code against Saturday framework patterns              |
-| `suggest_improvements`   | Suggest code improvements based on Saturday best practices     |
-| `generate_documentation` | Generate markdown documentation for a project                  |
-| `parse_test_failure`     | Parse Playwright test output to identify failing files/lines   |
+| Name                         | Purpose                                                        |
+|------------------------------|----------------------------------------------------------------|
+| `generate_site`              | Generate a Site class with page and flow registration          |
+| `generate_page`              | Generate a Page class with element registration                |
+| `generate_flow`              | Generate a Flow class for multi-step user journeys             |
+| `generate_steps`             | Generate Cucumber step definitions from Gherkin patterns       |
+| `generate_element`           | Generate a custom Element/Component class                      |
+| `generate_service`           | Generate an API Service class                                  |
+| `migrate_code`               | Migrate legacy code (Cypress/Selenium/raw Playwright) to Saturday |
+| `analyze_framework`          | Analyze existing framework structure and patterns              |
+| `analyze_performance`        | Analyze code for performance bottlenecks                       |
+| `analyze_impact`             | Analyze the blast radius of modifying a specific file          |
+| `validate_patterns`          | Validate code against Saturday framework patterns              |
+| `suggest_improvements`       | Suggest code improvements based on Saturday best practices     |
+| `generate_documentation`     | Generate markdown documentation for a project                  |
+| `parse_test_failure`         | Parse Playwright test output to identify failing files/lines   |
+| `analyze_complexity`         | Analyze cyclomatic complexity and function length thresholds   |
+| `check_accessibility`        | Check HTML/Vue/React files for accessibility violations        |
+| `check_ubiquitous_language`  | Validate domain dictionary terms and language consistency      |
+| `verify_dependencies`        | Verify Clean Architecture layer import dependencies            |
+| `search_ki`                  | Search Knowledge Items and ADRs by query, tags, or domain      |
+| `search_docs`                | Search project documentation using BM25 FTS5 retrieval         |
 
 ### Workflows
 

@@ -101,8 +101,8 @@ adapter implementations to wire in.
 ### Tool
 
 Defined in `internal/domain/tool.go`. A `Tool` is one bounded MCP operation — generate a page,
-validate patterns, parse a test failure. One Go type per registered tool, one file per type,
-under `internal/tools/`.
+validate patterns, analyze complexity, search Knowledge Items, or retrieve documentation. One
+Go type per registered tool, one file per type, under `internal/tools/`.
 
 The interface:
 
