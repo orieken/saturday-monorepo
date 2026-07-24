@@ -1,6 +1,6 @@
 # Agent Prompts
 
-Ready-to-fire handoff prompts for outstanding work on saturday-mcp. Each file is self-contained — a fresh agent (Claude Code chat, subagent, or other MCP client) can pick up any prompt without prior conversation context.
+Ready-to-fire handoff prompts for work on `saturday-mcp`. Each file is self-contained — a fresh agent (Claude Code chat, subagent, or other MCP client) can pick up any prompt without prior conversation context.
 
 ## How to use
 
@@ -8,13 +8,26 @@ Ready-to-fire handoff prompts for outstanding work on saturday-mcp. Each file is
 2. Copy the entire contents of the target prompt file into the message.
 3. The agent will have everything it needs: repo path, prior state, scope, guardrails, deliverable format.
 
-## Prompts
+## Completed Prompts (`docs/prompts/done/`)
 
-| File | Scope | Estimated size |
+| File | Scope | Status |
 |---|---|---|
-| [backfill-workflow-tool-tests.md](backfill-workflow-tool-tests.md) | Add unit tests for `internal/tools/workflow_tool.go` (currently 0% coverage) | Small — 1-2 tests, 1 commit |
-| [refresh-docs-post-retrofit.md](refresh-docs-post-retrofit.md) | Update `README.md` and `docs/architecture.md` to reflect the post-retrofit trinity + adapter structure | Medium — 2-4 commits |
-| [mcp-expand.md](mcp-expand.md) | Add framework-tooling capabilities (analytical tools, personas, KI search, etc.) to saturday-mcp | Large — spawn subagents in batches, similar cadence to the mcp-add retrofit |
+| [backfill-workflow-tool-tests.md](done/backfill-workflow-tool-tests.md) | Add unit tests for `internal/tools/workflow_tool.go` (100% coverage) | Completed |
+| [refresh-docs-post-retrofit.md](done/refresh-docs-post-retrofit.md) | Update `README.md` and `docs/architecture.md` to reflect post-retrofit trinity structure | Completed |
+| [mcp-expand.md](done/mcp-expand.md) | Framework-tooling expansion — Milestone 1 (6 analytical & search tools) | Completed |
+
+## Future Expansion Roadmap (`mcp-expand-plan.md`)
+
+The roadmap for upcoming work is documented in [`mcp-expand-plan.md`](../mcp-expand-plan.md):
+
+- **Milestone 2**: Advanced Verification & Generators
+  - `search_features` (semantic vector search via sqlite-vec over feature archives)
+  - `validate_migrations` (expand/contract SQL migration validator)
+  - `saturday_test_advisor` & `sunday_test_advisor` (test coverage gap auditors)
+  - `create_ki`, `create_adr`, `scaffold_docs` (structured markdown generators)
+- **Milestone 3**: Framework Personas & Composite Workflows
+  - Personas: `architect`, `code_reviewer`, `security_reviewer`, `accessibility_engineer`, `sre_engineer`, `performance_engineer`
+  - Workflows: `review_pr_workflow`, `analyze_repo_workflow`
 
 ## Convention
 
@@ -22,8 +35,8 @@ Every prompt in this directory:
 - States the target repo path explicitly
 - Summarizes prior state (what's done, where to look)
 - Enumerates the scope (what to do, what NOT to touch)
-- Lists guardrails (git hygiene — the parent monorepo has 100+ unrelated in-progress files, so `git add -A` is banned)
-- Specifies escalation criteria (when to stop and ask instead of pushing through)
+- Lists guardrails (git hygiene — explicit paths only, `git add -A` is banned)
+- Specifies escalation criteria (when to stop and ask)
 - Requests a specific report format
 
-Add new prompts as new files. When a prompt is executed and committed, either delete it or move it to a `docs/prompts/done/` subdirectory (convention: TBD).
+When a prompt is executed and committed, move it to `docs/prompts/done/`.
