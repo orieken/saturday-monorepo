@@ -16,6 +16,232 @@ Semantic-ish, not strict SemVer:
 When you bump an agent's `version:` frontmatter field, add a row under a new dated heading here in the same
 commit — the pre-commit hook checks for exactly this.
 
+## 2026-07-30 — Epic 46: Visual QA Engineer
+
+- **`visual-qa-engineer` 1.0.0**: Added new conditional pipeline agent. Runs after qa-engineer on UI-touching features that have `heatmap-data/` or Playwright snapshot baselines. Wraps `@orieken/saturday-ml-analyzer` for interaction coverage analysis and Playwright native `toHaveScreenshot()` for visual regression. Verdict: PASS | FAIL | UNCONFIGURED. An UNCONFIGURED verdict does not block the pipeline (heatmap instrumentation not yet adopted). Produces `visual-qa-report.md` validated by `shared/contracts/visual-qa-report-contract.md`.
+
+## 2026-07-29 — Portable model_tier Abstraction
+
+- **`model-tier-auditor` 1.0.0**: Added new read-only counter-agent auditing agent frontmatter for portable `model_tier` declarations (`light`, `default`, `heavy`).
+- **`model_tier` Frontmatter Backfill**: Backfilled portable `model_tier` declarations with operational rationale comments across all 36 shared agents.
+
+## 2026-07-25 — v3.1.0: AOS Governance Skeleton (Phase 2)
+
+Second phase of the AOS (AI Operating System) migration described in `docs/aos/migration-plan.md`. Phase 2 is **purely additive**: every change is opt-in. A team upgrading to v3.1.0 without configuring `.claude/hooks/` or enabling auditor invocations sees zero behavior change from v3.0.0. That is the backward-compat guarantee this release commits to.
+
+- **10 Counter-Auditor Agents**: Added `context-auditor`, `knowledge-auditor`, `prompt-evaluator`, `agent-evaluator`, `rule-auditor`, `pattern-reviewer`, `tool-validator`, `documentation-auditor`, `retrieval-evaluator`, `privacy-auditor`.
+- **4 Opposing-Force Skill Pairs (7 skills)**: Added `memory-expansion` / `memory-compression`, `learning-engine` / `forgetting-engine`, `cost-optimizer` / `quality-optimizer`, and `scheduler`.
+- **Event Interceptor Layer**: Created `shared/hooks/` with `hooks-schema.md` and example hook definitions (`on-artifact-write.yaml`, `on-validation-pass.yaml`, `on-ki-created.yaml`).
+- **Opt-in Auditor Integration**: Updated `validate-artifact` to optionally invoke corresponding counter-auditor agents post-structural PASS when configured.
+- **Health Check Extension**: Extended `health-check` skill to detect all 11 counter agents and validate hook schemas.
+
+| Agent | Version | Change |
+|---|---|---|
+| `context-auditor` | 1.0.0 | Initial counter agent auditing `context-manifest.md` for pruning discipline, broken references, and token pressure accuracy. |
+| `knowledge-auditor` | 1.0.0 | Initial counter agent auditing `create-ki` skill output for KI schema compliance, semantic overlap, and ubiquitous language. |
+| `prompt-evaluator` | 1.0.0 | Initial counter agent auditing agent/skill prompts for prompt engineering hygiene, secret leakage, and template decoupling. |
+| `agent-evaluator` | 1.0.0 | Initial counter agent promoting `agent-eval` skill logic into an agent persona, evaluating frontmatter contracts and quality scores. |
+| `rule-auditor` | 1.0.0 | Initial counter agent auditing `shared/rules/*.md` for cross-rule contradictions, dead path references, and registry alignment. |
+| `pattern-reviewer` | 1.0.0 | Initial counter agent auditing `docs/patterns/*.md` for code snippet accuracy and resolved file paths. |
+| `tool-validator` | 1.0.0 | Initial counter agent auditing `shared/skills/*/SKILL.md` for standalone mode declarations and hidden script dependencies. |
+| `documentation-auditor` | 1.0.0 | Initial counter agent auditing `README.md`, `docs/AGENT_REFERENCE.md`, and prose docs for accurate agent/skill counts. |
+| `retrieval-evaluator` | 1.0.0 | Initial counter agent auditing KI + ADR retrievability per ADR-002 telemetry, identifying unmatched zero-hit queries. |
+| `privacy-auditor` | 1.0.0 | Initial counter agent paired with `security-reviewer`, auditing workspace artifacts for secret leakage, PII, and data boundary leaks. |
+
+---
+
+## 2026-07-25 — AOS Phase 2 Op 2.1: 10 Counter-Auditor Agents
+
+Adds 10 read-only counter agents under `shared/agents/` following the `memory-auditor` exemplar shape (Op 2.1 of `docs/aos/migration-plan.md`). Every agent is audit-only, reports findings for human review, and never mutates project state.
+
+| Agent | Version | Change |
+|---|---|---|
+| `context-auditor` | 1.0.0 | Initial counter agent auditing `context-manifest.md` for pruning discipline, broken references, and token pressure accuracy. |
+| `knowledge-auditor` | 1.0.0 | Initial counter agent auditing `create-ki` skill output for KI schema compliance, semantic overlap, and ubiquitous language. |
+| `prompt-evaluator` | 1.0.0 | Initial counter agent auditing agent/skill prompts for prompt engineering hygiene, secret leakage, and template decoupling. |
+| `agent-evaluator` | 1.0.0 | Initial counter agent promoting `agent-eval` skill logic into an agent persona, evaluating frontmatter contracts and quality scores. |
+| `rule-auditor` | 1.0.0 | Initial counter agent auditing `shared/rules/*.md` for cross-rule contradictions, dead path references, and registry alignment. |
+| `pattern-reviewer` | 1.0.0 | Initial counter agent auditing `docs/patterns/*.md` for code snippet accuracy and resolved file paths. |
+| `tool-validator` | 1.0.0 | Initial counter agent auditing `shared/skills/*/SKILL.md` for standalone mode declarations and hidden script dependencies. |
+| `documentation-auditor` | 1.0.0 | Initial counter agent auditing `README.md`, `docs/AGENT_REFERENCE.md`, and prose docs for accurate agent/skill counts. |
+| `retrieval-evaluator` | 1.0.0 | Initial counter agent auditing KI + ADR retrievability per ADR-002 telemetry, identifying unmatched zero-hit queries. |
+| `privacy-auditor` | 1.0.0 | Initial counter agent paired with `security-reviewer`, auditing workspace artifacts for secret leakage, PII, and data boundary leaks. |
+
+---
+
+## 2026-07-24 — Context-engineer changelog catch-up
+
+Documentation-only catch-up for the existing `context-engineer` v2.2.0 prompt state. The agent file
+already carried this version; this entry records it so `health-check.sh` no longer reports the version as
+undocumented. No agent behavior changed in this edit.
+
+| Agent | Version | Change |
+|---|---|---|
+| context-engineer | 2.2.0 | Changelog catch-up for the already-present proactive context-optimization prompt version. No prompt edit or behavior change in this documentation patch. |
+
+---
+
+## 2026-07-22 — v3.0.0: AOS foundations (Phase 1)
+
+First landing of the AOS (AI Operating System) migration described in
+`docs/aos/migration-plan.md`. Phase 1 is **purely additive**: every change here
+is opt-in. A team upgrading a v2.x install to v3.0.0 without invoking any AOS-
+specific capability behaves identically to v2.x. That is the backward-compat
+guarantee this release commits to — see `docs/aos/migration-guide.md`.
+
+### New
+- `shared/telemetry/` — top-level layer for pipeline telemetry. Contains
+  `README.md`, `event-schema.md` (agent.invoked, agent.completed,
+  artifact.written, validation.passed, validation.failed), and the
+  `event-recorder` skill (`event-recorder.md`) that appends events to
+  `.claude/telemetry/events.jsonl`. No producer emits events by default —
+  Phase 3 will wire that via hooks.
+- `shared/evaluation/` — top-level layer for continuous evaluation specs.
+  Contains `README.md` (continuous vs on-demand model) and the first spec,
+  `pipeline-retrospective.md`, which points at the existing
+  `shared/skills/pipeline-retrospective/SKILL.md` unchanged and documents its
+  Phase 3 continuous-trigger contract.
+- `shared/agents/memory-auditor.md` (v1.0.0) — the first AOS counter agent,
+  paired with the `memory-engineer` skill (pair #2 in the AOS design pack's
+  Governance Checks and Balances). Read-only (`Read, Glob, Grep`), reports
+  schema failures, exact duplicates, semantic-overlap candidates, and stale-
+  metadata candidates. Never modifies KIs. Exemplar for the 10 remaining
+  audit-relationship counter agents Phase 2 will land.
+- `docs/aos/migration-guide.md` — the "how to opt in" stub. Nothing forces
+  adoption in v3.0.0.
+
+### Updated
+- `shared/skills/health-check/SKILL.md` — new "AOS Layers" section at the
+  bottom of the health report inventories which AOS layers and counter
+  agents are present. Absence of any AOS layer is never a failure —
+  inventory only, consistent with the opt-in migration principle. Counter-
+  agent detection filters out review-shaped producers (`code-reviewer`,
+  `security-reviewer`, etc.) so only real AOS counter agents (paired per
+  the 15 governance pairs) get counted. Skill has no frontmatter `version:`
+  field today; not retroactively adding one just for this edit — kept
+  consistent with every other skill.
+
+### Unchanged
+Every agent's `version:` in this changelog stayed exactly as it was in the
+v2.x-era last row. Every existing skill file behaves identically. Every rule
+under `shared/rules/` is untouched. Every contract, blueprint, and template
+is untouched. `shared/memory-registry.json` is untouched (memory-auditor
+reads it; it does not appear as a new source).
+
+### The v3.0 backward-compat guarantee (verbatim)
+
+> A v2.x install upgraded to v3.0 without opting into any AOS capability
+> behaves identically to v2.x.
+
+Verified via Op 1.7's identity check — see the migration plan for the exact
+checks a human should run before publishing the v3.0.0 tag.
+
+| Agent | Version | Change |
+|---|---|---|
+| memory-auditor | — -> 1.0.0 | **New agent.** First AOS counter agent, paired with the memory-engineer skill. Read-only auditor: schema compliance, exact + semantic duplicate detection, stale-metadata candidates. Never modifies KIs; produces findings for human/memory-engineer approval. Tools deliberately limited to Read, Glob, Grep. |
+
+---
+
+## 2026-07-15 — Testing taxonomy: FIRST, Three Laws, and annotation convention explicit
+
+Surfaced by a direct question about whether the framework has a clear distinction between unit /
+integration / acceptance / E2E tests, and whether tests should annotate their originating
+issue/AC for traceability. Both real gaps: the framework had structural separation (Saturday = E2E,
+Sunday = API, `test-driven-developer` = greenfield unit, `unit-tester` = existing-code unit) but no
+doc naming the pyramid or its principles per level, and no in-test annotation convention (traceability
+was report-time-only, evaporates the moment a test file gets renamed or moved).
+
+The user's follow-up correctly pushed back on cargo-culting XP TDD: the design pressure of XP TDD comes
+from epistemic role separation between the person writing the failing test and the person implementing
+it. When a single agent does both, that gap collapses. Rather than pretend `test-driven-developer`
+standalone produces the same design benefit as human XP TDD, this update states the honest scope: role-
+separated (via `deliver-atdd`) preserves the design pressure; standalone is valuable for spec/
+regression but relies on other mechanisms (complexity thresholds, SOLID, `code-reviewer`) for design
+work. This is the same "state the tradeoff plainly rather than paper over it" approach
+`docs/AGENT_REFERENCE.md` already uses for `test-driven-developer`'s review-chain bypass.
+
+New: `docs/patterns/testing-pyramid.md` (the philosophy — five test levels, FIRST, Three Laws with the
+role-separation scoping) and two new sections in `shared/rules/testing-conventions.md` (the
+enforcement — Test Categories table mapping level to agent/framework, plus Test Annotation Convention
+with per-language mechanisms — JSDoc for TS, docstring for pytest, `@Tag`/`@DisplayName` for JUnit,
+`[Trait]` for xUnit, comment for Go, `@issue:...` tag for Gherkin).
+
+| Agent | Version | Change |
+|---|---|---|
+| test-driven-developer | 1.1.0 -> 1.2.0 | **Minor**: cite Three Laws + FIRST explicitly (they were already the implicit discipline; naming them makes it teachable). Add honest scoping note about role separation — standalone use doesn't produce XP TDD's design benefit; that's a real tradeoff, not something to hide. New process step: annotate each test per the new Test Annotation Convention. Read `testing-conventions.md` in the preamble now that it has enforceable rules relevant to this agent. |
+| unit-tester | 1.1.0 -> 1.2.0 | **Minor**: state explicitly that this agent does NOT follow the Three Laws (impossible — the code came first) but that its tests still satisfy FIRST as properties. Add annotation-convention citation to step 6, with a note that in characterization mode the "AC" being annotated is often the observed behavior itself, not a spec-defined AC. Read `testing-conventions.md` in the preamble. |
+| qa-engineer | 1.1.1 -> 1.2.0 | **Minor**: add an intro paragraph making the multi-level scope explicit (integration / API contract / acceptance / E2E — this agent legitimately owns all four, and should be explicit about which level each test is at). Add annotation-convention citation to step 6 with per-format guidance (Gherkin gets `@issue:...` tag; scenario name IS the AC). Read `testing-conventions.md` in the preamble. |
+
+---
+
+## 2026-07-13 — unit-tester reads callers/dependents; backfill-unit-tests considers context-engineer
+
+Follow-up to the same-day `unit-tester`/`backfill-unit-tests` addition, prompted by a direct question:
+should context get cleaned up before either starts work? Answer landed as "not the full `context-engineer`
+pass" (it's built around feature-spec-driven bounded-context mapping that doesn't exist for a bare
+file/directory target) "but yes to a narrower version of the same need." Characterization mode specifically
+depends on understanding a legacy target's callers and dependents, not just the target file — a caller that
+only exercises the code under specific external state is invisible from the target file alone, and
+`search-ki` doesn't cover it either (it finds documented gotchas, not undocumented call graphs).
+
+| Agent | Version | Change |
+|---|---|---|
+| unit-tester | 1.0.0 -> 1.1.0 | **Minor**: expanded process step 3 — after reading the target, grep for its callers/importers and what it depends on, not just the target file in isolation. Most load-bearing in characterization mode; a single already-understood file being backfilled for coverage needs it less. |
+
+`backfill-unit-tests` (no version — skills aren't versioned the way agents are): new process step 2 points
+at `context-engineer`'s own proactive self-invocation trigger (3+ files, unfamiliar code) rather than
+duplicating its logic — a directory/module-level characterization target should trigger it in practice, a
+single already-familiar file usually shouldn't. Renumbered subsequent steps.
+
+---
+
+## 2026-07-13 — New agent: unit-tester (+ backfill-unit-tests skill)
+
+A new gap, adjacent to but distinct from `test-driven-developer`: sometimes tests need to be added to code
+that must *not* change — raising coverage on already-trusted code, or building a Michael Feathers-style
+characterization-test safety net around legacy code before a refactor or migration. `qa-engineer` already
+had the right guidance for this (its own "Testing Legacy Code" section), but only as a step gated behind
+`deliver-feature`'s `analysis.md`/`implementation-notes.md` inputs — there was no way to point it at an
+arbitrary existing file with no feature delivery underway.
+
+Added `unit-tester`: same standalone-invocation style as `test-driven-developer`, but inverted — the code
+doesn't change to satisfy the tests, the tests describe what the code already does. Stricter than
+`qa-engineer` on one point: never modifies source, not even qa-engineer's narrow "except to fix a bug
+found" exception. If the code genuinely can't be tested without a structural seam, that's treated as
+`approval-gates.md` gate #6 (Writing Files out of Boundary) — reported and held for explicit approval, never
+performed automatically.
+
+Unlike `test-driven-developer`'s soft "recommend documentation-manager, don't auto-invoke" pattern (real
+risk of wasted ceremony — most ad-hoc sessions produce nothing worth promoting), a code-quality pass over
+newly-written tests has no equivalent "usually pointless" cost. So this one gets auto-chained instead of
+just recommended: new skill `backfill-unit-tests` runs `unit-tester`, then automatically runs
+`code-reviewer` against just the new test files (never the untouched source), producing one combined
+report — same shape as `review-pr`, this repo's existing precedent for a thin orchestration skill that
+coordinates agents without `deliver-feature`'s full checkpoint ceremony.
+
+| Agent | Version | Change |
+|---|---|---|
+| unit-tester | — -> 1.0.0 | **New agent.** Standalone, writes/backfills unit tests for existing code without modifying it (coverage backfill or legacy characterization). Includes the same `search-ki` lookup + non-auto-invoked `documentation-manager` recommendation pattern just added to `test-driven-developer`. |
+
+New skill: `shared/skills/backfill-unit-tests/SKILL.md` — coordinates `unit-tester` + `code-reviewer`, mirroring `review-pr`'s orchestration shape.
+
+---
+
+## 2026-07-13 — test-driven-developer gets memory awareness
+
+`test-driven-developer` bypasses the whole `deliver-feature` pipeline by design (see
+`docs/AGENT_REFERENCE.md` entry 24) — no `context-engineer` pass before it starts, and it's not part of
+the `pipeline-trace`/retrospective-every-5 cadence after it finishes. That's a deliberate speed tradeoff
+on the *review* axis (no code-reviewer/security-reviewer), but it left this agent silently cold on the
+*memory* axis too: it never checked whether a relevant KI/ADR already existed, and nothing routed its
+findings back into the memory system afterward. Closes that gap without reintroducing the ceremony the
+agent exists to skip — a single cheap `search-ki` lookup going in, a recommendation (not an auto-trigger)
+for `documentation-manager` coming out.
+
+| Agent | Version | Change |
+|---|---|---|
+| test-driven-developer | 1.0.1 -> 1.1.0 | **Minor**: new process step 2 invokes `search-ki` for the feature's domain/keywords before test design (read-only, non-blocking — informs, doesn't gate). New "Knowledge Consulted" section in `tdd-report.md`'s output format. New rule: after a substantial session, recommend `documentation-manager` to the user rather than auto-invoking it, matching that agent's own "most sessions produce nothing durable enough to promote" discipline. |
+
 ---
 
 ## 2026-07-06 — Cursor native skills/agents compatibility (Epic 30, Phase 1)

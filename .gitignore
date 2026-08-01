@@ -8,3 +8,18 @@ perf/k6
 
 
 containers
+
+# IDE / tooling
+.idea/
+.claude/worktrees/
+.claude/*.bak.*
+.agents/*.bak.*
+*.bak.*
+
+# Test run artifacts
+playwright-report/
+reports/
+heatmap-data/
+coverage.out
+coverage_output.txt
+*.webm

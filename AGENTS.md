@@ -261,6 +261,82 @@ Follows the community-standard layout ([golang-standards/project-layout](https:/
   readable CI output plus `--junitfile` for JUnit XML export into whatever CI reporting aggregator is in
   use.
 
+# Infrastructure-as-Code Conventions
+
+Cross-references `shared/rules/architecture-guardrails.md` #3 (no hardcoded secrets). These rules apply to every IaC file the `devops-engineer` agent touches.
+
+---
+
+## Terraform / OpenTofu
+
+ALWAYS pin explicit versions for every provider and module — no floating `~>` without a lower-bound patch.
+ALWAYS use remote state with locking (S3 + DynamoDB, GCS, Terraform Cloud, etc.) — no local `terraform.tfstate` in source.
+NEVER hardcode credentials, account IDs, or tokens — use `var.*` backed by a secrets manager reference or environment variable.
+ALWAYS run `terraform fmt` and `tflint` before committing — treat lint failures as build failures.
+ALWAYS use module boundaries to separate environment config from resource definitions — one module per concern.
+NEVER run `terraform apply` without a reviewed `terraform plan` output — this is an Approval Gate.
+ALWAYS tag every resource with at minimum `environment`, `owner`, and `project` tags.
+NEVER commit `.tfvars` files containing real secrets — use `.tfvars.example` with placeholder values only.
+
+## Module Layout
+
+```
+infra/
+├── modules/           ← reusable, no environment knowledge
+│   └── <service>/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+└── environments/
+    ├── staging/
+    │   └── main.tf    ← calls modules, sets env-specific vars
+    └── production/
+        └── main.tf
+```
+
+---
+
+## Dockerfile
+
+ALWAYS use multi-stage builds — build artifacts in a builder stage, copy only what's needed into the final image.
+ALWAYS switch to a non-root `USER` before the final `CMD` or `ENTRYPOINT`.
+ALWAYS use minimal base images (`distroless`, `alpine`, or official slim variants) — never `ubuntu:latest` or bare `debian`.
+NEVER use `latest` as a base image tag — pin to a specific digest or version tag.
+NEVER install packages with `apt-get` / `apk add` without pinning a version (`apt-get install curl=7.x.x`).
+NEVER store secrets, API keys, or passwords in `ENV` or `ARG` instructions — secrets must be injected at runtime.
+ALWAYS set `WORKDIR` explicitly — never rely on the default working directory.
+ALWAYS use `.dockerignore` to exclude `.git`, `node_modules`, secrets, and build artifacts from the build context.
+
+---
+
+## Kubernetes / Helm
+
+ALWAYS set `resources.requests` and `resources.limits` on every container — omitting them blocks scheduling predictability.
+NEVER use `image: *:latest` in any manifest or Helm values file — pin to a specific SHA or immutable tag.
+ALWAYS create a dedicated `ServiceAccount` per application — never use the `default` service account.
+ALWAYS apply RBAC (`Role` + `RoleBinding`) scoped to the minimum permissions the workload needs — ClusterRole only when namespace scope is genuinely insufficient.
+ALWAYS define `NetworkPolicy` for every namespace — default-deny all ingress and egress, then allow only required paths.
+NEVER store secrets as plain-text `Secret` manifests in source control — use ExternalSecrets Operator, Sealed Secrets, or Vault Agent Injector.
+ALWAYS set `readinessProbe` and `livenessProbe` — without them Kubernetes cannot route traffic or restart unhealthy pods.
+ALWAYS set `podDisruptionBudget` for production workloads to prevent full-cluster drain during rolling updates.
+
+---
+
+## GitHub Actions
+
+ALWAYS pin action versions to a full commit SHA, not a mutable tag (`uses: actions/checkout@abc1234` not `@v4`).
+ALWAYS declare an explicit `permissions:` block at the job or workflow level — default is read-all, which is too broad.
+NEVER echo secrets in `run:` steps — use `::add-mask::` or rely on the automatic masking of `${{ secrets.* }}` variables only.
+NEVER use `pull_request_target` with an explicit checkout of the PR branch unless you have verified the workflow does not expose repository secrets to untrusted code — this is a critical TOCTOU attack surface.
+ALWAYS scope `GITHUB_TOKEN` permissions to `contents: read` unless a step specifically needs write access (and then scope only that step).
+ALWAYS use `if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository` to guard secrets from fork PRs.
+NEVER store third-party credentials in repository variables — use environment-scoped secrets with required reviewers for production environments.
+ALWAYS run security-sensitive jobs (deploy, publish) only after all test and lint jobs have passed — use `needs:` dependencies explicitly.
+
+---
+
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+
 # Java Conventions
 
 **No internal Saturday-Java reference repo exists yet** (unlike Python and C#, which are grounded
@@ -300,6 +376,101 @@ or overrides these choices.
   reporting tool, with first-class JUnit 5 and Cucumber integration (relevant if Cucumber-JVM is
   adopted for BDD). `ExtentReports` is a Java-specific alternative if Allure's broader ecosystem
   positioning isn't a fit.
+
+# Kotlin Conventions
+
+Conventions for Android apps and Kotlin Multiplatform (KMP) targets built with Jetpack Compose and
+Coroutines. Applies to any feature the framework targets at Android or shared Kotlin layers.
+
+## Architecture
+ALWAYS follow Clean Architecture layers: Domain → UseCase → Repository → DataSource.
+NEVER let domain entities import Android framework classes (`Context`, `Activity`, etc.).
+ALWAYS define repository interfaces in the use-case layer, implement in the data layer.
+ALWAYS use constructor injection — no service locators or manual `getInstance()` calls outside DI modules.
+NEVER use `GlobalScope` — always use a `CoroutineScope` tied to a lifecycle or ViewModel.
+ALWAYS use `StateFlow` / `SharedFlow` for UI state — never raw mutable state exposed from ViewModel.
+
+## Project Tooling
+- **Build system**: Gradle with Kotlin DSL (`build.gradle.kts`) — no Groovy DSL for new projects.
+- **Complexity enforcement**: [`detekt`](https://detekt.dev/) — `ComplexMethod` rule capped at `6`
+  (enforces the framework-wide `< 7` cyclomatic complexity budget). Add `detekt.yml` at the repo
+  root; treat detekt failures as CI build failures.
+- **Formatter / linter**: [`ktlint`](https://pinterest.github.io/ktlint/) — consistent Kotlin
+  formatting (Google style guide subset). Run as a Gradle task or pre-commit hook.
+- **Static analysis**: detekt (complexity + code smells) + Android Lint (resource and API issues).
+- **Build variants**: use Gradle product flavors only when the apps genuinely differ in behavior;
+  avoid flavor soup for environment config — use `BuildConfig` fields backed by CI env vars instead.
+
+## File Naming
+PascalCase for classes and files; camelCase for functions, properties, and variables; one public
+top-level declaration per file; filename matches the public declaration name.
+
+| Purpose | Suffix | Example |
+|---|---|---|
+| Domain model | `Model.kt` | `UserModel.kt` |
+| ViewModel | `ViewModel.kt` | `UserProfileViewModel.kt` |
+| Repository interface | `Repository.kt` | `UserRepository.kt` |
+| Repository impl | `RepositoryImpl.kt` | `UserRepositoryImpl.kt` |
+| Use case | `UseCase.kt` | `FetchUserUseCase.kt` |
+| Compose screen | `Screen.kt` | `UserProfileScreen.kt` |
+| Data source | `DataSource.kt` | `UserRemoteDataSource.kt` |
+| Unit test | `Test.kt` | `UserProfileViewModelTest.kt` |
+
+## Frameworks
+- **UI layer**: Jetpack Compose — primary and modern default. XML layouts only for legacy feature
+  areas or views not yet expressible in Compose; never mix them in the same screen without a clear
+  `AndroidView` boundary.
+- **Async**: Kotlin Coroutines + Flow — all async work. Prefer `suspend fun` for one-shot operations,
+  `Flow<T>` for streams, `StateFlow<T>` for observable UI state.
+- **Dependency injection**: [Hilt](https://dagger.dev/hilt/) for Android apps (Dagger-backed,
+  first-party Google support). [Koin](https://insert-koin.io/) for Kotlin Multiplatform targets
+  where Hilt isn't available. Constructor injection always — no field injection except where
+  Android lifecycle genuinely forces it (legacy `Activity`/`Fragment` injection only).
+- **Networking**: [Ktor](https://ktor.io/) for KMP or [Retrofit](https://square.github.io/retrofit/)
+  for Android-only; never use raw `HttpURLConnection`.
+- **Local persistence**: Room for SQL; DataStore (Proto or Preferences) for lightweight key-value;
+  never SharedPreferences for new code.
+
+## Testing & QA Tooling
+- **Unit testing framework**: JUnit 5 (`junit-jupiter`) — same framework default as the Java
+  conventions (`java-conventions.md`).
+- **Mocking**: [`MockK`](https://mockk.io/) — the Kotlin-idiomatic mocking library (`mockk<T>()`,
+  `coEvery`, `coVerify`). Prefer MockK over Mockito for any Kotlin codebase; Mockito lacks suspend
+  function support without the `mockito-kotlin` bridge.
+- **Coroutine testing**: `kotlinx-coroutines-test` — `runTest {}`, `TestCoroutineScheduler`,
+  `UnconfinedTestDispatcher`. Never use `runBlocking` in tests — use `runTest`.
+- **Android UI testing**: [Espresso](https://developer.android.com/training/testing/espresso) for
+  View-based UI; [Compose UI Test](https://developer.android.com/jetpack/compose/testing) for
+  Compose screens (`composeTestRule.onNodeWithText(...).performClick()`).
+- **Snapshot testing**: [Paparazzi](https://github.com/cashapp/paparazzi) — records and diffs
+  Compose and View screenshots without a device or emulator. Pair with visual-qa-engineer.
+- **Fake / synthetic data**: [`Faker`](https://github.com/serpro69/kotlin-faker) (`io.github.serpro69:kotlin-faker`)
+  — Kotlin-idiomatic wrapper over the Faker pattern, consistent with the Java DataFaker pick in
+  `java-conventions.md`. Pair with hand-written builder functions for domain-object construction.
+- **Factories**: hand-written `build*()` factory functions or `Builder` classes per domain type —
+  same preference as Go conventions. [InstancioKotlin](https://www.instancio.org/kotlin/) is an
+  option for large object graphs.
+- **Performance testing**: Android Macrobenchmark for app startup and scroll jank; k6 for any
+  backend service the Android app calls.
+- **Reporting**: JUnit XML output via `junit-platform-reporting`; feed into CI reporting aggregator
+  (same pipeline as `java-conventions.md`).
+
+## Quick Reference
+
+```kotlin
+// Complexity: < 7 — enforce with detekt ComplexMethod capped at 6
+// File naming: PascalCase classes/files, camelCase functions/props, one public decl per file
+// Architecture: Domain / UseCase / Repository / DataSource — no Android imports in domain
+// Async: Coroutines + Flow; StateFlow for UI state; runTest in tests (never runBlocking)
+// DI: Hilt (Android) or Koin (KMP); constructor injection always
+// UI: Jetpack Compose; XML layouts legacy only
+// Mocking: MockK (not Mockito)
+// Snapshot: Paparazzi
+// Complexity tool: detekt ComplexMethod capped at 6
+```
+
+---
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
 
 # Python Conventions
 
@@ -352,12 +523,219 @@ root, source under `src/<package_name>/`, tests under `tests/` mirroring the sou
 `saturday-ml` (visual baselines, regression, heatmap generation) — mentioned for completeness since
 they're part of the same monorepo, not because they're testing-tooling categories this file is scoped to.
 
+# Rust Conventions
+
+Conventions for systems-level and service work built with Rust. Applies to any feature the
+framework targets at a Rust codebase — CLI tools, backend services, or shared library crates.
+
+## Architecture
+ALWAYS follow Clean Architecture layers: Domain → UseCases → Adapters → Frameworks.
+NEVER let domain types import adapter or framework crates.
+ALWAYS define traits in the use-case layer, implement in adapter crates.
+ALWAYS use constructor-style `new()` or builder patterns — no naked public fields on domain types.
+NEVER use `unwrap()` or `expect()` in library code — only in tests or unreachable branches with a comment explaining why.
+ALWAYS handle errors explicitly with `?` — no silent swallows.
+ALWAYS set explicit timeouts on every network call.
+NEVER use raw SQL without parameterized queries.
+ALWAYS use the expand/contract pattern for database migrations.
+
+## Project Tooling
+- **Build / dependency manager**: `cargo` — pin exact versions in `Cargo.lock`; check in `Cargo.lock`
+  for binaries, omit it for library crates.
+- **Formatter**: `rustfmt` — `cargo fmt --all`; enforce in CI.
+- **Linter / complexity**: `cargo clippy -- -D warnings` — treat every Clippy warning as a build
+  failure. For cognitive complexity specifically, enable
+  `#![warn(clippy::cognitive_complexity)]` and cap at `6` (enforces the framework-wide `< 7` budget).
+- **Supply-chain audit**: [`cargo-deny`](https://embarkstudios.github.io/cargo-deny/) — ban known
+  yanked crates, enforce license allow-lists, block duplicate versions. `cargo audit` for CVE scanning.
+- **Unsafe code**: `#![forbid(unsafe_code)]` at every crate root. If `unsafe` is genuinely
+  required (FFI, performance-critical primitives), it MUST be documented in an ADR and isolated to
+  a single `unsafe_impl/` module with a `# Safety` doc comment on every `unsafe` block.
+
+## Project Structure
+Follows standard Cargo workspace layout:
+- `crates/<name>/src/` — one crate per bounded context or architectural layer
+- `src/lib.rs` — library entry point for single-crate projects
+- `src/main.rs` — binary entry point; keep thin — delegate immediately to a `run()` fn in `lib.rs`
+- `src/<domain>/mod.rs` — top-level module file for non-trivial sub-domains
+- `tests/` — integration tests (separate from `#[cfg(test)]` unit tests); one file per feature area
+
+File naming follows Rust community convention: `snake_case.rs`, one public top-level type or module
+per file for large types. Small related types (newtypes, enums, errors) may share a file.
+
+## Error Handling
+- **Library crates**: [`thiserror`](https://github.com/dtolnay/thiserror) — derive typed
+  `Error` enums that callers can `match` on.
+- **Application / binary crates**: [`anyhow`](https://github.com/dtolnay/anyhow) — ergonomic
+  `Result<T, anyhow::Error>` with context chaining (`.context("...")`).
+- NEVER mix `thiserror` and `anyhow` in the same crate — library boundary is the dividing line.
+- ALWAYS propagate with `?`; only `unwrap()` / `expect()` where an invariant is truly unreachable
+  and the panic message explains why.
+
+## Async
+- **Runtime**: [`tokio`](https://tokio.rs/) — the standard default for networked services.
+  For embedded or no-std targets, this choice is an ADR-worthy decision — document the alternative
+  (`embassy`, `smol`, bare `futures`) and the reason.
+- **Async in traits**: native `async fn` in traits is stable since Rust 1.75 and is the correct
+  default for non-object-safe trait bounds. For object-safe dynamic dispatch
+  (`Box<dyn MyTrait>`), [`async-trait`](https://github.com/dtolnay/async-trait) remains necessary
+  until `dyn async Fn` stabilizes — annotate with `#[async_trait]` only when dynamic dispatch
+  is explicitly needed.
+- ALWAYS use `tokio::time::timeout()` for network calls — never an unbounded `.await`.
+- NEVER `block_on()` from within an async context — it deadlocks on single-threaded runtimes.
+
+## Testing & QA Tooling
+- **Unit tests**: inline `#[cfg(test)] mod tests { ... }` per module — the Rust idiom; tests live
+  next to the code they verify.
+- **Integration tests**: `tests/` directory, one file per feature boundary; uses the public API only.
+- **Property-based testing**: [`proptest`](https://github.com/proptest-rs/proptest) — generate
+  random inputs and verify invariants (`prop_assert!`). Prefer over hand-written edge cases for
+  numeric, string, and collection inputs.
+- **Parameterized / table-driven tests**: [`rstest`](https://github.com/la10736/rstest) — `#[rstest]`
+  + `#[case(...)]` for table-driven tests; `#[fixture]` for shared setup, equivalent to
+  `t.Run()` table tests in Go.
+- **Trait mocking**: [`mockall`](https://github.com/asomers/mockall) — `#[automock]` on traits;
+  generates `MockMyTrait` structs with `.expect_method()` / `.returning(...)` Mockito-style
+  expectations. Use only in unit tests — never ship `mockall` in production code paths.
+- **Fake / synthetic data**: [`fake`](https://github.com/cksac/fake-rs) (`fake = { features = ["derive"] }`)
+  — derive-based fake generation for domain structs; `Faker::fake()` for scalars. Closest Rust
+  equivalent to `gofakeit` / `@faker-js/faker`.
+- **Performance testing**: k6 — same as every other language here. For micro-benchmarks,
+  `cargo bench` with [`criterion`](https://github.com/bheisler/criterion.rs) — statistical
+  regression detection, HTML reports.
+- **Reporting**: `cargo test --no-fail-fast -- -Z unstable-options --format json` piped to
+  [`cargo2junit`](https://github.com/johnterickson/cargo2junit) for JUnit XML output into the CI
+  reporting aggregator.
+
+## Quick Reference
+
+```rust
+// Complexity: < 7 — enforce with clippy::cognitive_complexity capped at 6 in CI
+// File naming: snake_case.rs, one top-level public type per file for large types
+// Architecture: Domain / UseCases / Adapters / Frameworks — no framework imports in domain
+// Errors: thiserror in libs, anyhow in binaries; never unwrap() in lib code
+// Async: tokio runtime; native async fn in traits (1.75+); async-trait for dyn dispatch only
+// Unsafe: #![forbid(unsafe_code)] at crate root; ADR required to unlock
+// Safety fitness function: cargo clippy -- -D warnings in CI
+// Tests: #[cfg(test)] inline units, tests/ integration, proptest, rstest, mockall
+// Benchmarks: criterion
+```
+
+---
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+
+# Swift Conventions
+
+Conventions for iOS / macOS apps built with SwiftUI and Swift Concurrency. Applies to any feature
+the framework targets at a native Apple platform.
+
+## Architecture
+ALWAYS follow Clean Architecture layers: Domain → UseCase → Repository → Adapter.
+NEVER let domain entities import UIKit, SwiftUI, or any framework layer.
+ALWAYS define repository protocols in the use-case layer, implement in adapters.
+ALWAYS use constructor injection for dependencies — avoid singletons as primary state holders.
+Use `@Environment` for SwiftUI-scoped dependencies only (theme, locale, navigation containers).
+ALWAYS use `async`/`await` and Swift Concurrency — no callback pyramids or manual DispatchQueue juggling.
+NEVER use `@Published` inside domain entities — keep Combine bindings in the ViewModel layer.
+
+## Project Tooling
+- **Build system**: Xcode (primary) or Swift Package Manager for command-line / multiplatform targets.
+- **Complexity enforcement**: [`SwiftLint`](https://github.com/realm/SwiftLint) — `cyclomatic_complexity`
+  rule capped at `6` (enforces the framework-wide `< 7` budget). Add a `.swiftlint.yml` at the repo
+  root; treat SwiftLint warnings as CI failures.
+- **Formatter**: [`SwiftFormat`](https://github.com/nicklockwood/SwiftFormat) — run as a build phase
+  or pre-commit hook.
+- **Static analysis**: Xcode's built-in Analyze action (`⌘⇧B`) plus SwiftLint; no custom
+  analysis framework required.
+
+## File Naming
+PascalCase for all Swift source files; one public type per file; filename matches the public type name.
+
+| Purpose | Suffix | Example |
+|---|---|---|
+| Domain model | `Model.swift` | `UserModel.swift` |
+| ViewModel | `ViewModel.swift` | `UserProfileViewModel.swift` |
+| Repository protocol | `Repository.swift` | `UserRepository.swift` |
+| Repository impl | `RepositoryImpl.swift` | `UserRepositoryImpl.swift` |
+| Use case | `UseCase.swift` | `FetchUserUseCase.swift` |
+| SwiftUI view | `View.swift` | `UserProfileView.swift` |
+| Unit test | `Tests.swift` | `UserProfileViewModelTests.swift` |
+| UI test | `UITests.swift` | `UserProfileUITests.swift` |
+
+## Frameworks
+- **UI layer**: SwiftUI — primary and modern default. UIKit only for components not yet expressible
+  in SwiftUI or for legacy feature areas; never mix them in the same view hierarchy without a
+  clear `UIViewRepresentable` boundary.
+- **Reactive / async**: Swift Concurrency (`async`/`await`, `Task`, `Actor`) for all async work.
+  Combine is acceptable for multi-value streams and SwiftUI bindings (`@Published`, `PassthroughSubject`);
+  avoid Combine for one-shot async calls (use `async/await` instead).
+- **Dependency injection**: constructor injection; [`Factory`](https://github.com/hmlongco/Factory)
+  is the recommended lightweight DI container for projects that need container-based registration —
+  not required for small apps.
+- **Networking**: `URLSession` with `async`/`await` — no third-party HTTP library required.
+
+## Testing & QA Tooling
+- **Unit testing framework**: XCTest — standard library, no extra dependency.
+- **Expressive matchers**: [`Nimble`](https://github.com/Quick/Nimble) (optional) for readable
+  assertions (`expect(result).to(equal(42))`). [`Quick`](https://github.com/Quick/Quick) for
+  BDD-style `describe`/`it` grouping (optional; use when BDD phrasing aids stakeholder readability).
+- **Mocking**: Swift has no runtime reflection, so prefer **hand-rolled protocol-based test doubles**
+  (`MockUserRepository: UserRepository { ... }`). For large suites,
+  [`Mockingbird`](https://github.com/birdrides/mockingbird) can generate mocks from source at build
+  time — verify it tracks your Swift/Xcode version before adoption.
+- **Snapshot testing**: [`swift-snapshot-testing`](https://github.com/pointfreeco/swift-snapshot-testing)
+  — records and diffs SwiftUI / UIKit view snapshots. Pair with visual-qa-engineer when enabled.
+- **UI / integration**: XCUITest (Xcode's built-in UI automation) for acceptance flows.
+- **Fake / synthetic data**: hand-built `Builder` structs or `static func make(...)` factory methods
+  per domain type (the same builder pattern recommended in `go-conventions.md`). No faker library
+  equivalent dominates the Swift ecosystem yet.
+- **Performance testing**: XCTest's `measure {}` block for microbenchmarks; k6 for any backend
+  service the iOS app calls.
+- **Reporting**: XCTest's built-in `.xcresult` bundle; convert to JUnit XML via
+  [`xcresulttool`](https://developer.apple.com/documentation/xctest) for CI reporting aggregators.
+
+## Quick Reference
+
+```swift
+// Complexity: < 7 — enforce with SwiftLint cyclomatic_complexity: 6
+// File naming: PascalCase, one public type per file, suffix-typed
+// Architecture: Domain / UseCase / Repository / Adapter — no framework imports in domain
+// Models: struct (value semantics), final class only when reference semantics needed
+// Async: async/await + Actor — no callbacks or manual DispatchQueue
+// Dependency injection: constructor injection; @Environment for SwiftUI-scoped deps
+// Tests: XCTest (primary), Nimble matchers, hand-rolled protocol fakes
+// Snapshot testing: swift-snapshot-testing
+// Complexity tool: SwiftLint cyclomatic_complexity rule capped at 6
+```
+
+---
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+
 # Testing Rules
 
 Cross-language testing principles and the Saturday/Sunday framework conventions. Language-specific
 tooling (unit test framework, fake-data/factory libraries, per-language Playwright bindings, reporting)
 lives in each language's own `shared/rules/<language>-conventions.md` — this file covers what's shared
 across all of them.
+
+For the *why* behind the categories and disciplines below (FIRST principles, the Three Laws of TDD, when
+role separation preserves TDD's design pressure and when it doesn't), see
+`docs/patterns/testing-pyramid.md`. This file is the
+enforceable "always/never" side; that one is the philosophy.
+
+## Test Categories
+
+Every test belongs to exactly one level. The level determines the writing agent, the framework, and the
+principles that apply. Full detail in `docs/patterns/testing-pyramid.md`; this table is the enforcement
+map.
+
+| Level | Written by | Framework | Speed budget | Principles |
+|---|---|---|---|---|
+| Unit | `test-driven-developer` (greenfield) or `unit-tester` (backfill/characterization) | project's language convention (Vitest/pytest/JUnit/xUnit/`testing`) | fractions of a second | FIRST |
+| Integration | `qa-engineer` (or `test-driven-developer` when the integration IS the feature) | same as unit | seconds, not minutes | FIRST |
+| API Contract | `api-test-generator` (from OpenAPI) or `qa-engineer` (hand-written) | Sunday (`BaseApiClient` + `IHttpAdapter` + Fluent Matchers + Zod + Resilience Primitives) | seconds | Sunday's Declarative API Client Pattern |
+| Acceptance | `qa-engineer` inside `deliver-atdd` or `deliver-feature` | Gherkin (Cucumber.js / Reqnroll / pytest-bdd / Cucumber-JVM per language) | tens of seconds per scenario | scenario IS the AC, business language |
+| E2E / UI | `qa-engineer` following Saturday conventions | Saturday (Cucumber.js + Playwright, Site-Centric pattern) | minutes total for the suite | Saturday's Site-Centric Pattern |
 
 ## Saturday Framework (E2E / UI Testing)
 ALWAYS use the Site-Centric pattern: `BaseSite`, `BasePage`, `BaseElement`, `BaseFlow`.
@@ -367,7 +745,7 @@ ALWAYS include OpenTelemetry instrumentation for every BDD scenario.
 
 ## Sunday Framework (API Testing)
 ALWAYS use Vitest for unit tests and Playwright for integration/E2E API tests.
-ALWAYS use the custom `api` fixture and fluent matchers (`toHaveStatus`, `toBeSuccessful`, `toRespondWithin`).
+ALWAYS use the custom api fixture (`api`) and fluent matchers (`toHaveStatus`, `toBeSuccessful`, `toRespondWithin`).
 ALWAYS extend `BaseApiClient` for domain-specific API clients.
 ALWAYS validate schemas with Zod (`validateSchema()`).
 NEVER use custom retry loops — use `CircuitBreaker` or `ExponentialBackoffStrategy`.
@@ -377,6 +755,12 @@ CRITICAL: Test coverage MUST be >= 85%.
 CRITICAL: Cyclomatic complexity per function MUST be < 7.
 ALWAYS practice TDD/BDD — Red-Green-Refactor.
 NEVER write feature code without tests.
+ALWAYS keep tests "moist," not fully dry — DRY the setup noise (via Flows, Factories, fixtures) but
+keep the critical assertion path visible in the test itself. A test verifying search results should
+show "user searched for X" prominently in the test body; how they clicked into the search input should
+not. Over-DRYing by hiding the interesting user action inside a flow makes the test read like a magic
+incantation and defeats the point. This is the same idea as DAMP (Descriptive And Meaningful Phrases),
+a well-known counterpoint to blanket DRY in tests.
 
 ## Reporting Pipeline
 Cucumber JSON summaries feed the Friday dashboard (see `shared/rules/approval-gates.md` gate #1 —
@@ -384,6 +768,92 @@ posting to Friday requires explicit human approval, same as any other external-f
 language's port of Saturday should be able to produce Cucumber-JSON-compatible output, or a bridge to
 it, so results from any language funnel through the same reporting/approval pipeline rather than each
 language inventing its own.
+
+## Test Annotation Convention
+
+Every test carries traceability back to two things: (1) the issue that motivated it, and (2) the
+specific acceptance criterion (or fine-grained behavior derived from one) it verifies. Report-time
+mapping (e.g., `qa-report.md`'s "acceptance criteria covered X/Y") is a snapshot — the moment a test
+gets renamed or moved, that mapping evaporates. In-test annotation is durable because it lives with
+the test itself.
+
+The AC being verified may originate from a Gherkin scenario the framework wrote (via `qa-engineer`
+inside `deliver-atdd`) or from an external ticket (JIRA, Linear, GitHub issue). Either way, the
+annotation format is the same — the source of the AC doesn't change how it's linked to the test.
+
+### What every test carries
+
+- **Issue reference**: free-form string — `PROJ-123`, `ENG-456`, `#789`, or a URL. Teams pick the
+  format that matches their tracker; the framework doesn't lock this to any specific one.
+- **AC reference**: a short excerpt of the AC text, or a numbered reference if the ticket/spec
+  enumerates them (e.g., `AC1: user can register with valid email and password`).
+
+### Use native language mechanisms, not homegrown comments
+
+**TypeScript (Vitest/Jest)** — JSDoc block above the test:
+```typescript
+/**
+ * @issue PROJ-123
+ * @ac AC1: user can register with valid email and password
+ */
+test('creates user with valid credentials', async () => { ... });
+```
+
+**Python (pytest)** — docstring; optional custom marker for filtering by issue:
+```python
+def test_creates_user_with_valid_credentials():
+    """PROJ-123 / AC1: user can register with valid email and password"""
+    ...
+```
+
+**Java (JUnit 5)** — `@Tag` for filtering + `@DisplayName` for the report:
+```java
+@Tag("issue:PROJ-123")
+@DisplayName("PROJ-123 - AC1: user can register with valid credentials")
+@Test
+void createsUserWithValidCredentials() { ... }
+```
+
+**C# (xUnit)** — `[Trait(...)]` on the `[Fact]` or `[Theory]`:
+```csharp
+[Trait("Issue", "PROJ-123")]
+[Trait("AC", "AC1: user can register with valid credentials")]
+[Fact]
+public void CreatesUserWithValidCredentials() { ... }
+```
+
+**Go (`testing`)** — comment above the test function:
+```go
+// PROJ-123 / AC1: user can register with valid credentials
+func TestCreatesUserWithValidCredentials(t *testing.T) { ... }
+```
+
+**Gherkin (Cucumber / pytest-bdd / Reqnroll / Cucumber-JVM)** — tag on the scenario. The scenario name
+itself IS the AC, so no separate AC annotation is needed:
+```gherkin
+@issue:PROJ-123
+Scenario: PROJ-123 - user can register with valid credentials
+  Given ...
+```
+
+### Per-level granularity
+
+- **Unit** and **Integration**: annotate the specific AC (or fine-grained behavior derived from one).
+  One AC often spawns 3-5 unit tests exercising different edge cases; each gets the same issue-ref but
+  different AC-ref granularity (`AC1`, `AC1 - empty email`, `AC1 - invalid email format`).
+- **API Contract**: issue-ref for the change, AC-ref for the specific contract requirement (e.g.,
+  `returns 429 on 6th request per minute`).
+- **Acceptance** and **E2E/UI**: the Gherkin scenario IS the AC. Tag with issue-ref; scenario name/text
+  IS the AC. Nothing further needed.
+
+### Enforcement
+
+Documented convention only — no CI fitness function today. Matches how Sandi Metz's class/method line
+limits and boolean-parameter guidance are handled in `CLAUDE.md`: flagged for humans, not gated in CI.
+Adding a "grep every test for a `PROJ-\d+`-shape reference" check is real work with real false-positive
+risk (URL-format issue references, teams without a tracker prefix, tests genuinely exploring behavior
+before an AC exists yet) — easy to add later if the convention catches on, expensive to walk back if
+it doesn't.
 
 # TypeScript Conventions
 
@@ -437,26 +907,40 @@ You must **strictly adhere** to the patterns defined in `ARCHITECTURE_RULES.md` 
 The following specialized personas are available. Invoke them by name when you need domain-specific expertise. Note: on this platform these are personas — context frames with no tool access or autonomous pipeline participation, per `DOMAIN_DICTIONARY.md`. Full multi-step agent orchestration is only available on Tier 1 (Claude Code).
 
 - **accessibility-engineer**: Use after the developer subagent has produced implementation-notes.md and BEFORE the code-reviewer. Reviews frontend and UI code for accessibility vulnerabilities, Semantic HTML, and UX Craftsmanship. Produces accessibility-report.md. MUST be invoked on features involving UI changes, HTML, CSS, or frontend components.
+- **agent-evaluator**: Read-only counter agent promoting the agent-eval skill logic into a dedicated agent persona. Runs golden-file evaluations against shared/agents/ frontmatter contracts and prompt behavior expectations, logging regression metrics to shared/evaluation/. Never mutates agents — produces evaluation findings for human review.
 - **analyst**: Use PROACTIVELY as the first step of any feature implementation. Reads a feature markdown file and produces a detailed technical analysis including acceptance criteria, task breakdown, affected files, data model changes, API contracts, edge cases, and definition of done. MUST be invoked before the developer subagent.
 - **api-test-generator**: Use when generating API test suites following the Sunday Framework conventions. Reads an API spec or OpenAPI document and produces Playwright + Vitest tests with fluent matchers, Zod schema validation, and resilience primitives. Invoke when the user says "generate API tests" or "test this API endpoint".
 - **architect**: Use PROACTIVELY after the analyst and before the developer on any feature that involves structural decisions — new packages, new base classes, cross-cutting concerns, layer boundary changes, or decisions that will constrain how the codebase evolves. Reads analysis.md, makes structural decisions, defines fitness functions, and produces architecture-notes.md. MUST be invoked after analyst and before developer when architectural decisions are needed.
 - **chaos-engineer**: Proactively designs and executes fault-injection experiments. Triggered when a new resilience pattern is added or before major releases.
 - **code-reviewer**: Use after the developer subagent has produced implementation-notes.md and BEFORE the security-reviewer or qa-engineer. Reviews the developer's implementation against ARCHITECTURE_RULES.md, SOLID principles, and clean code standards. Produces code-review-report.md. Acts as a "Pair Programmer" and will send the developer back to make changes if the code violates craftsmanship rules. MUST be invoked after developer and before security-reviewer.
+- **context-auditor**: Read-only counter agent to context-engineer. Audits .claude/feature-workspace/context-manifest.md for pruning discipline, checking for pinned files that were never read in downstream artifacts, broken KI/ADR links, and budget calculation accuracy. Never mutates files — produces audit findings for human or pipeline review.
 - **context-engineer**: Use PROACTIVELY before starting any task that touches 3+ files, a new feature area, or unfamiliar code — not only when explicitly asked. Acts as a pre-flight context optimizer. Analyzes user tasks, prunes open files, maps relevant Knowledge Items (KIs) and ADRs, surfaces prior deliveries in the same bounded context, and builds a high-signal context manifest before coding starts.
 - **data-engineer**: Use PROACTIVELY after the architect but before the developer on any feature that requires database schema changes, migrations, or complex querying. Reviews schema design, enforces the Expand/Contract pattern for zero-downtime migrations, and writes migration scripts. Produces data-engineering-notes.md.
 - **dependency-auditor**: Use when auditing project dependencies for vulnerabilities, license compliance, maintenance health, and unused packages. Analyzes the full dependency tree and produces an actionable audit report. Invoke when the user says "audit dependencies", "check for vulnerabilities", or "are my packages safe?".
 - **developer**: Use after the analyst subagent has produced analysis.md. Implements the feature by writing and modifying source code. Reads .claude/feature-workspace/analysis.md and the feature spec, then implements all developer tasks. Produces implementation-notes.md. MUST be invoked after analyst and before code-reviewer. Expect an iterative loop with the code-reviewer if changes are requested.
 - **devops-engineer**: Use after tech-writer has produced docs-report.md. Handles CI/CD pipeline updates, environment configuration, deployment scripts, and infrastructure changes required by the feature. Produces devops-report.md. MUST be invoked after tech-writer and is the final agent in the pipeline.
+- **documentation-auditor**: Read-only counter agent to tech-writer and prose documentation authors. Audits README.md, docs/ARCHITECTURE.md, docs/AGENT_REFERENCE.md, and prose docs for staleness against current agent and skill inventories. Never mutates docs — produces audit findings for human review.
 - **documentation-manager**: The ad-hoc-session counterpart to promote-memory -- analyzes a non-pipeline development session (one that never went through deliver-feature, so promote-memory/extract-lessons never saw it) for durable knowledge and produces Candidate Records for human review, using the same Memory Contract as promote-memory. Does not write a KI, ADR, rule change, or living-doc update without explicit approval.
 - **dx-engineer**: Obsesses over the local development loop, build pipelines, and developer friction. Triggered when build times exceed SLAs, flaky tests are detected, or a new tool is introduced.
 - **finops-engineer**: Reviews architectural decisions and codebase changes for cost implications. Treats cost as an architectural fitness function.
+- **knowledge-auditor**: Read-only counter agent to the create-ki skill. Audits newly authored Knowledge Items for frontmatter schema compliance (against shared/schemas/ki-frontmatter.schema.json), semantic duplication against existing KIs, and domain dictionary alignment. Never mutates KIs — produces audit findings for human or memory-engineer review.
+- **memory-auditor**: Read-only counter to the memory-engineer skill. Audits every KI under shared/knowledge/ and .claude/knowledge/ for schema compliance, duplicates (exact and semantic), and stale metadata (last-referenced > 6 months + no linking anywhere in the corpus). Never modifies KIs — produces findings for a human (or memory-engineer) to act on. Invoke when you want a fresh audit of the KI corpus, after a burst of create-ki activity, or on a periodic cadence.
+- **model-tier-auditor**: Read-only counter agent auditing agent frontmatter for portable model_tier declarations. Scans shared/agents/*.md for missing model_tier, invalid enum values, or tier assignments that mismatch operational profile heuristics. Never mutates agents — produces audit findings for human review.
 - **modernization-supervisor**: A supervisor agent that coordinates multiple parallel modernization agents (dependency-updater, pattern-refactor, test-coverage) across the codebase.
+- **pattern-reviewer**: Read-only counter agent to pattern document authors. Audits docs/patterns/*.md for accuracy against current codebase implementation state, checking for stale code snippets, broken file paths, and obsolete architectural references. Never mutates pattern docs — produces findings for human review.
 - **performance-engineer**: Use PROACTIVELY after the architect subagent has produced architecture-notes.md and BEFORE the developer starts coding. Reviews structural design, API contracts, and database decisions specifically for shift-left performance bottlenecks. Enforces N+1 query prevention, idempotency, strict timeouts, and caching strategies. Produces performance-report.md.
+- **privacy-auditor**: Read-only counter agent paired with security-reviewer. Audits pipeline artifacts in .claude/feature-workspace/ for accidental PII inclusion, hardcoded tokens/passwords in prompts or implementation notes, and data boundary leaks. Never mutates files — produces audit findings for human review.
 - **product-owner**: Challenges the spec-writer and analyst on whether a feature should be built at all. Enforces ROI and minimal viable scope.
+- **prompt-evaluator**: Read-only counter agent to prompt authors. Audits agent and skill prompt files for prompt-engineering hygiene, checking for fabricated URLs, hardcoded secrets in examples, un-decoupled template examples, and inconsistent voice. Never mutates prompts — produces audit findings for human review.
 - **qa-engineer**: Use after the developer/code-reviewer/security-reviewer have finished. Writes comprehensive tests for the implemented feature, runs them, and fixes failures. Reads analysis.md, implementation-notes.md, and security-report.md. Produces test files and qa-report.md. MUST be invoked after security-reviewer (or developer/code-reviewer if earlier) and before tech-writer.
 - **release-manager**: Use when cutting a release, generating changelogs, determining version bumps, or drafting release notes. Analyzes git history since the last tag, applies semantic versioning from conventional commits, and produces a release plan with deployment checklist. Invoke explicitly or when the user says "prepare a release" or "cut a release".
+- **retrieval-evaluator**: Read-only counter agent to retrieval skills and RAG engine. Audits KI and ADR corpus retrievability based on ADR-002 telemetry and memory-registry.json, flagging queries with zero matches as missing-KI or bad-metadata candidates. Never mutates files — produces evaluation findings for human review.
+- **rule-auditor**: Read-only counter agent to rule authors. Audits shared/rules/*.md for internal consistency, checking for contradictory constraints across files, dead path references, and un-indexed rule files. Never mutates rules — produces audit findings for human review.
 - **security-reviewer**: Use after the code-reviewer subagent has approved the code and BEFORE the qa-engineer. Reviews the implementation for security vulnerabilities using STRIDE threat modeling. Produces security-report.md. MUST be invoked after code-reviewer and before qa-engineer on features involving auth, API endpoints, user input, secrets handling, tokens, sessions, or any data that crosses a trust boundary.
 - **spec-writer**: Use to create or review any work item markdown before it enters the delivery pipeline — features, bugs, spikes, or chores. Interviews the user to build a complete spec, then runs a readiness critique against every downstream agent's needs before declaring the work item ready. Invoke with /spec-writer or ask Claude to "write a spec for [thing]" or "review this spec [file]".
 - **sre-engineer**: Use after the developer subagent has produced implementation-notes.md. Reviews the code specifically for Observability, Telemetry, Logging Cardinality, and Service Level Indicators (SLIs). Produces observability-report.md. MUST be invoked before the devops-engineer handles infrastructure.
 - **tech-writer**: Use after qa-engineer has produced qa-report.md. Updates all documentation for the implemented feature including README, API docs, ADRs, changelogs, and inline code docs. Produces docs-report.md. MUST be invoked after qa-engineer and before devops-engineer.
 - **test-driven-developer**: Evaluates acceptance criteria and autonomously writes tests first, then iterates on the implementation until the entire suite passes green. Generates feature documentation as a final step.
+- **tool-validator**: Read-only counter agent to skill/tool authors. Audits shared/skills/*/SKILL.md for standalone-mode declaration, hidden MCP dependencies, frontmatter schema compliance, and valid parameter declarations. Never mutates skills — produces audit findings for human review.
+- **unit-tester**: Writes unit tests for existing code without modifying it -- either to raise coverage on working code or to build a characterization-test safety net around legacy code before a refactor or migration. Never touches source, not even to fix a bug it finds.
+- **visual-qa-engineer**: Use after qa-engineer has produced qa-report.md. Analyzes interaction heatmaps (via @orieken/saturday-ml-analyzer on heatmap-data/) and Playwright screenshot baselines for visual regression. Produces visual-qa-report.md. MUST be invoked on UI-touching features when heatmap instrumentation or Playwright visual snapshots are present.
