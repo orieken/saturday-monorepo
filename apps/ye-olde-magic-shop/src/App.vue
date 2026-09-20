@@ -8,6 +8,7 @@
         </router-link>
         <nav class="flex gap-6 text-dnd-parchment font-magical items-center">
           <router-link to="/" class="hover:text-dnd-gold transition-colors text-lg" data-testid="shop-link">Shop</router-link>
+          <router-link to="/locations" class="hover:text-dnd-gold transition-colors text-lg" data-testid="locations-link">Locations</router-link>
           <router-link to="/cart" class="hover:text-dnd-gold transition-colors text-lg flex items-center gap-2" data-testid="cart-link">
             <span>Cart</span>
             <span v-if="totalItems > 0" class="bg-dnd-crimson text-white text-xs rounded-full px-2 py-0.5 font-sans" data-testid="cart-count">{{ totalItems }}</span>

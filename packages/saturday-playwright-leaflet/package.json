@@ -1,0 +1,22 @@
+{
+  "name": "@orieken/saturday-playwright-leaflet",
+  "version": "0.1.0",
+  "description": "Playwright extension for testing Leaflet maps in the Saturday framework",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.0",
+    "leaflet": "^1.9.0"
+  }
+}

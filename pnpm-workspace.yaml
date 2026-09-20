@@ -1,10 +1,6 @@
 packages:
   - apps/*
   - packages/*
-  - saturday-cucumber-starter
-  - saturday-playwright-test-starter
-  - 'saturday-go-cli'
-  - saturday-mcp
 
 onlyBuiltDependencies:
   - esbuild

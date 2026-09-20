@@ -13,6 +13,10 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:8000',
     trace: 'on-first-retry',
+    video: 'on',
+    launchOptions: {
+      slowMo: 1000,
+    },
   },
   projects: [
     {
