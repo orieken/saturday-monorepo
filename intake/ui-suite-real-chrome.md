@@ -16,7 +16,7 @@ depends-on: []
 budget:
   max-attempts: 2
   max-usd: 40
-  max-hours: 5
+  max-hours: 6
 scope:
   paths: [apps/ye-olde-magic-shop/playwright.config.ts, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/tests/**, containers/saturday-runner/**, .dockerignore, scripts/**, docs/**]
 ---
