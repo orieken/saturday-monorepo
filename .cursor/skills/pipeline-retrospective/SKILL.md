@@ -17,6 +17,16 @@ Do NOT use for a single delivery's narrative (what went well/poorly on this one 
 `/retrospective` instead. Do NOT use for a single run's raw numbers — use `pipeline-trace` instead.
 
 ## Context To Load First
+0. **Prefer measured data where it exists.** Run `loom memory runs --json` and
+   `loom memory retries --json` first (roadmap L3.5). Deliveries that ran under `loom run` have
+   timings measured by the process doing the work, real iteration counts, and provider-reported
+   cost. `pipeline-trace.json`'s equivalents are a model's account of itself. If the binary is
+   absent or the store is empty, fall back to step 1 and say so.
+
+   **Name the source of every finding** — "measured" or "estimated". A trend line that mixes them
+   without labelling which is which is worse than either alone, because a reader cannot tell whether
+   a change is a real regression or a change in who was counting.
+
 1. `docs/features/*/pipeline-trace.json` — collect the most recent N (default 10), ordered by each
    feature directory's `pipeline-trace.json` `completedAt` timestamp
 2. The most recent `docs/agent-metrics/scorecard-*.md` if one exists (see `agent-scorecard`), for
@@ -27,6 +37,9 @@ Do NOT use for a single delivery's narrative (what went well/poorly on this one 
    "insufficient data" instead of a trend claim if fewer than 3 exist).
 2. For each agent that appears across the collected traces, compute:
    - Average `durationSeconds` and average `iterations`.
+   - If `tokensIn`, `tokensOut`, and `estimatedCostUsd` are non-null in at least one trace, also
+     compute average `estimatedCostUsd` per agent. Omit cost columns entirely when *all* traces have
+     null cost data (never fill with zeros or estimates — see `pipeline-trace` field notes on null).
    - Trend: split the N traces into an older half and a newer half (by `completedAt`); compare each
      metric's average between halves. Report `IMPROVING` / `STABLE` / `DEGRADING` (>15% change = not stable).
    - If `agentVersion` changes partway through the collected traces, check whether the trend boundary lines
@@ -52,10 +65,12 @@ Do NOT use for a single delivery's narrative (what went well/poorly on this one 
 - Date range: [oldest completedAt] to [newest completedAt]
 
 ## Per-Agent Trends
-| Agent | Avg Duration | Avg Iterations | Duration Trend | Iteration Trend | Version Change Aligns? |
-|---|---|---|---|---|---|
-| analyst | [Ns] | [N] | IMPROVING/STABLE/DEGRADING | IMPROVING/STABLE/DEGRADING | Yes (v[x.y.z] -> v[x.y.z]) / No version change in window |
-| ... | ... | ... | ... | ... | ... |
+| Agent | Avg Duration | Avg Iterations | Duration Trend | Iteration Trend | Avg Cost (USD) | Version Change Aligns? |
+|---|---|---|---|---|---|---|
+| analyst | [Ns] | [N] | IMPROVING/STABLE/DEGRADING | IMPROVING/STABLE/DEGRADING | $[N] / n/a | Yes (v[x.y.z] -> v[x.y.z]) / No version change in window |
+| ... | ... | ... | ... | ... | ... | ... |
+
+> **Avg Cost (USD)**: populated only when `estimatedCostUsd` is non-null in at least one trace for that agent. Show `n/a` otherwise — never fill with 0 or an estimate.
 
 ## Biggest Bottleneck
 [agent] — average [Ns] per run, [context on why, e.g. "consistently the longest single step"]
@@ -82,4 +97,4 @@ Do NOT use for a single delivery's narrative (what went well/poorly on this one 
 Pure local file reads and aggregation. No external calls.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

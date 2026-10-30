@@ -7,17 +7,42 @@ triggers:
 standalone: true
 ---
 
+## Scope: this is the markdown pipeline's record
+
+`pipeline-trace.json` is written by a host platform's LLM following `deliver-feature`, which cannot
+observe elapsed time — its `durationSeconds` and `budgetUtilization` are the model's own account of
+itself. That was the only record available when this skill was written. It no longer is.
+
+Under `loom run`, the Go executor measures the same things and the episodic store keeps them beyond
+the run (roadmap L3.5). **Prefer the store for any delivery that ran under the executor**, and say
+which source a number came from — a trend mixing measured and estimated figures without labelling
+them is worse than either alone.
+
+| Question | Markdown pipeline | `loom run` |
+|---|---|---|
+| How long did a stage take? | `durationSeconds` — a model's estimate | Measured by the process doing the work: `loom memory runs`, or the run's trace |
+| How many rounds did the review loop take? | `iterations` — model-counted | Counted by the executor: `loom memory retries` |
+| What did it cost? | `budgetUtilization` — a fraction of an unstated budget | Reported by the provider in dollars and tokens |
+| Did a human correct the output? | not recorded | `loom memory corrections`, with the diff |
+| Which stages were skipped, and why? | not recorded | recorded with a reason per stage |
+
+This file is **not deprecated**. It is genuinely written on every markdown-pipeline delivery and is
+that pipeline's only record; retiring it belongs with whatever brings the markdown pipeline under
+the executor. What has changed is that it is no longer the best available answer when a better one
+exists.
+
 ## When To Use
-- `deliver-feature` writes to `.claude/feature-workspace/pipeline-trace.json` directly as part of its own
+- `deliver-feature` writes to `.claude/feature-workspace/<feature-name>/pipeline-trace.json` directly as part of its own
   Checkpoint bookkeeping (see `deliver-feature/SKILL.md`, "Pipeline Tracing") — it does not invoke this
   skill on every step, the same way it doesn't invoke a separate skill to write `pipeline-state.json`.
 - Invoke this skill when a human asks an ad-hoc question about timing/iterations for a specific feature's
   run, current or past: "why did this delivery take so long", "which agent looped the most on user-auth".
 - For cross-delivery trend analysis (is code-reviewer getting slower over the last 10 features?), use
-  `pipeline-retrospective` instead — this skill only looks at one run at a time.
+  `pipeline-retrospective` instead — this skill only looks at one run at a time. For deliveries that
+  ran under `loom run`, `loom memory` answers cross-run questions from measured data.
 
 ## Context To Load First
-1. `.claude/feature-workspace/pipeline-trace.json` (in-progress run) or `docs/features/<feature-name>/pipeline-trace.json` (completed run)
+1. `.claude/feature-workspace/<feature-name>/pipeline-trace.json` (in-progress run) or `docs/features/<feature-name>/pipeline-trace.json` (completed run)
 
 ## Schema
 ```json
@@ -37,7 +62,10 @@ standalone: true
       "status": "PASS",
       "iterations": 1,
       "contractRetries": 0,
-      "budgetUtilization": 0.42
+      "budgetUtilization": 0.42,
+      "tokensIn": 45231,
+      "tokensOut": 3892,
+      "estimatedCostUsd": 0.021
     },
     {
       "agent": "code-reviewer",
@@ -49,7 +77,10 @@ standalone: true
       "status": "APPROVED",
       "iterations": 3,
       "changesRequestedCount": 2,
-      "budgetUtilization": null
+      "budgetUtilization": null,
+      "tokensIn": null,
+      "tokensOut": null,
+      "estimatedCostUsd": null
     }
   ]
 }
@@ -76,9 +107,17 @@ Field notes:
   REQUESTED before APPROVED.
 - `durationSeconds` accumulates across retries — it's total wall-clock time spent on that agent's step
   across every attempt, not just the final successful one.
+- `tokensIn`: input token count (prompt + cache reads) consumed by this agent's step, as reported by
+  the runtime. Use `null` when the runtime does not surface per-subagent token counts for this session
+  (Claude Code does not always expose them). **Never fabricate or estimate this value.**
+- `tokensOut`: output token count (generated tokens) for this agent's step. Same null rule as `tokensIn`.
+- `estimatedCostUsd`: derived cost in USD using the model's published input/output pricing at the time
+  the trace was written. Computed only when *both* `tokensIn` and `tokensOut` are non-null; otherwise
+  `null`. Never inferred from a partial count. Used by `pipeline-retrospective` and `agent-scorecard`
+  to surface spend trends when data is available.
 
 ## Process
-1. Read the relevant `pipeline-trace.json` (in-progress in `.claude/feature-workspace/`, or persisted in
+1. Read the relevant `pipeline-trace.json` (in-progress in `.claude/feature-workspace/<feature-name>/`, or persisted in
    `docs/features/<feature-name>/` for a completed run).
 2. Answer the specific question asked — total duration, slowest agent, which agent looped, etc. — by
    reading the `agents` array directly. No aggregation across multiple files here (that's
@@ -99,4 +138,4 @@ totaling 1800s" not "code-reviewer took a while").
 Pure local JSON file reads. No external calls.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

@@ -18,8 +18,5 @@
   },
   "devDependencies": {
     "prettier": "^3.3.3"
-  },
-  "dependencies": {
-    "latest": "^0.2.0"
   }
 }

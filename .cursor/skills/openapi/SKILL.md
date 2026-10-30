@@ -13,7 +13,7 @@ When NOT to use: Internal method signatures, test helper APIs, or any interface 
 
 ## Context To Load First
 1. `DOMAIN_DICTIONARY.md`
-2. `.claude/feature-workspace/analysis.md`
+2. `.claude/feature-workspace/<feature-name>/analysis.md`
 
 ## Process
 1. "What resource does this endpoint operate on?"
@@ -64,4 +64,4 @@ When NOT to use: Internal method signatures, test helper APIs, or any interface 
 Pure design reasoning. No external tools required. Produces YAML spec locally.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

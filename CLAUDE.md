@@ -53,64 +53,25 @@ Invoke `code-reviewer` after `developer` pass. It always runs for every develope
 
 Before starting delivery, run `/spec-writer [feature-name]` to create or review a spec. The `spec-writer` interviews you, drafts the work item, and critiques it for completeness before handing off to the analyst. You must resolve any ⚠️ NEEDS WORK findings before beginning the pipeline below.
 
-## Feature Delivery Workflow
+## Delivering work
 
-When the user gives you a feature (markdown file path or inline description), follow this pipeline:
+| You have | Use |
+|---|---|
+| An idea, no spec yet | `/new-feature` — interviews you and writes `features/<name>.md` |
+| A spec in `features/<name>.md` | `/deliver-feature features/<name>.md` |
+| A reproducible bug | `/deliver-bugfix` |
+| A spec, and the `loom` binary installed | `loom run --spec features/<name>.md` — the same pipeline, with state, digests and gates enforced in code rather than by this conversation |
+| Work for the factory to pick up | a work order in `intake/<id>.md` — see `intake/README.md` |
 
-```
-1. ANALYST           → .claude/feature-workspace/analysis.md
-2. ARCHITECT*        → .claude/feature-workspace/architecture-notes.md
-3. DEVELOPER         → code changes + .claude/feature-workspace/implementation-notes.md
-4. CODE-REVIEWER     → .claude/feature-workspace/code-review-report.md
-5. SECURITY-REVIEWER*→ .claude/feature-workspace/security-report.md
-6. QA-ENGINEER       → test files + .claude/feature-workspace/qa-report.md
-7. TECH-WRITER       → doc updates + .claude/feature-workspace/docs-report.md
-8. DEVOPS-ENGINEER   → CI/deploy artifacts + .claude/feature-workspace/devops-report.md
-9. YOU               → .claude/feature-workspace/delivery-summary.md
-```
+Never start implementing a feature without a spec, and never skip the pipeline's stages or reorder
+them by hand: the skill decides which stages run and why.
 
-*Conditional — see rules above. Each agent reads all previous agents' outputs.
-Do not skip steps. Do not proceed until the current step's output file exists.
+## Where artifacts live
 
-## How to Start
+- In progress: `.claude/feature-workspace/<feature>/` — one directory per feature, holding each
+  stage's artifact and the run's state. Do not hand-edit run state.
+- Delivered: `docs/features/<feature>/` — the permanent record, append-only.
 
-When the user says something like:
-- "Implement the feature in `features/my-feature.md`"
-- "Build out the feature described here: [inline description]"
-- "Deliver feature: [name]"
-
-**You respond by:**
-1. Creating `.claude/feature-workspace/` if it doesn't exist
-2. If the feature is inline, saving it to `features/[kebab-case-name].md` first
-3. Delegating to `analyst` subagent with the feature file path
-4. Deciding whether `architect` is needed based on the analysis content
-5. Proceeding through the pipeline sequentially
-
-## Workspace Convention
-
-All intermediate artifacts go in `.claude/feature-workspace/`:
-```
-.claude/feature-workspace/
-├── analysis.md              ← analyst output
-├── architecture-notes.md    ← architect output (conditional)
-├── implementation-notes.md  ← developer output
-├── code-review-report.md    ← code-reviewer output
-├── security-report.md       ← security-reviewer output (conditional)
-├── qa-report.md             ← qa-engineer output
-├── docs-report.md           ← tech-writer output
-├── devops-report.md         ← devops-engineer output
-└── delivery-summary.md      ← your final synthesis
-```
-
-## Human Checkpoints
-
-**After analyst** (always): Show the analysis summary and ask "Does this look correct? Should I proceed?" Do not continue until confirmed.
-
-**After architect** (if invoked): Show the structural decisions and fitness functions. Ask "Do these architectural decisions look right?" Architectural decisions are expensive to reverse — get confirmation.
-
-**After security-reviewer** (if Critical findings): If Critical findings were found and fixed, summarize what changed and confirm QA should proceed against the updated code.
-
-**After qa-engineer**: If there are failing tests that couldn't be resolved, pause and report before continuing.
 
 ## Delivery Summary Format
 

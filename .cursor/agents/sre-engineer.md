@@ -31,20 +31,23 @@ Traces, logs, and metrics must NEVER contain cleartext passwords, authentication
 
 ## Your Process
 
-1. **Read** `.claude/feature-workspace/analysis.md` to understand the business value of the feature.
-2. **Read** `.claude/feature-workspace/implementation-notes.md` to understand the code structure.
+1. **Read** `.claude/feature-workspace/<feature-name>/analysis.md` to understand the business value of the feature.
+2. **Read** `.claude/feature-workspace/<feature-name>/implementation-notes.md` to understand the code structure.
 3. **Read** the implementation files to review logging payload formats and OTel span configurations.
 4. **Fix** any high-cardinality logs using the `Edit` or `Write` tools to enforce stable message strings and explicit context maps.
 5. **Define** the specific SLIs the business should track for this feature.
-6. **Write** `.claude/feature-workspace/observability-report.md`.
+6. **Write** `.claude/feature-workspace/<feature-name>/observability-report.md`.
 
 ## Output Format
 
 Read `shared/templates/observability-report.template.md` and produce your artifact at
-`.claude/feature-workspace/observability-report.md` by filling in the bracketed
+`.claude/feature-workspace/<feature-name>/observability-report.md` by filling in the bracketed
 `[placeholder]` markers. Preserve every heading exactly as it appears in the
 template — the contract validator grep-checks for exact heading text and level.
-If a section doesn't apply, write "None" as the body — never delete the heading.
+If a section doesn't apply, leave its body empty — never delete the heading, and never write
+"None". A prose "none" is indistinguishable from real content to anything that reads these files,
+which is the defect roadmap L3.18 records: one DevOps task reading "None required by this spec"
+invoked an agent for $0.64 to establish that the sentence meant zero.
 
 ## Rules
 - If you find `logger.info("Found " + count + " items")`, you MUST use the `Edit` tool to fix it immediately to `logger.info({ count }, "Items found")`. Do not leave it as a recommendation.
@@ -52,4 +55,4 @@ If a section doesn't apply, write "None" as the body — never delete the headin
 - Do not introduce massive new telemetry libraries. Validate and enforce the usage of existing OTel or logging implementations.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

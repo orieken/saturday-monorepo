@@ -16,6 +16,460 @@ Semantic-ish, not strict SemVer:
 When you bump an agent's `version:` frontmatter field, add a row under a new dated heading here in the same
 commit — the pre-commit hook checks for exactly this.
 
+## 2026-10-23 — spec-writer keeps frontmatter it did not write (review item I-2)
+
+| Agent | Version | Change |
+|---|---|---|
+| spec-writer | 1.3.0 -> 1.4.0 | Minor: expanded guardrail. Fix and review mode preserve an existing file's frontmatter key for key and edit only the body; a factory work order's frontmatter (`intake:` key) is never changed, `status` included; the READY message for an order points to `loom intake check` |
+
+Fix mode used to rewrite the whole file to its own three-key frontmatter, which would strip a factory
+work order down to `type`, `status` and `created`. `loom intake check` still catches a stripped order
+(schema version and id go missing), so this rule is backed by a deterministic check.
+
+## 2026-10-17 — Delivery template: hypothesis and edge cases
+
+| Agent | Version | Change |
+|---|---|---|
+| spec-writer | 1.2.1 -> 1.3.0 | Minor: new output sections `## Hypothesis and Target Metric` and `## Edge Cases and Failure Modes` (omitted for spikes and chores), two new interview questions (Q11, Q12), and two new readiness checks. The matching contract `shared/contracts/delivery-template-contract.md` makes both sections required. The golden fixture and `expected-patterns.txt` are re-recorded in the same change |
+
+## 2026-10-11 — Simplified Technical English for the writers (ASD-STE100)
+
+| Agent | Version | Change |
+|---|---|---|
+| analyst | 2.1.0 -> 2.2.0 | Minor: new rule — acceptance criteria, tasks and edge cases follow `shared/rules/writing-style.md`, so the spec's language survives the first handoff; preamble now reads that rule |
+| spec-writer | 1.2.0 -> 1.2.1 | Patch: the STE rules move to the shared rule `shared/rules/writing-style.md`; the agent keeps a short application of them and reads the rule in its preamble |
+| tech-writer | 1.4.0 -> 1.4.1 | Patch: the STE bullet now points at `shared/rules/writing-style.md` (single source of truth); preamble reads it |
+| spec-writer | 1.1.1 -> 1.2.0 | Minor: new "Writing Style & Simplified Technical English (ASD-STE100)" section — sentence caps (20 words for steps, 25 for descriptions, 3–4 sentences per paragraph), active voice for acceptance criteria, noun clusters of at most 3, RFC 2119 modals, and an exception for `DOMAIN_DICTIONARY.md` terms and native engineering vocabulary |
+| tech-writer | 1.3.0 -> 1.4.0 | Minor: Writing Style Rules gain an ASD-STE100 bullet — >90% active voice, 20/25-word caps, noun stacks of at most 3, plain vocabulary, consistent terminology |
+
+## 2026-10-05 — Repo context indexing (ADR-010)
+
+| Agent | Version | Change |
+|---|---|---|
+| repo-documenter | new -> 1.0.0 | New producer agent. Documents one directory from its fact sheet and child summaries as typed JSON (`repo-doc` state kind); read-only (`Read` only), no source by default, every claim cited, "unknown" is a valid answer. Contract: `shared/contracts/repo-doc-contract.md` |
+| repo-documenter | 1.1.1 -> 1.1.2 | Patch: evidence of an absence is cited as `field:none` (`imports:none`). Found by the first live run: the agent claimed "imports nothing" and cited the empty `imports` field, which the verifier rejects as supporting nothing |
+| repo-documenter | 1.1.0 -> 1.1.1 | Patch: a child summary can now also be `stale` (its recorded documentation predates the directory's latest change); its old text is withheld rather than shown as current |
+| repo-documenter | 1.0.0 -> 1.1.0 | Minor: new `revision-feedback` input block and a revise-don't-argue rule; backticks are now reserved for names the fact sheet contains (the verifier checks them); evidence claims must repeat the claim text exactly; never cite an empty fact-sheet field |
+| context-engineer | 2.2.0 -> 2.3.0 | Minor: new step 7 — pin by blast radius. Declares `mcp__loom__impact`, `mcp__loom__dependents_of` and `mcp__loom__find_files` (tool-list change); records only `blastRadius.seeds` and `depth`, since `loom` computes the answer from the repo graph; falls back to grep and says so when the graph is unavailable. Skill updated to match |
+| architect | 2.0.0 -> 2.1.0 | Minor: layer boundaries are checked as repo-graph queries (`mcp__loom__dependencies_of`, whose edges carry the target's layer) instead of by reading imports; an `approximate` crossing is only a possible violation. Declares the three graph tools |
+| refactor-engineer | 1.3.0 -> 1.4.0 | Minor: decides where characterization tests go first from `mcp__loom__dependents_of` (most exact dependents first), and records the order. Declares `mcp__loom__dependents_of` and `mcp__loom__impact` |
+| unit-tester | 1.6.2 -> 1.7.0 | Minor: orders characterization tests by `mcp__loom__dependents_of`. Declares that tool |
+| repo-doc-auditor | new -> 1.0.0 | New read-only counter agent to repo-documenter. Judges whether cited facts support each claim, after the Go verifier passes; typed `repo-doc-audit` verdict. Contract: `shared/contracts/repo-doc-audit-contract.md` |
+| repo-doc-auditor | 1.1.0 -> 1.2.0 | Minor: names what is and is not specificity. Restating a name's verb or noun and stating that an import or dependent exists are supported; usage purpose, links between listed things, totalities and purpose clauses are blocking. Found by the full run: the auditor blocked "Computes a `Digest`" and "imports X", leaving 9 directories unverified |
+| repo-documenter | 1.1.2 -> 1.1.3 | Patch: say what the names say and stop — no reasons, intents, links between listed things or totalities; those go in openQuestions |
+| repo-doc-auditor | 1.0.0 -> 1.1.0 | Minor: calibrate to name-level fact sheets. A claim restating what an exported name plainly denotes is supported; block only specificity a name cannot carry; report every problem in one round. Found by the first live run: "when in doubt, block" made the auditor raise a fresh objection each round until the document was vacuous and left unverified after three rounds |
+
+## 2026-09-24 — KI provenance and injection flags (roadmap L3.7)
+
+| Agent | Version | Change |
+|---|---|---|
+| analyst | 2.0.0 -> 2.1.0 | Minor: new guardrail in step 4. A KI with `sync_source` (or a `search_ki` match with `trust: org-sync`) is weighed as external; a match with `injectionFlags` is not read into reasoning or acted on, but named under Risks and raised with the human |
+
+`search_ki` now says whose text a KI is and whether its body addressed a model, and `sync-memory.sh`
+refuses to pull a KI that did. The analyst is the agent that reads surfaced KIs first, so it is the
+one told what those fields mean.
+
+## 2026-09-23 — acceptance scenarios are written before the build (roadmap L3.62)
+
+| Agent | Version | Change |
+|---|---|---|
+| qa-engineer | 1.6.1 -> 1.7.0 | Minor: runs twice under `loom run`. As the new `acceptance-scenarios` stage, before the developer, it writes Gherkin scenarios from the acceptance criteria alone and reads no code; after the build it automates those scenarios as given, and a scenario the code fails is a finding, not a scenario to edit |
+
+qa-engineer used to write acceptance tests after the developer, reading implementation notes in a
+working tree that already held the code, so its scenarios could describe what was built rather than
+what was asked for. The independence ADR-009 keeps is exactly that difference, and it is a property of
+order: the executor now rejects any plan that runs the scenario stage after the developer.
+
+## 2026-09-22 — the implementer owns its unit tests; `test-driven-developer` is removed (ADR-009)
+
+| Agent | Version | Change |
+|---|---|---|
+| test-driven-developer | 1.5.1 -> removed | Removed outright, no deprecation release (decided 2026-09-22). `developer` replaces it; `deliver-atdd` Phase 3 invokes `developer`. See `docs/MIGRATION.md` |
+| developer | 1.3.0 -> 1.4.0 | Minor: writes the unit tests for the code it changes, in either order, and proves each new test can fail. Replaces the Red-Green-Refactor section and removes "Do NOT write test files", which contradicted it |
+| unit-tester | 1.6.1 -> 1.6.2 | Patch: its "mirror image" sentence named the removed agent; it now contrasts with `developer` testing its own change |
+
+An agent that writes both the test and the code already knows the implementation, so the friction TDD
+depends on never occurs; the framework's own prompts conceded this. What is required now is ADR-008's
+result on the change, which three CI checks measure (L3.58–L3.60). Roadmap L3.61.
+
+## 2026-09-22 — pipeline artifacts are read from the feature's workspace
+
+| Agent | Version | Change |
+|---|---|---|
+| finops-engineer | 1.0.1 -> 1.1.0 | Minor: step 2 reads `architecture-notes.md` and `implementation-notes.md` from `.claude/feature-workspace/<feature-name>/`, and asks for the feature name when it was not given one |
+| chaos-engineer | 1.0.1 -> 1.1.0 | Minor: step 2 reads `architecture-notes.md` from the same place, with the same instruction |
+
+Both agents read pipeline artifacts at the flat workspace root, where nothing has written them since
+Epic 63 moved every delivery into `<feature-name>/` (2026-08-02) — so both reads silently found
+nothing, or a stale pre-Epic-63 leftover. Their own report outputs stay at the root: Epic 63 records
+that non-pipeline agents use it as an ad-hoc scratch area (`docs/aos/parallel-delivery-isolation-design.md`).
+Roadmap C.2.
+
+## 2026-09-22 — the annotation syntax moved out of every stage's prompt
+
+| Agent | Version | Change |
+|---|---|---|
+| qa-engineer | 1.6.0 -> 1.6.1 | Patch: the Test Annotation Convention reference now also names `docs/patterns/test-annotation.md`, where the per-language syntax went |
+| unit-tester | 1.6.0 -> 1.6.1 | Patch: same reference change |
+| test-driven-developer | 1.5.0 -> 1.5.1 | Patch: same reference change |
+
+No behaviour change: the convention, the annotation each test carries, and the rule that requires it
+are all unaltered. `shared/rules/testing-conventions.md` keeps the rule and loses six languages'
+worth of syntax examples to `docs/patterns/`, because a rule file is auto-loaded into every stage's
+prompt and a test is written in one language at a time (roadmap L3.19).
+
+## 2026-09-21 — the context auditor measures the budget instead of reading it
+
+| Agent | Version | Change |
+|---|---|---|
+| context-auditor | 1.0.0 -> 1.1.0 | Minor: step 6 now says how to verify the token budget rather than that it should be verified. Measure from bytes (`wc -c`, bytes / 4), never from line counts. Under `loom run`, recompute the executor's total and report disagreement as Critical; under the markdown pipeline, the total and status fields are blank by design, so a blank is not a finding — measure and report your own, and say it was measured here |
+
+L3.25 moved the budget arithmetic into the executor and removed the ~7x-under per-line heuristic
+from `context-engineer` and the manifest template. It did not update the auditor that reads the
+result. Under `loom run` that left the one number nothing else checks being "verified" by reading
+it back; under the markdown pipeline it left an auditor looking for a field the template now tells
+the author to leave blank — with the removed heuristic as the nearest thing to hand.
+
+## 2026-09-18 — the reviewer says whether behaviour changed, and it cannot approve itself
+
+| Agent | Version | Change |
+|---|---|---|
+| code-reviewer | 2.1.0 -> 2.2.0 | Minor: new step 7 answers one question about the diff as a whole — does it change *what the system does*, or only *how it is written*? Recorded under `## Design Review` as `Behaviour change: yes \| no \| cannot tell`. `cannot tell` is encouraged for a large or unfamiliar diff and is treated as unknown, never as "no" |
+
+Sources `codeReviewer.behaviorChange`, one of the two policy condition fields L2.20 kept. The
+typed side is `ReviewState.BehaviorChange *bool` — a pointer because "the reviewer did not say"
+and "the reviewer said no" are different facts a policy must tell apart.
+
+**A policy may read it only to require more human attention, never to approve.** It is the
+reviewer grading the significance of its own work, so an `auto-approve` policy naming it now
+**fails to load**, including when it is nested under `not:` or `any:`. Reading it in a
+`require-human`, `auto-reject` or `escalate` policy is permitted — the worst case there is a
+human looking at something that did not need it.
+
+Note the asymmetry with `codeReviewer.verdict`, which is equally self-reported and stays
+unrestricted: the verdict IS the review's output, the thing a gate exists to act on. This is a
+different kind of claim.
+
+## 2026-09-17 — least privilege on egress is a separate question
+
+| Agent | Version | Change |
+|---|---|---|
+| security-reviewer | 2.0.0 -> 2.1.0 | Minor: STRIDE-I now asks Information Disclosure **twice** — what can be read, and what can carry it out. A new row covers egress specifically: outbound calls with no destination allowlist, and a rendered markdown image URL, which fetches for whoever controls it with no network call in the code for a reviewer to find |
+
+Least privilege on *data* is not least privilege on *egress*, and the framework only had the first.
+A read-only role answers whether a component can write; it says nothing about whether it can carry
+what it read somewhere else. `docs/patterns/security-patterns.md` gained a **Least Privilege on
+Egress** pattern separating the two axes.
+
+Verified rather than assumed: no agent declares `WebFetch` or `WebSearch`, so the whole egress
+surface is `Bash` — which is both axes at once, any file and any host.
+
+Enforcement is deliberately narrow and stated as such. `health-check` section `7f` holds the one
+property loom can: a read-only counter agent declares neither a write tool nor an egress tool. It
+cannot police egress inside a project loom does not run in, and no tool allowlist sees an
+output-rendered path.
+
+Found by the alignment audit, item `A9`.
+
+## 2026-09-16 — a review answers whether its tests would fail, or says there were none
+
+| Agent | Version | Change |
+|---|---|---|
+| code-reviewer | 2.0.0 -> 2.1.0 | Minor: step 7 now says the Test Design Review section is **never empty** — a diff that adds or modifies no tests says exactly that. "There were none to judge" and "I did not look" are different facts and a blank section cannot distinguish them |
+
+The prose half of a defect whose other half was in Go. `review-contract.md` has always listed
+`## Test Design Review` as a required section and `validate-artifact` checks the heading — but
+`ReviewState.TestDesignReview` was `omitempty` and absent from `Validate()`, and an empty list
+renders as the word **"None"** under the heading. So a run under the executor could emit a report
+that satisfied the markdown contract and answered nothing, which is exactly the vacuous-assertion
+shape L3.41 exists to reject, arriving one level up.
+
+Now required in the validator and `required` in `review.schema.json`, so the provider is actually
+asked for it. Found by the alignment audit, item `A7`.
+
+## 2026-09-16 — `tools` describes what an agent can actually do
+
+Seven agents declared `Read, Glob, Grep, Bash` while every one of them is required to produce a
+markdown artifact, and none declared `Write`. `Bash` was not an over-permission on a read-only
+agent — it was **the write channel the markdown pipeline runs on**, undeclared. Three went further
+and were instructed to modify source: `accessibility-engineer` ("Fix violations directly whenever
+possible"), `security-reviewer` ("Write fixes … using the Write/Edit tools" — which it did not
+have), and `data-engineer` ("rewrite the migration to use the Expand pattern"). Both reviewers have
+carried exactly `Read, Glob, Grep, Bash` since their first commit; `Write` was never removed,
+it was never there.
+
+**This is the mechanism behind L3.36.** Its open question was how a stage that "declares write
+tools? no" changed production source. It was instructed to, `Bash` was the only channel, and that
+channel is invisible to anything reading the `tools` field.
+
+| Agent | Version | Change |
+|---|---|---|
+| accessibility-engineer | 1.1.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Edit, Glob, Grep`. `Write` for its report, `Edit` because it is told to fix violations directly. `Bash` dropped — step 53 explicitly forbids running a11y tools, so it had no execution use at all |
+| analyst | 1.2.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Glob, Grep`. `Write` for `analysis.md`; `Bash` dropped, unused |
+| architect | 1.2.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Glob, Grep`. `Write` for `architecture-notes.md`; `Bash` dropped — it names `verify-dependencies` and `analyze-complexity` as fitness functions, it does not run them |
+| code-reviewer | 1.2.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Glob, Grep, Bash`. `Write` for its report. `Bash` **kept**: one named use, the optional complexity linter |
+| data-engineer | 1.1.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Edit, Glob, Grep`. `Write` for its notes and migration scripts, `Edit` to rewrite a destructive migration into the Expand pattern; `Bash` dropped, unused |
+| product-owner | 1.0.1 -> 2.0.0 | **Major** (tool access): `Read, Bash, Glob, Grep` -> `Read, Write, Glob, Grep`. `Write` for `product-review.md`; `Bash` dropped — the only one of the seven with no use for it anywhere in its prompt |
+| security-reviewer | 1.1.0 -> 2.0.0 | **Major** (tool access): `Read, Glob, Grep, Bash` -> `Read, Write, Edit, Glob, Grep, Bash`. `Write` and `Edit` make step 9 true — it cited tools it did not hold. `Bash` **kept**: `pnpm audit` / `pip-audit` / `go mod verify` in step 7 |
+
+**No prompt behavior changed.** Whether `security-reviewer` and `accessibility-engineer` *should*
+fix an already-approved tree is L3.36's question, which has three costed candidates; stripping their
+write channel here would have decided it by the back door. This commit only makes the declaration
+match what the prompts already instruct.
+
+`agent-frontmatter-contract.md`, `frontmatter-conventions.md` and `agent-frontmatter.schema.json`
+claimed `tools` "enforces capability boundaries" and that a read-only auditor "CANNOT accidentally
+modify what it's auditing". That was false for all seven. Corrected: `Bash` is a write and egress
+channel, read-only **counter agents** are `Read, Glob, Grep` with no `Bash` (and genuinely are), and
+pipeline reviewers are not read-only — they write reports.
+
+Found by the alignment audit (`docs/prompts/loom-alignment-todo-2026-09-16.md`, item `A6`), which
+undercounted the set at six and framed it as over-permission rather than under-declaration.
+
+## 2026-09-16 — a characterization net says what it does not cover
+
+| Agent | Version | Change |
+|---|---|---|
+| unit-tester | 1.5.0 -> 1.6.0 | Minor: step 8 now requires a scope note **in the test file** in characterization mode — records-behavior-as-of date, an explicit `NOT COVERED` list (inputs never tried, env/locale/clock dependencies, unobserved side effects, and that correctness was never asserted), and the three behavior-carrying lines. Not required in coverage-backfill mode, where "does not encode intent" would be false. New `## Scope Note` section in the report points at where the note lives |
+
+Two reasons it goes in the test file rather than the report. `.claude/feature-workspace/` is
+gitignored, so a note written only to the report is deleted with the workspace and the net ships with
+nothing recording its limits — the reader who needs it is looking at the test months later, not at the
+report today. And step 8 already required naming three behavior-carrying lines while the output
+template had **no section for them**: the instruction was orphaned, and relocating it to the scope note
+gives it a home that survives.
+
+Enforcement is `judgment-only` with a reason, marked in the agent under the
+PRECONDITION / ENFORCED-BY convention: `health-check` runs against this repository and cannot see test
+files in the projects this agent writes for, so there is nothing here to assert it against.
+
+Found by the alignment audit (`docs/prompts/loom-alignment-todo-2026-09-16.md`, item `A5`) against
+Level 2B's characterization scope note.
+
+## 2026-09-15 — a mutant that never landed is not a passing test
+
+| Agent | Version | Change |
+|---|---|---|
+| exemplar-auditor | 1.1.0 -> 1.2.0 | Minor: step 5 must now say which standard its vacuity answer meets. A YES reasoned from control flow is weaker than one demonstrated by mutation, and for the one test every later test is copied from that difference is worth stating rather than smoothing over. With no mutation evidence, recommend `backfill-unit-tests` step 6 instead of presenting the reasoned answer as settled |
+
+`backfill-unit-tests` step 6 and `exemplar-contract.md`'s second disqualifier gained the same fix:
+confirm the mutant landed (non-empty diff) before trusting a survival, and mutate what an assertion
+depends on. Twice in two days a mutation failed to apply and the passing test read exactly like an
+uncovered line.
+
+## 2026-09-15 — the exemplar audit gets a cadence
+
+| Agent | Version | Change |
+|---|---|---|
+| exemplar-auditor | 1.0.0 -> 1.1.0 | Minor: step 7 splits its output by how it was invoked. Ad hoc still writes `.claude/feature-workspace/exemplar-audit.md`; a scheduled run writes `docs/audits/exemplar-audit-YYYY-MM-DD.md`, dated and never overwritten, because an audit whose output is replaced each run cannot be told stale from fresh. `health-check` reads that date |
+
+Wired into `shared/hooks/scheduled-monthly.yaml` as `exemplar-auditor-monthly`, disabled by default
+like every entry in that file. Exemplars are deliberately not gated (L3.46), so this audit is the
+only thing that notices a degraded one.
+
+## 2026-09-14 — a suite has health numbers, not just a coverage number (roadmap L3.42)
+
+New `docs/patterns/test-suite-health-metrics.md` and `shared/knowledge/flake-triage-taxonomy.md`.
+Coverage is the one number that cannot detect what this framework's agents can produce: repairing a
+vacuous test moves it by zero, retiring a dead test moves it down, and deleting an assertion leaves
+the line covered.
+
+| Agent | Version | Change |
+|---|---|---|
+| dx-engineer | 1.2.0 -> 1.3.0 | Minor: step 3 now says to cluster flaky tests by **cause** rather than by test, pointing at the taxonomy KI for the four categories and the evidence that separates them, and at the metrics pattern for the numbers that say whether triage worked. It is the only agent bound: these are suite-over-time numbers a lead reads, and `qa-engineer` works per feature |
+
+The KI records a deliberate divergence from the source material rather than applying it silently:
+the wider practice treats quarantine as a disposition an engineer applies, and here it is approval
+gate #9 — an agent proposes, a human applies.
+
+## 2026-09-14 — exemplar tests: the pattern an agent copies (roadmap L3.40)
+
+New contract `shared/contracts/exemplar-contract.md`, manifest `.claude/exemplars.yaml`, and the
+`test-exemplars` memory-registry source. Agents here write tests constantly and learned the house
+pattern from prose; nothing showed them one good test. The framework already did this for its own
+agents — `memory-auditor` is "the pattern exemplar every new counter agent should follow" — and had
+never done it for tests.
+
+| Agent | Version | Change |
+|---|---|---|
+| exemplar-auditor | — -> 1.0.0 | **New.** Thirteenth read-only counter agent. Audits each declared exemplar against the contract: still exists and runs, still annotated, digest still confirmed, and still demonstrates what it claims. The judgement is test craftsmanship, which `memory-auditor` has none of — a sweep checking schema and duplicates would pass a beautifully-registered bad test |
+| developer | 1.2.0 -> 1.3.0 | Minor: consult the exemplar for the language and level before writing a test |
+| qa-engineer | 1.5.0 -> 1.6.0 | Minor: same |
+| dx-engineer | 1.1.0 -> 1.2.0 | Minor: same |
+| refactor-engineer | 1.2.0 -> 1.3.0 | Minor: same |
+| test-driven-developer | 1.4.0 -> 1.5.0 | Minor: same |
+| unit-tester | 1.4.0 -> 1.5.0 | Minor: same |
+| api-test-generator | 1.1.0 -> 1.2.0 | Minor: same |
+| visual-qa-engineer | 1.1.0 -> 1.2.0 | Minor: same |
+
+Not "golden": `DOMAIN_DICTIONARY.md` reserves that term for the structural check over
+`tests/agents/*/actual-output.md`, and golden carries the golden-master sense — a recorded baseline
+you compare *against*, the opposite instruction to *copy this*.
+
+## 2026-09-13 — every test-writing agent is bound by the test repair contract (roadmap L3.39)
+
+New rule `shared/rules/test-repair-contract.md` and approval gate #9 (Removing Test Coverage). Before
+this, nothing in the framework stopped an agent making a suite green by deleting the assertion that
+was failing — the only counter-language was one line in `qa-engineer`, binding one agent, enforced by
+nothing.
+
+| Agent | Version | Change |
+|---|---|---|
+| dx-engineer | 1.0.1 -> 1.1.0 | Minor, and the reason this item existed: step 4 said "Quarantine flaky tests", with Write and Edit and no gate — an unsupervised one-way door on regression signal. It now **proposes** a quarantine carrying owner, expiry, cause and resolving evidence, and a human applies it at gate #9. Also names the four flake categories, because a category-A flake is a product defect the test correctly found and quarantining it hides a real bug |
+| developer | 1.1.0 -> 1.2.0 | Minor: bound by the test repair contract |
+| qa-engineer | 1.4.0 -> 1.5.0 | Minor: bound by the test repair contract. Its existing "never skip a test just to make the suite green" line now has a rule behind it instead of standing alone |
+| refactor-engineer | 1.1.0 -> 1.2.0 | Minor: bound by the test repair contract — a refactor that changes a test file has moved the net it was being verified against |
+| test-driven-developer | 1.3.0 -> 1.4.0 | Minor: bound by the test repair contract |
+| unit-tester | 1.3.0 -> 1.4.0 | Minor: bound by the test repair contract |
+| api-test-generator | 1.0.1 -> 1.1.0 | Minor: bound by the test repair contract |
+| visual-qa-engineer | 1.0.0 -> 1.1.0 | Minor: bound by the test repair contract |
+
+## 2026-09-13 — the reviewer asks whether a test would fail (roadmap L3.41)
+
+| Agent | Version | Change |
+|---|---|---|
+| code-reviewer | 1.1.0 -> 1.2.0 | Minor: new process step 7 and a **Test Evidence** criterion. For every test added or modified in the diff, answers "would this test fail if the behavior its name claims were broken?" as YES / NO / UNCERTAIN under the existing `## Test Design Review` heading. A `NO` names one of four types (vacuous, self-fulfilling, unreached, disabled) and requests changes; `UNCERTAIN` is advisory and never blocks, because a real assertion inside an unread custom matcher looks vacuous and a mock configured in a distant `beforeEach` looks legitimate. Scope is the diff's own tests, never a suite sweep. No contract change — the heading already existed and specified nothing |
+| unit-tester | 1.2.0 -> 1.3.0 | Minor: a characterization net is not finished until mutation proves it. Names the stopping condition and points at `backfill-unit-tests`, which runs the mutation in a throwaway git worktree — this agent's "never modify source, full stop" rule is unchanged and stays absolute |
+
+## 2026-08-31 — analysis reaches QA and tech-writer as a projection, not a summary
+
+| Agent | Version | Change |
+|---|---|---|
+| qa-engineer | 1.3.0 -> 1.4.0 | Step 2 no longer calls `summarize-artifact` on `analysis.md`. Under `loom run` the acceptance criteria, edge cases, QA tasks, and definition of done arrive as a projection of typed analysis state — selected fields rather than a ~200-word LLM summary, so nothing is paraphrased or silently dropped. Without the executor, read the two relevant sections directly instead of the whole file (roadmap L2.9 / L2.10) |
+| tech-writer | 1.2.0 -> 1.3.0 | Step 1 same change: feature summary, out-of-scope list, and its own task list arrive as a projection instead of a summary |
+
+## 2026-08-20 — context-engineer wired as mandatory Step 0 in all delivery and refactoring pipelines
+
+| Agent / Skill | Version | Change |
+|---|---|---|
+| refactor-engineer | 1.0.0 → 1.1.0 | Minor: context-engineer is now Step 0 of Phase 0. Invoked before scope baseline, produces `context-manifest.md` that pins the refactoring target files and surfaces ADR constraints and prior retrospective lessons. Guardrail added: never proceed to step 1 without `context-manifest.md`. Standalone escape hatch: note "context-debt" in `refactoring-notes.md` if context-engineer cannot run. |
+| deliver-atdd | — | Step 6 added in Phase 0: invoke context-engineer → `context-manifest.md`; all subsequent steps renumbered 6–16 → 7–17. Phase 0 row added to delivery-summary table. Guardrail added: never skip context-engineer before qa-engineer writes scenarios. |
+| deliver-bugfix | — | Phase 0 section added before Phase 1: invoke context-engineer → `context-manifest.md`. Comparison table row updated from Skipped → Required. `context-manifest.md` added to output artifacts. Guardrail added with context-debt fallback. |
+| orchestrate | — | Validate-and-Load step 4 added: halts any `feature-delivery` or `refactoring` workflow whose first executable stage is not `context-engineer`. Guardrail added: cannot bypass via `--legacy`. |
+
+## 2026-08-15 — Canonical runbook index
+
+| Agent | Version | Change |
+|---|---|---|
+| documentation-manager | 2.0.1 -> 2.0.2 | Patch: living-document updates now target the canonical `docs/runbooks/README.md` index; `docs/RUNBOOKS.md` is a compatibility redirect. |
+
+## 2026-08-04 — Epic 60: Retrieval Regression Set
+
+| Agent | Version | Change |
+|---|---|---|
+| retrieval-evaluator | 1.1.0 | Added regression set runner: reads approved cases from shared/evaluation/retrieval-regression.md, simulates retrieval for each, reports PASS/FAIL. Added telemetry sweep for new retrieval.queried event type (pending schema v1.2.0). Updated description to reflect expanded scope. |
+
+## 2026-08-02 — Epic 45: Refactor Engineer
+
+| Agent | Version | Change |
+|---|---|---|
+| refactor-engineer | 1.0.0 | New agent — structural refactoring with Fowler operations, characterization-test safety net, and behavior-preservation attestation |
+
+## 2026-08-01 — v3.3.0: AOS Policy Layer (Phase 4)
+
+Fourth and final phase of the AOS migration. Phase 4 introduces the policy layer that makes
+graduated automation possible. **A team on v3.2.0 that upgrades to v3.3.0 and does not create
+any `.claude/policies/` files sees zero behavior change.** Default policy set is empty; all
+approvals still require human confirmation. Policies are strictly opt-in per-project. This is
+the backward-compatibility guarantee for the fifth and final time.
+
+**Policy Layer (Ops 4.1-4.3)**
+- `shared/policies/` scaffold: `README.md` (opt-in nature, audit-trail requirements, per-project
+  storage), `policy-schema.md` (declarative matcher + condition + action format, gate eligibility
+  table, conflict-resolution rules, telemetry event shapes), `examples/` (4 reference policies).
+- `shared/policies/examples/auto-approve-refactor.policy.yaml`: Tier A auto-proceed on pure-refactor
+  commits (code-reviewer APPROVED, no behavior change, fitness functions pass, diff < 200 LOC,
+  no security/auth paths).
+- `shared/policies/examples/auto-approve-doc-changes.policy.yaml`: auto-proceed on docs-only git
+  commits (diffType docs-only, tests pass, diff < 500 lines). Targets Gate 2.
+- `shared/policies/examples/auto-approve-test-additions.policy.yaml`: auto-proceed on fitness
+  function wiring when the wired function is a new test (dry-run pass, all paths in test dirs,
+  zero security criticals). Targets Gate 7.
+- `shared/policies/examples/require-human-review-security.policy.yaml`: inversion policy —
+  explicitly requires human on any file matching security/auth/credential paths regardless of
+  other policies. Targets Gates 2 and 6. Demonstrates that `require-human` always beats
+  `auto-approve` in conflict resolution.
+
+**Policy Evaluator (Op 4.2)**
+- `shared/orchestration/policy-evaluator.md`: spec for the evaluator that bridges `.claude/policies/`
+  to `FeatureDeliveryWorkflow` stage boundaries. Algorithm: load → filter → evaluate → conflict-
+  resolve → emit telemetry → return `proceed | halt | require-human`. Every decision emits a
+  `policy.evaluated` telemetry event — no silent auto-approvals. Conflict resolution: `require-human`
+  always beats `auto-approve`. Dry-run mode: `--dry-run-policies` validates policies against
+  historical telemetry without mutating pipeline state.
+
+**Approval Gates Classification (Op 4.5)**
+- `shared/rules/approval-gates.md` updated: each of the 8 gates now annotated with policy
+  eligibility (`Policy-eligible: Yes (Tier A)` or `No — Always Human`) and gate ID for the
+  evaluator's matcher. Policy-eligible gates: 2 (`git-commit`), 6 (`out-of-boundary-write`),
+  7 (`fitness-function-wiring`). Always-human gates: 1, 3, 4, 5, 8. New "Policy-Based Gate Type"
+  section explains the v3.3 opt-in mechanism.
+
+**Policy Authoring Guide (Op 4.4)**
+- `docs/aos/policy-authoring-guide.md`: comprehensive operator guide covering the 8-gate
+  eligibility table, schema quick-reference, first-policy walkthrough, inversion policy pattern,
+  dry-run testing, emergency override (`policiesEnabled: false`), conflict resolution reference,
+  audit trail requirements, and governance pair interaction (audits run before policy evaluation).
+
+**Health Check Extension (Op 4.6)**
+- `shared/skills/health-check/SKILL.md` extended with Step 5 (policy validation): parses each
+  `.policy.yaml`, validates required fields, checks gate IDs against the eligible set, reports
+  coverage map for the 3 eligible gates, detects conflicting policies, validates `action.type`
+  values. Never fails on absence of policies. New "Policy Layer" section in health report output.
+
+| Agent / Skill | Version | Change |
+|---|---|---|
+| `health-check` | 1.3.0 | Added Step 5: policy syntax validation, gate-ID eligibility check, coverage-conflict detection, policy layer section in output format. |
+
+---
+
+## 2026-08-01 — v3.2.0: AOS Runtime (Phase 3)
+
+Third phase of the AOS migration. Phase 3 wires the runtime layers: RAG retrieval, orchestration,
+Learning/Forgetting engines. All additions are opt-in. A team on v3.1.0 that does not invoke
+`/orchestrate`, `--semantic` flags, Learning/Forgetting engines, or the `FeatureDeliveryWorkflow`/
+`TDDWorkflow` sees **zero behavior change**.
+
+**RAG Layer (Ops 3.1-3.4)**
+- `shared/rag/` scaffold: three-corpus model (LLM-as-retriever / BM25 / vector) per ADR-002.
+- `shared/skills/search-ki-semantic/` (new): full-corpus LLM-as-retriever for the KI+ADR corpus.
+- `query-memory` updated: `--semantic` flag delegates KI/ADR portion to `search-ki-semantic`.
+- Source retrieval deferred: `shared/rag/adapters/source-retrieval.deferred.md` documents the rationale.
+- No re-work for installed-project BM25: shipped in `saturday-mcp` M1 (commit `5a47441`).
+
+**Learning/Forgetting Engines Wired (Ops 3.5-3.6)**
+- `shared/hooks/on-retrospective-written.yaml` (new): triggers `learning-engine` on retrospective write.
+- `shared/hooks/scheduled-monthly.yaml` (new): monthly `forgetting-engine` + `memory-auditor` schedule.
+- `learning-engine` SKILL.md formalized: invocation modes, duplicate-check step, explicit human-confirmation language.
+- `forgetting-engine` SKILL.md formalized: staleness criteria, confidence tiers, archive-not-delete guarantee.
+
+**Orchestration Runtime (Ops 3.7-3.10)**
+- `shared/orchestration/` scaffold: README, interface.md (Workflow contract), pipeline-schema.md.
+- `shared/skills/orchestrate/` (new): `/orchestrate` runtime entry point with `--legacy`, `--dry-run`, `--resume` flags.
+- `install.sh`: `--base` (default, unchanged behavior) and `--full` (seeds AOS layers) modes.
+- `docs/aos/migration-guide.md`: full v3.2 operator guide with per-layer opt-in steps.
+
+**Trinity-Native Workflow Refactor (Ops 3.11-3.13)**
+- `shared/workflows/feature-delivery-workflow.md` (new): `FeatureDeliveryWorkflow` — 14 named stages,
+  resumable checkpoints, explicit Phase 4 policy boundaries, audit-after-producer on each contract artifact.
+  `deliver-feature` skill is unchanged external entry point (v3.1 behavior preserved).
+- `shared/workflows/tdd-workflow.md` (new): `TDDWorkflow` — 6-stage Red-Green-Refactor loop with
+  named roles, coverage gate (≥ 85%), max-iteration halt, audit blocks on test-writing + refactor.
+  `test-driven-developer` agent is unchanged external entry point (v1.3.0).
+- `shared/orchestration/audit-composition-pattern.md` (new): producer→auditor mapping, retry protocol,
+  config knob (`workflowAuditsEnabled: false` to disable per-project).
+
+| Agent / Skill | Version | Change |
+|---|---|---|
+| `test-driven-developer` | 1.3.0 | Added TDDWorkflow reference and runtime invocation path (additive). |
+| `search-ki-semantic` | 1.0.0 | New skill: LLM-as-retriever for framework KI corpus (Phase 3 Op 3.2). |
+| `orchestrate` | 1.0.0 | New skill: /orchestrate runtime entry point (Phase 3 Op 3.8). |
+| `learning-engine` | 1.1.0 | Formalized invocation modes, duplicate-check step, human-confirmation language. |
+| `forgetting-engine` | 1.1.0 | Formalized staleness criteria, confidence tiers, archive-not-delete guarantee. |
+| `deliver-feature` | *(no version bump — no behavior change)* | Added workflow reference comment. |
+
+---
+
 ## 2026-07-30 — Epic 46: Visual QA Engineer
 
 - **`visual-qa-engineer` 1.0.0**: Added new conditional pipeline agent. Runs after qa-engineer on UI-touching features that have `heatmap-data/` or Playwright snapshot baselines. Wraps `@orieken/saturday-ml-analyzer` for interaction coverage analysis and Playwright native `toHaveScreenshot()` for visual regression. Verdict: PASS | FAIL | UNCONFIGURED. An UNCONFIGURED verdict does not block the pipeline (heatmap instrumentation not yet adopted). Produces `visual-qa-report.md` validated by `shared/contracts/visual-qa-report-contract.md`.
