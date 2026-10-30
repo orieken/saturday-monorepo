@@ -22,4 +22,5 @@ reports/
 heatmap-data/
 coverage.out
 coverage_output.txt
-*.webm
+*.webm.loom/
+.claude/settings.local.json
