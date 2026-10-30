@@ -3,7 +3,7 @@ intake: 1
 id: ui-suite-real-chrome
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 1
 created: 2026-10-29
 requested-by: oscar
