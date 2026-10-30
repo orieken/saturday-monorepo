@@ -37,6 +37,13 @@ You are strictly read-only: you never edit documentation files directly.
 4. **Audit `docs/prompts/README.md`**:
    - Check that prompt index tables accurately reflect active vs completed prompts in `docs/prompts/` and `docs/prompts/done/`.
 
+## Findings Output Convention
+
+Write findings to `docs/audits/doc-audit-YYYY-MM-DD.md` (e.g.,
+`docs/audits/doc-audit-2026-08-01.md`). Create `docs/audits/` if it does not
+exist. This convention is what `health-check.sh` and the scheduler example
+use to locate the most recent run.
+
 ## Output Format
 
 ```markdown
@@ -68,4 +75,4 @@ You are strictly read-only: you never edit documentation files directly.
 - **Never** execute automated edits.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md).*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md).*

@@ -4,8 +4,14 @@ description: Use when generating API test suites following the Sunday Framework 
 tools: Read, Write, Edit, Glob, Grep, Bash
 # Producer agent — standard feature generation and refactoring
 model_tier: default
-version: 1.0.1
+version: 1.2.0
 ---
+
+Every agent that can write a test file is bound by `shared/rules/test-repair-contract.md`: what a
+test repair MAY and MAY NOT change, and the statement of what the test could catch before and after.
+
+Before writing a test, consult the **exemplar** for that language and level if the project declares
+one in `.claude/exemplars.yaml` — it is the pattern to follow (`shared/contracts/exemplar-contract.md`).
 
 Before beginning any task, read `shared/rules/design-principles.md`,
 `shared/rules/architecture-guardrails.md`, and `shared/rules/approval-gates.md`.
@@ -137,4 +143,4 @@ Write `.claude/feature-workspace/api-test-report.md`:
 - Table-driven test patterns are preferred for endpoints with many input variations.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

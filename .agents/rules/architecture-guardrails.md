@@ -32,10 +32,20 @@ Never hardcode API keys, passwords, connection strings, or tokens. Use `.env` pl
 ## 7. Verifiable Architecture
 - Every structural or architectural decision made must produce a fitness function (a CI check, linter rule, or automated test).
 - If it cannot produce a fitness function, it MUST be explicitly flagged as "judgment-only" with a documented reason in the architecture notes.
+- A comment stating a condition the code depends on must name what holds it: `PRECONDITION:` + `ENFORCED-BY:` (a test, a script, or `judgment-only` with a reason). See `docs/patterns/framework-meta-patterns.md`.
 
 ## 8. Observability Boundaries
 - No OpenTelemetry (OTel) instrumentation logic is allowed inside domain entities or page logic.
 - Traces and spans must only be emitted from the adapter layer or interceptor layer.
 
+## 9. Telemetry Records Properties, Not Payloads
+Guardrail #8 governs *where* instrumentation may live. This governs *what* it may carry.
+- NEVER record raw prompt or completion text, retrieved document bodies, user email/name/account ID, credentials, or a tool argument's value that the code owning it has not declared non-sensitive.
+- Record the properties instead: a salted hash, a length, a count, an ID, a status, a version. A hash answers "is this the same input that failed yesterday?" without storing it; a token count shows truncation without storing text.
+- Never emit an unsalted hash of low-entropy input — it brute-forces. Salted, or nothing.
+- Permission to record a value is **opt-in per field, declared by the code that owns it**. A denylist of sensitive-looking names cannot cover a field it was never told about, and fails silently.
+- Span and metric names stay low-cardinality; the variable part goes in a bounded or hashed attribute.
+- "We will redact it later" is not available — once exported it is in the vendor's storage and retention, not yours.
+
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

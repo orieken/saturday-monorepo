@@ -62,6 +62,17 @@ deliberately independent of recency — a same-area feature from 20 deliveries a
 scale a direct grep is fine; once the archive grows past ~15-20 features, see
 `docs/runbooks/scaling-cross-feature-learning.md`.
 
+### 4a. Pin by Blast Radius (when the repo graph is available)
+Once the files the task changes are known, ask the graph rather than guessing who depends on them. If the
+`loom` MCP server is registered (`loom mcp serve`) and the repo was indexed (`loom index`), call
+`mcp__loom__impact` with those paths and a depth of 2–3: it returns every directory that transitively imports
+them, nearest first, each labelled `exact` or `approximate`. Pin the changed files, then their distance-1
+`exact` dependents, then tests; treat `approximate` as something to verify. In the typed manifest record only
+`blastRadius.seeds` and `depth` — `loom` computes the rest from the graph and replaces anything else, so never
+transcribe the result. A `fresh: false` answer predates the working tree: confirm importers with Grep. With no
+graph, pin by grep over imports, omit `blastRadius`, and say the radius was not graph-derived. Full guidance:
+`shared/agents/context-engineer.md` step 7.
+
 ### 4b. Prefer High-Fidelity References
 When choosing what to pin, prefer references Claude can inspect directly over prose paraphrases:
 - Interfaces, schemas, tests, fixtures, generated golden outputs, and prior implementation files.
@@ -75,7 +86,7 @@ prose pin with the underlying reference when the summary adds no unique informat
 For each pinned file, estimate tokens (~line count × 8 chars/line ÷ 4 chars/token — a rough heuristic). Sum the total and compare against the consuming agent's tier budget (of a 200k-token context window): Analyst/Architect ≤60%, Developer ≤80%, Reviewer agents ≤40%. Flag `WARNING` if over budget and recommend specific cuts.
 
 ### 6. Compile a Context Manifest
-Generate a concise `context-manifest.md` in the current feature workspace (e.g., `.claude/feature-workspace/context-manifest.md` or output directly). 
+Generate a concise `context-manifest.md` in the active feature workspace (e.g., `.claude/feature-workspace/<feature-name>/context-manifest.md`, where `<feature-name>` is provided by the orchestrator; or output directly when invoked standalone). 
 
 ## Output Format
 
@@ -131,4 +142,4 @@ List files currently open that should be closed immediately:
 - **Never** fabricate a lesson from a retrospective that doesn't actually say it.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

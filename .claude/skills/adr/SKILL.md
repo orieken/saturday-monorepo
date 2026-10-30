@@ -14,7 +14,7 @@ When the user explicitly asks to document an architectural decision or asks to w
 1. All existing ADRs in `docs/adrs/` (for next number + tone)
 2. `ARCHITECTURE_RULES.md`
 3. `DOMAIN_DICTIONARY.md`
-4. `.claude/feature-workspace/architecture-notes.md` if it exists.
+4. `.claude/feature-workspace/<feature-name>/architecture-notes.md` if it exists.
 
 ## Process
 1. Determine next ADR number (scan `docs/adrs/` for existing files)
@@ -65,4 +65,4 @@ Technical Story: [feature or ticket that prompted this]
 Fully conversational. Generates the Markdown logic locally.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

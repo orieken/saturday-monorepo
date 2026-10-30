@@ -18,6 +18,10 @@ Do NOT use for root cause analysis of a specific bug — use `/five-whys` instea
 2. `docs/features/<feature-name>/delivery-summary.md` — pipeline run status
 3. `CLAUDE.md` — project constraints for benchmarking
 4. The most recent `docs/agent-metrics/scorecard-*.md` (if one exists) — for the Agent Scorecard Cross-Reference section
+5. `run-state.json` and `run-events.jsonl` for this feature (present when it was delivered by
+   `loom run`; their absence is not an error) — the `artifact.corrected` entries are this delivery's
+   human corrections, already attributed to the producing agent, each naming a retained diff under
+   `.approved/<gate>/corrections/` (roadmap L4.5).
 
 ## Process
 
@@ -50,14 +54,29 @@ Do NOT use for root cause analysis of a specific bug — use `/five-whys` instea
    - **What went poorly** — things that required rework, were missed, or caused delays
    - **What to improve** — actionable process changes for next time
 
-5. **Cross-reference the latest agent scorecard** (if `docs/agent-metrics/scorecard-*.md` exists): for each
+5. **Human Corrections**: If this feature was delivered by `loom run`, read the `artifact.corrected`
+   entries from its run state. For each one:
+   - Note the producing agent (`agent`), the gate it was caught at (`gate`), and the size of the
+     change (`stat`). Attribution comes from the record — do not infer it from who owns the gate.
+   - Read the diff at `diffPath`. Summarize at a high level what the human changed; quote only
+     short fragments, never a whole artifact body.
+   - Remember the correction was **advisory**: the executor recorded it and did not adopt it, so
+     the delivered artifact does not contain the human's text. Do not describe it as a fix that
+     shipped.
+   - Omit this step (and the output section) when the feature has no run state or no corrections.
+
+6. **Cross-reference the latest agent scorecard** (if `docs/agent-metrics/scorecard-*.md` exists): for each
    agent that ran in this delivery, check whether it was flagged `UNDERPERFORMING` in the most recent
    scorecard. If so, and this delivery shows the same symptom (e.g. scorecard flags code-reviewer's
    first-pass acceptance rate as low, and this delivery also needed multiple CHANGES REQUESTED loops), call
    it out explicitly — that's corroborating evidence, not a coincidence. If no scorecard exists yet, note
    that in the output rather than skipping the section silently.
 
-6. **Produce the retrospective** at `docs/features/<feature-name>/retrospective.md`.
+7. **Produce the retrospective** at `docs/features/<feature-name>/retrospective.md`.
+
+   Include a "Gate Corrections" section only when at least one `gate_decision` event was found for
+   this feature (step 5 above). Omit the section entirely when telemetry is not enabled or no events
+   match.
 
 ## Output Format
 
@@ -102,6 +121,17 @@ Delivery status: Complete | Complete with notes | Blocked
 ## Patterns Identified
 [Recurring themes across this and prior deliveries, if other retrospectives exist in docs/features/]
 
+## Gate Corrections
+[Include this section ONLY when the feature was delivered by `loom run` and its run state records
+`artifact.corrected` entries. Omit entirely otherwise — a delivery through the markdown pipeline
+records no corrections, and neither does a run nobody corrected.]
+
+| Gate | Agent | Outcome | Reason |
+|---|---|---|---|
+| Gate #[N] ([name]) | [agent] | rejected / edited_then_approved | [stated reason or "none given"] |
+
+[If every gate was approved without edits: "All gate halts approved without edits."]
+
 ## Agent Scorecard Cross-Reference
 [For each agent in this delivery flagged UNDERPERFORMING in the latest docs/agent-metrics/scorecard-*.md:
 note whether this delivery corroborates it. If no scorecard exists yet: "No agent-scorecard has been
@@ -120,4 +150,4 @@ delivery's agents: "No corroborating evidence this delivery — see docs/agent-m
 Works entirely offline. Reads only local markdown files. No external services required.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*

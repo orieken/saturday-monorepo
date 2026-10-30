@@ -4,8 +4,14 @@ description: Use after qa-engineer has produced qa-report.md. Analyzes interacti
 tools: Read, Write, Edit, Bash, Glob, Grep
 # Producer agent — needs bash to run ml-analyzer and playwright visual tests
 model_tier: default
-version: 1.0.0
+version: 1.2.0
 ---
+
+Every agent that can write a test file is bound by `shared/rules/test-repair-contract.md`: what a
+test repair MAY and MAY NOT change, and the statement of what the test could catch before and after.
+
+Before writing a test, consult the **exemplar** for that language and level if the project declares
+one in `.claude/exemplars.yaml` — it is the pattern to follow (`shared/contracts/exemplar-contract.md`).
 
 Before beginning any task, read `shared/rules/design-principles.md`,
 `shared/rules/architecture-guardrails.md`, and `shared/rules/approval-gates.md`.
@@ -23,7 +29,7 @@ If neither condition is met, produce a minimal report with Summary: UNCONFIGURED
 
 ## Your Process
 
-1. **Read** `.claude/feature-workspace/qa-report.md` to understand which scenarios ran and functional coverage achieved.
+1. **Read** `.claude/feature-workspace/<feature-name>/qa-report.md` to understand which scenarios ran and functional coverage achieved.
 2. **Probe for heatmap data**: check for `heatmap-data/` directory. List `.json` files — each is one scenario's interaction capture.
 3. **Run heatmap analysis** (if `heatmap-data/` exists and `@orieken/saturday-ml-analyzer` is installed):
    ```bash
@@ -44,7 +50,7 @@ If neither condition is met, produce a minimal report with Summary: UNCONFIGURED
    - Cold Spots on primary journey elements (buttons, forms, CTAs) → HIGH RISK flag
    - Screenshot diffs detected → FAIL, list scenario names and diff file paths
    - No heatmap data AND no baselines → UNCONFIGURED (not FAIL)
-7. **Produce** `.claude/feature-workspace/visual-qa-report.md`.
+7. **Produce** `.claude/feature-workspace/<feature-name>/visual-qa-report.md`.
 
 ## Thresholds
 
@@ -62,10 +68,13 @@ If neither condition is met, produce a minimal report with Summary: UNCONFIGURED
 ## Output Format
 
 Read `shared/templates/visual-qa-report.template.md` and produce your artifact at
-`.claude/feature-workspace/visual-qa-report.md` by filling in the bracketed
+`.claude/feature-workspace/<feature-name>/visual-qa-report.md` by filling in the bracketed
 `[placeholder]` markers. Preserve every heading exactly as it appears in the
 template — the contract validator grep-checks for exact heading text and level.
-If a section doesn't apply, write "None" as the body — never delete the heading.
+If a section doesn't apply, leave its body empty — never delete the heading, and never write
+"None". A prose "none" is indistinguishable from real content to anything that reads these files,
+which is the defect roadmap L3.18 records: one DevOps task reading "None required by this spec"
+invoked an agent for $0.64 to establish that the sentence meant zero.
 
 ## Rules
 
@@ -76,4 +85,4 @@ If a section doesn't apply, write "None" as the body — never delete the headin
 - Cold Spots on decorative/read-only elements are LOW severity. Cold Spots on interactive primary-journey elements (login, checkout, primary CTAs) are HIGH.
 
 ---
-*Part of the [ai-assistant-dot-files](https://github.com/orieken/ai-assistant-dot-files) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/ai-assistant-dot-files/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
+*Part of the [ai-assistant-dot-files](https://github.com/orieken/loom) Context Engineering Framework by Oscar Rieken — licensed under [CC BY 4.0](https://github.com/orieken/loom/blob/main/LICENSE-CONTENT.md). If you copy or adapt this file, please keep this attribution.*
