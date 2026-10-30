@@ -1,0 +1,27 @@
+# Top-level Debian packages for the runner image's debian target.
+# containers/saturday-runner/lock-packages.sh resolves this list's full
+# dependency closure (including transitive deps) against the pinned base
+# image plus the vendored Chrome/Edge repositories, and writes the result
+# to containers/saturday-runner/apt.lock. Edit this file to add or remove a
+# package, then rerun lock-packages.sh — never hand-edit apt.lock.
+ca-certificates
+gnupg
+curl
+dbus
+dbus-x11
+fontconfig
+fonts-liberation
+fonts-noto-color-emoji
+iproute2
+libegl1
+libgl1-mesa-dri
+libgles2
+openbox
+procps
+python3-websockify
+novnc
+x11-utils
+x11vnc
+xvfb
+google-chrome-stable
+microsoft-edge-stable
