@@ -7,7 +7,9 @@ perf/k6
 .env.apis
 
 
-containers
+# Container images: only the runner image is committed (docs/runner-image.md)
+containers/*
+!containers/saturday-runner/
 
 # IDE / tooling
 .idea/
@@ -22,5 +24,6 @@ reports/
 heatmap-data/
 coverage.out
 coverage_output.txt
-*.webm.loom/
+*.webm
+.loom/
 .claude/settings.local.json
