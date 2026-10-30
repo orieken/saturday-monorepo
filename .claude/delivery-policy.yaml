@@ -1,0 +1,4 @@
+maxContractRetries: 3
+preShipChecks: []
+# after ui-suite-real-chrome:      - {name: ui-suite, command: scripts/ui-suite-in-chrome.sh}
+# after golden-lint-and-exemplars: - {name: lint, command: pnpm --filter @orieken/ye-olde-magic-shop lint}
