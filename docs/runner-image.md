@@ -8,6 +8,8 @@ viewer and checks:
 | `debian` (default) | Everyday use, CI, the factory | `node:24.19.0-bookworm-slim`, every package pinned |
 | `ubi9` | Teams whose policy requires a Red Hat base, FIPS, or Red Hat's security errata | UBI9 9.x with CentOS Stream 9 and EPEL 9, every package pinned |
 
+How to build both: ai-assistant-dot-files `docs/prompts/factories/06-runner-images.md`.
+
 Choose with `scripts/ui-suite-in-chrome.sh --ubi9`, or `RUNNER_VARIANT=ubi9`. Both must pass the
 same `runner-check` before either ships a change.
 
