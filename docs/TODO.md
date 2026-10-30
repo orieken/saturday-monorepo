@@ -15,7 +15,12 @@ Each item below with an `order:` tag is a draft work order in `intake/`. To have
       in Playwright's bundled Chromium on the host; `Dockerfile.runner` is the Playwright image, not
       a real-Chrome one; and `containers/Dockerfile` copies a `supervisord.conf` that is not in
       `containers/`. Pick one real-Chrome image, run the suite in it under Xvfb through one script,
-      and assert WebGL is available. Every map order depends on this. `order: ui-suite-real-chrome`
+      and assert WebGL is available. Every map order depends on this. Image design: `docs/runner-image.md`.
+      `order: ui-suite-real-chrome`
+- [ ] **Polyglot runner target**: JDK, Python, Gradle and Go on top of the runner image, pinned and
+      checksum-verified. `order: runner-image-polyglot`
+- [ ] **UBI9 runner variant** (supported alongside Debian, for teams needing a Red Hat base): same image on UBI9 with Stream and EPEL, packages locked, EPEL RPMs
+      vendored, Mesa from Stream so WebGL works. `order: runner-image-ubi9`
 
 # TODO — Golden tests (repair before any factory copies them)
 
