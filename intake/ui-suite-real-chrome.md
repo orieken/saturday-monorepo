@@ -15,10 +15,10 @@ autonomy: inherit
 depends-on: []
 budget:
   max-attempts: 2
-  max-usd: 40
-  max-hours: 6
+  max-usd: 25
+  max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/playwright.config.ts, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/tests/**, containers/saturday-runner/**, .dockerignore, scripts/**, docs/**]
+  paths: [apps/ye-olde-magic-shop/playwright.config.ts, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/tests/**, .dockerignore, scripts/**, docs/features/ui-suite-real-chrome/**]
 ---
 
 # Run the demo app's UI suite in real Chrome under Xvfb
@@ -31,42 +31,41 @@ scope:
 
 ## Summary
 
-The demo app's Playwright suite runs today in Playwright's bundled Chromium, on the host. This
-order builds the Saturday runner image designed in `docs/runner-image.md`, runs the suite in it
-headed in real Chrome under Xvfb, proves WebGL works there, and gives the factory one command to
-run it as a pre-ship check.
+The Saturday runner image already exists: `containers/saturday-runner/` (debian target), built and
+verified by hand per `docs/runner-image.md`, "Debian variant: first build record". This order does
+not change the image. It wires the demo app's Playwright suite to it: a `chrome` project that runs
+headed in real Chrome under Xvfb, a spec that proves WebGL works there, and one command the factory
+can run as a pre-ship check.
+
+## Starting point
+
+The first attempt (killed at the stage timeout while building the image) left working drafts of
+every file this order needs. They are on commit `034adbd` (branch `salvage/ui-suite-real-chrome`),
+not on `main`. Start from them and check each against the criteria below; do not rewrite them from
+scratch:
+
+```bash
+git show 034adbd:scripts/ui-suite-in-chrome.sh
+git show 034adbd:apps/ye-olde-magic-shop/playwright.config.ts
+git show 034adbd:apps/ye-olde-magic-shop/tests/webgl.spec.ts
+git show 034adbd:apps/ye-olde-magic-shop/package.json
+git show 034adbd:.dockerignore
+```
 
 ## Acceptance Criteria
 
-- [ ] Given `containers/saturday-runner/Containerfile`, then its `debian` target matches
-      `docs/runner-image.md`, "The combined design": the pinned `node:24.19.0-bookworm-slim` digest
-      from that page; Chrome and Edge from repositories signed by the keys in
-      `containers/saturday-runner/keys/`, checked against `SHA256SUMS` before use; Xvfb, openbox,
-      x11vnc, noVNC, `x11-utils`, Mesa GL, fonts and dbus; pnpm pinned; ffmpeg from
-      `playwright install ffmpeg`; runs as uid 1000. It contains no `gpgcheck=0`, `--nogpgcheck`,
-      `curl | bash`, `COPY . .`, root user or supervisord.
-- [ ] Given `containers/saturday-runner/apt.lock`, then it pins every package installed, and
-      `containers/saturday-runner/lock-packages.sh` regenerates it from the package list in the same
-      directory. The build fails if a pinned version is unavailable.
-- [ ] Given the image's entrypoint, when it starts, then it starts Xvfb at 1920x1080x24 with
-      `-nolisten tcp`, waits until `xdpyinfo` succeeds (failing after 15 seconds), starts openbox,
-      and runs its command with `exec`, so the container's exit code is the command's.
-- [ ] Given `RUNNER_VIEWER=1`, then the entrypoint also starts x11vnc with a random password on
-      localhost only and noVNC on port 6080, and prints where the password is. Without it, nothing
-      listens on any port.
-- [ ] Given `runner-check` in the image, when run, then it launches Chrome and Edge headed, creates a
-      `webgl2` context in each, writes each renderer string to `/work/evidence/webgl.txt` with the
-      browser versions and installed packages, and exits non-zero if either context is null.
 - [ ] Given `apps/ye-olde-magic-shop/playwright.config.ts`, then it has a `chrome` project with
-      `channel: 'chrome'` and `headless: false`, and that project is what the container runs. The
-      bundled-Chromium project may stay for local runs. `slowMo` and `video` are read from
-      environment variables and default to off.
+      `channel: 'chrome'`, `headless: false`, and launch args `--use-gl=angle
+      --use-angle=swiftshader` (the same args `runner-check` uses; see `docs/runner-image.md`), and
+      that project is what the container runs. The bundled-Chromium project may stay for local runs.
+      `slowMo` and `video` are read from environment variables and default to off.
 - [ ] Given `scripts/ui-suite-in-chrome.sh`, when run from the repository root on a machine with
-      Docker, then it builds the image (`--platform linux/amd64`), mounts the checkout at `/work`
-      with a named pnpm store volume, installs dependencies with `--frozen-lockfile`, starts the app
-      and the mock API, runs `runner-check` and then the `chrome` project, copies the report to
-      `artifacts/ui-suite/`, and exits with the suite's exit code. The app and mock API make no
-      request off the container after dependencies are installed.
+      Docker, then it builds the image from `containers/saturday-runner/Containerfile`
+      (`--platform linux/amd64 --target debian`) without changing it, mounts the checkout at
+      `/work` with a named pnpm store volume, installs dependencies with `--frozen-lockfile`,
+      starts the app and the mock API, runs `runner-check` and then the `chrome` project, copies the
+      report to `artifacts/ui-suite/`, and exits with the suite's exit code. The app and mock API
+      make no request off the container after dependencies are installed.
 - [ ] Given the suite, then `tests/webgl.spec.ts` asserts a `webgl2` context is available in the
       running app's page, and fails when the browser is launched with `--disable-gpu
       --disable-software-rasterizer`. Use that launch as the test of the test, recorded in the
@@ -83,8 +82,10 @@ run it as a pre-ship check.
 
 ## Out of Scope
 
+- Any change to `containers/saturday-runner/` (the image, its locks, keys, entrypoint or
+  `runner-check`). If the suite needs one, stop and say so; it is a separate order.
 - The `polyglot` target (JDK, Python, Gradle, Go): order `runner-image-polyglot`.
-- A UBI9 variant.
+- A UBI9 variant: order `runner-image-ubi9`.
 - testing-with-certs adopting this image as its base; that is a separate order in that repo.
 - Changing any existing test's behaviour.
 
@@ -94,15 +95,13 @@ run it as a pre-ship check.
 
 ## Non-Functional Requirements
 
-- Display readiness within 15 seconds; app health within 180 seconds.
-- With `RUNNER_VIEWER` unset, the container listens on no port.
+- App health within 180 seconds.
+- With `RUNNER_VIEWER` unset, the container listens on no port; the script never sets it.
 
 ## Trust Boundaries
 
-- Browser packages cross into the image from Google's and Microsoft's repositories: accepted only
-  when signed by the vendored keys, whose hashes are recorded.
 - The VNC viewer is a remote desktop into the test browser: password-protected, bound to
-  localhost, off by default.
+  localhost, off by default. The script must not enable it or print its password.
 
 ## Test Approach
 
