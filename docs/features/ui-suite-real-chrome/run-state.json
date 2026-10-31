@@ -1,0 +1,534 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "ui-suite-real-chrome",
+  "specPath": ".claude/factory/claims/ui-suite-real-chrome.md",
+  "specSha256": "519a552a93fb86149e4855fa4b20a2b344fccaef722a5e3c90e4c591ccf16c9c",
+  "provider": "claude",
+  "startedAt": "2026-10-31T02:59:24.442682Z",
+  "startCommit": "48741d58fd4461ab16cfc894db4f04132ee9663f",
+  "diffLines": {
+    "confirm-design": 8113,
+    "confirm-security": 8113,
+    "confirm-ship": 8113
+  },
+  "reviewedDigest": "1490e00bcf6fc946421e1e2ad4456f5e0bea3668a32ec4f5bb5729bff8a8c07f",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:15:01.239923Z",
+      "finishedAt": "2026-10-31T03:16:15.29919Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/acceptance-scenarios.json",
+      "artifactSha256": "2ddbecd271d773db5a424659e57d528dd3534b6772bf482704752a97077e5540",
+      "sequence": 11,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 4,
+        "outputTokens": 8095,
+        "cacheReadTokens": 99835,
+        "cacheCreationTokens": 63676,
+        "costUsd": 0.355629
+      }
+    },
+    "accessibility-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-10-31T03:07:25.971334Z",
+      "sequence": 5,
+      "skipReason": "the analysis declares no UI surface",
+      "iteration": 1
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:01:43.626296Z",
+      "finishedAt": "2026-10-31T03:07:25.929349Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/analyst.json",
+      "artifactSha256": "21e3e5b98596170c293a87ec27ee1d5ee2d1fbfe075f17062a485b309053e15e",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 36,
+        "outputTokens": 32009,
+        "cacheReadTokens": 1681596,
+        "cacheCreationTokens": 106677,
+        "costUsd": 1.0831892
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:11:29.395041Z",
+      "finishedAt": "2026-10-31T03:13:36.541779Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/architect.json",
+      "artifactSha256": "0429013df87693308349835dc94cdbcb2240fd29cef68207e6038179489762a9",
+      "sequence": 9,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 22,
+        "outputTokens": 29376,
+        "cacheReadTokens": 829398,
+        "cacheCreationTokens": 145903,
+        "costUsd": 1.0432956
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:36:54.872357Z",
+      "finishedAt": "2026-10-31T03:37:44.239184Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/code-reviewer.json",
+      "artifactSha256": "53a992228957d9dc30572e5d1a328f95a0b02a877583a5958c051c1ccbb2b4cd",
+      "sequence": 13,
+      "iteration": 2,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 42,
+        "outputTokens": 24620,
+        "cacheReadTokens": 1971636,
+        "cacheCreationTokens": 123740,
+        "costUsd": 1.1355712
+      },
+      "iterationArtifacts": [
+        {
+          "iteration": 1,
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.iterations/code-reviewer.1.json",
+          "sha256": "0fd5b52fc37a669e7969f9cbe28267d5714912a75ce75e1c559c073df1288c58",
+          "at": "2026-10-31T03:36:13.729807Z"
+        }
+      ]
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T02:59:24.44917Z",
+      "finishedAt": "2026-10-31T03:01:43.625789Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/context-engineer.json",
+      "artifactSha256": "ba75f7786b17b314d9408e577739901b8beeea8063663ce3b1de6717e4ac3246",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 28,
+        "outputTokens": 11247,
+        "cacheReadTokens": 1208870,
+        "cacheCreationTokens": 106402,
+        "costUsd": 0.7799080000000002
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-10-31T03:07:25.971161Z",
+      "sequence": 4,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:36:13.758016Z",
+      "finishedAt": "2026-10-31T03:36:54.871774Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/developer.json",
+      "artifactSha256": "14cb0e5e64e499cdddcfd6af1f4da81442c7ad3ab968532e6c197040cd68a181",
+      "gate": "confirm-design",
+      "sequence": 12,
+      "iteration": 2,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 92,
+        "outputTokens": 22719,
+        "cacheReadTokens": 4750426,
+        "cacheCreationTokens": 176323,
+        "costUsd": 1.8827511999999995
+      },
+      "iterationArtifacts": [
+        {
+          "iteration": 1,
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.iterations/developer.1.json",
+          "sha256": "a8b7e6e46da626fb75577cc41c89faf5add9c4b40bd769e1ece18a6804ae3f0b",
+          "at": "2026-10-31T03:36:13.729239Z"
+        }
+      ]
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-10-31T03:07:25.971882Z",
+      "gate": "confirm-ship",
+      "sequence": 8,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:13:36.542279Z",
+      "finishedAt": "2026-10-31T03:15:01.238978Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/performance-engineer.md",
+      "artifactSha256": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+      "sequence": 10,
+      "iteration": 1,
+      "agent": "performance-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 20,
+        "outputTokens": 6638,
+        "cacheReadTokens": 797202,
+        "cacheCreationTokens": 71528,
+        "costUsd": 0.5119724
+      }
+    },
+    "pre-ship-checks": {
+      "status": "SKIPPED",
+      "startedAt": "2026-10-31T05:29:33.819466Z",
+      "finishedAt": "2026-10-31T05:29:33.850948Z",
+      "sequence": 17,
+      "skipReason": "no preShipChecks configured",
+      "iteration": 1
+    },
+    "qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:01:03.163109Z",
+      "finishedAt": "2026-10-31T05:27:27.839792Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/qa-engineer.json",
+      "artifactSha256": "586938c9ce1dc1799c61f91f2cd895569e38285cbb43cc0691bd29eb0a94ab1c",
+      "gate": "confirm-security",
+      "sequence": 15,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "stateKind": "qa",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/qa-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 202,
+        "outputTokens": 101187,
+        "cacheReadTokens": 18225858,
+        "cacheCreationTokens": 238134,
+        "costUsd": 5.609981599999999
+      }
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:07:25.93007Z",
+      "finishedAt": "2026-10-31T03:07:25.97088Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/router.json",
+      "artifactSha256": "0ada473e0a8e3f2e543a21a39ff3b5373c6c9dfcd23c56b50c029bdec918355b",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T03:37:44.239746Z",
+      "finishedAt": "2026-10-31T03:39:40.680082Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/state/security-reviewer.json",
+      "artifactSha256": "4972ddcbe92c1a32c658a63276e73f03395b02ce9971c13b039e8c796073d4a1",
+      "sequence": 14,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/ui-suite-real-chrome/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 20,
+        "outputTokens": 9474,
+        "cacheReadTokens": 794133,
+        "cacheCreationTokens": 73770,
+        "costUsd": 0.5486866
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-10-31T03:07:25.971667Z",
+      "sequence": 7,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    },
+    "tech-writer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-10-31T05:27:27.840921Z",
+      "finishedAt": "2026-10-31T05:29:33.818889Z",
+      "artifactPath": ".claude/feature-workspace/ui-suite-real-chrome/tech-writer.md",
+      "artifactSha256": "e62601b08236281ad1d74b42f73cb8157067edc6c3f2d496616ab397c10515f7",
+      "sequence": 16,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "tech-writer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 30,
+        "outputTokens": 10598,
+        "cacheReadTokens": 1228256,
+        "cacheCreationTokens": 77363,
+        "costUsd": 0.6611431999999999
+      }
+    },
+    "visual-qa-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-10-31T03:07:25.971487Z",
+      "sequence": 6,
+      "skipReason": "the analysis declares no UI surface, so there is nothing to look at",
+      "iteration": 1
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-10-31T03:28:19.017997Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "2ddbecd271d773db5a424659e57d528dd3534b6772bf482704752a97077e5540",
+        "analyst": "21e3e5b98596170c293a87ec27ee1d5ee2d1fbfe075f17062a485b309053e15e",
+        "architect": "0429013df87693308349835dc94cdbcb2240fd29cef68207e6038179489762a9",
+        "context-engineer": "ba75f7786b17b314d9408e577739901b8beeea8063663ce3b1de6717e4ac3246",
+        "performance-engineer": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+        "router": "0ada473e0a8e3f2e543a21a39ff3b5373c6c9dfcd23c56b50c029bdec918355b"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-10-31T05:01:03.091627Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "2ddbecd271d773db5a424659e57d528dd3534b6772bf482704752a97077e5540",
+        "analyst": "21e3e5b98596170c293a87ec27ee1d5ee2d1fbfe075f17062a485b309053e15e",
+        "architect": "0429013df87693308349835dc94cdbcb2240fd29cef68207e6038179489762a9",
+        "code-reviewer": "53a992228957d9dc30572e5d1a328f95a0b02a877583a5958c051c1ccbb2b4cd",
+        "context-engineer": "ba75f7786b17b314d9408e577739901b8beeea8063663ce3b1de6717e4ac3246",
+        "developer": "14cb0e5e64e499cdddcfd6af1f4da81442c7ad3ab968532e6c197040cd68a181",
+        "performance-engineer": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+        "router": "0ada473e0a8e3f2e543a21a39ff3b5373c6c9dfcd23c56b50c029bdec918355b",
+        "security-reviewer": "4972ddcbe92c1a32c658a63276e73f03395b02ce9971c13b039e8c796073d4a1"
+      }
+    },
+    "confirm-ship": {
+      "approvedAt": "2026-10-31T05:37:36.259599Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "2ddbecd271d773db5a424659e57d528dd3534b6772bf482704752a97077e5540",
+        "analyst": "21e3e5b98596170c293a87ec27ee1d5ee2d1fbfe075f17062a485b309053e15e",
+        "architect": "0429013df87693308349835dc94cdbcb2240fd29cef68207e6038179489762a9",
+        "code-reviewer": "53a992228957d9dc30572e5d1a328f95a0b02a877583a5958c051c1ccbb2b4cd",
+        "context-engineer": "ba75f7786b17b314d9408e577739901b8beeea8063663ce3b1de6717e4ac3246",
+        "developer": "14cb0e5e64e499cdddcfd6af1f4da81442c7ad3ab968532e6c197040cd68a181",
+        "performance-engineer": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+        "qa-engineer": "586938c9ce1dc1799c61f91f2cd895569e38285cbb43cc0691bd29eb0a94ab1c",
+        "router": "0ada473e0a8e3f2e543a21a39ff3b5373c6c9dfcd23c56b50c029bdec918355b",
+        "security-reviewer": "4972ddcbe92c1a32c658a63276e73f03395b02ce9971c13b039e8c796073d4a1",
+        "tech-writer": "e62601b08236281ad1d74b42f73cb8157067edc6c3f2d496616ab397c10515f7"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-10-31T03:28:19.019107Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "75e06dd15497762a1ad83af9ed302a226ef25b85399aa91217d222df13807d8a",
+          "at": "2026-10-31T03:28:19.019412Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/analyst.md",
+          "sha256": "c84d6a5d5b33b1a04be42057c337f76bcfe5948b1e13fb0610711662d97a8547",
+          "at": "2026-10-31T03:28:19.01964Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/architect.md",
+          "sha256": "dd921a48c168d967e1c56bacf406fdfe376dd80638c3856614923248da74bed1",
+          "at": "2026-10-31T03:28:19.020105Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/context-engineer.md",
+          "sha256": "99b5a2885b560a838dc8abfce4bdfe9e5ff482944c4a0c362ab5da80bfba816f",
+          "at": "2026-10-31T03:28:19.019897Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/performance-engineer.md",
+          "sha256": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+          "at": "2026-10-31T03:28:19.019782Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-design/router.md",
+          "sha256": "560a567d336e5db3a82d083369df7ee92ad6b8233bb1bf6d59abfac92fc330ae",
+          "at": "2026-10-31T03:28:19.019255Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-10-31T05:01:03.092881Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "75e06dd15497762a1ad83af9ed302a226ef25b85399aa91217d222df13807d8a",
+          "at": "2026-10-31T05:01:03.093952Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/analyst.md",
+          "sha256": "c84d6a5d5b33b1a04be42057c337f76bcfe5948b1e13fb0610711662d97a8547",
+          "at": "2026-10-31T05:01:03.09355Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/architect.md",
+          "sha256": "dd921a48c168d967e1c56bacf406fdfe376dd80638c3856614923248da74bed1",
+          "at": "2026-10-31T05:01:03.094739Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/code-reviewer.md",
+          "sha256": "0fd388f82c5b9b458118a5235ad704db17b34c1c64b46ab4bbca0b6cf3947046",
+          "at": "2026-10-31T05:01:03.094554Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/context-engineer.md",
+          "sha256": "99b5a2885b560a838dc8abfce4bdfe9e5ff482944c4a0c362ab5da80bfba816f",
+          "at": "2026-10-31T05:01:03.094083Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/developer.md",
+          "sha256": "020f601e01e77f318f62aacac4f8ee450c340ca9671ce49195c80237458a0bca",
+          "at": "2026-10-31T05:01:03.094358Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/performance-engineer.md",
+          "sha256": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+          "at": "2026-10-31T05:01:03.094223Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/router.md",
+          "sha256": "560a567d336e5db3a82d083369df7ee92ad6b8233bb1bf6d59abfac92fc330ae",
+          "at": "2026-10-31T05:01:03.093682Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-security/security-reviewer.md",
+          "sha256": "cf61e132ab08d9468b4e262992a268249fa70496cf99e3ff3ab04bdd0efd96de",
+          "at": "2026-10-31T05:01:03.093164Z"
+        }
+      }
+    },
+    "confirm-ship": {
+      "at": "2026-10-31T05:37:36.260797Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/acceptance-scenarios.md",
+          "sha256": "75e06dd15497762a1ad83af9ed302a226ef25b85399aa91217d222df13807d8a",
+          "at": "2026-10-31T05:37:36.26228Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/analyst.md",
+          "sha256": "c84d6a5d5b33b1a04be42057c337f76bcfe5948b1e13fb0610711662d97a8547",
+          "at": "2026-10-31T05:37:36.262632Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/architect.md",
+          "sha256": "dd921a48c168d967e1c56bacf406fdfe376dd80638c3856614923248da74bed1",
+          "at": "2026-10-31T05:37:36.262015Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/code-reviewer.md",
+          "sha256": "0fd388f82c5b9b458118a5235ad704db17b34c1c64b46ab4bbca0b6cf3947046",
+          "at": "2026-10-31T05:37:36.262493Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/context-engineer.md",
+          "sha256": "99b5a2885b560a838dc8abfce4bdfe9e5ff482944c4a0c362ab5da80bfba816f",
+          "at": "2026-10-31T05:37:36.26213Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/developer.md",
+          "sha256": "020f601e01e77f318f62aacac4f8ee450c340ca9671ce49195c80237458a0bca",
+          "at": "2026-10-31T05:37:36.261649Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/performance-engineer.md",
+          "sha256": "6e1a87644c5b5772da39a26ad9434e21f1b0efa342bea96041063edb1bfcd61c",
+          "at": "2026-10-31T05:37:36.261853Z"
+        },
+        "qa-engineer": {
+          "stage": "qa-engineer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/qa-engineer.md",
+          "sha256": "607cce4ec4d6b4b58bec479cf347b2392c13fd00c9eded120dbaa03fa02397be",
+          "at": "2026-10-31T05:37:36.261308Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/router.md",
+          "sha256": "560a567d336e5db3a82d083369df7ee92ad6b8233bb1bf6d59abfac92fc330ae",
+          "at": "2026-10-31T05:37:36.261742Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/security-reviewer.md",
+          "sha256": "cf61e132ab08d9468b4e262992a268249fa70496cf99e3ff3ab04bdd0efd96de",
+          "at": "2026-10-31T05:37:36.26239Z"
+        },
+        "tech-writer": {
+          "stage": "tech-writer",
+          "path": ".claude/feature-workspace/ui-suite-real-chrome/.approved/confirm-ship/tech-writer.md",
+          "sha256": "e62601b08236281ad1d74b42f73cb8157067edc6c3f2d496616ab397c10515f7",
+          "at": "2026-10-31T05:37:36.261432Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 496,
+    "outputTokens": 255963,
+    "cacheReadTokens": 31587210,
+    "cacheCreationTokens": 1183516,
+    "costUsd": 13.612127999999997
+  },
+  "budget": {
+    "maxUsd": 25,
+    "maxHours": 3
+  },
+  "updatedAt": "2026-10-31T05:37:36.483925Z"
+}
