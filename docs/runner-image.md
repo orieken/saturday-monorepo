@@ -8,6 +8,8 @@ viewer and checks:
 | `debian` (default) | Everyday use, CI, the factory | `node:24.19.0-bookworm-slim`, every package pinned |
 | `ubi9` | Teams whose policy requires a Red Hat base, FIPS, or Red Hat's security errata | UBI9 9.x with CentOS Stream 9 and EPEL 9, every package pinned |
 
+How to build both: ai-assistant-dot-files `docs/prompts/factories/06-runner-images.md`.
+
 Choose with `scripts/ui-suite-in-chrome.sh --ubi9`, or `RUNNER_VARIANT=ubi9`. Both must pass the
 same `runner-check` before either ships a change.
 
@@ -74,9 +76,11 @@ saturday-runner:ubi9       the same set on UBI9, from UBI, Stream and EPEL
 
 **New**
 
-- **Mesa GL** (`libgl1-mesa-dri`, `libegl1`, `libgles2`) and **headed** Chrome under Xvfb, so WebGL
-  runs on llvmpipe. New-headless Chrome no longer falls back to software WebGL without
-  `--enable-unsafe-swiftshader`; headed under Xvfb avoids depending on that flag.
+- **Software WebGL through ANGLE SwiftShader**: **headed** Chrome under Xvfb, launched with
+  `--use-gl=angle --use-angle=swiftshader`. Mesa GL (`libgl1-mesa-dri`, `libegl1`, `libgles2`) is
+  still installed because Chrome's GL probing touches it, but it is not the renderer (see the
+  correction under the build record). New-headless Chrome no longer falls back to software WebGL
+  without `--enable-unsafe-swiftshader`; headed under Xvfb avoids depending on that flag.
 - **`runner-check`**: a command baked into the image that launches Chrome and Edge headed, creates
   a `webgl2` context, and records its renderer to the evidence directory. It fails the build's
   smoke step if either browser gets no context.
@@ -116,7 +120,7 @@ What the repositories hold (checked 2026-10-29):
 | Package | UBI9 | CentOS Stream 9 | EPEL 9 |
 |---|---|---|---|
 | `mesa-libGL`, `mesa-libEGL`, `mesa-libgbm`, `gtk3`, `nss` | yes | yes | |
-| `mesa-dri-drivers` (llvmpipe: software WebGL) | **no** | yes, several builds kept | |
+| `mesa-dri-drivers` (Chrome's GL probing; WebGL renders through ANGLE SwiftShader) | **no** | yes, several builds kept | |
 | `xorg-x11-server-Xvfb` | **no** | yes, several builds kept | |
 | `x11vnc`, `openbox`, `novnc`, `python3-websockify` | **no** | | yes, **latest build only** |
 
@@ -135,3 +139,138 @@ So:
   several builds, so its pins last. EPEL keeps only the latest build, so an EPEL pin breaks at the
   next update. The four EPEL packages are therefore copied into the build context as signed RPMs,
   checked against recorded SHA-256s, and installed from there.
+
+## Debian variant: first build record (2026-10-30)
+
+The factory's first developer run (2026-10-30) produced most of `containers/saturday-runner/`
+correctly but left five gaps. All five are fixed; the fixes and the full verify run are recorded
+here. The `ubi9` target is not built yet — out of scope for this pass.
+
+### Gaps fixed
+
+1. **Keys imported without checking `keys/SHA256SUMS`.** The Containerfile now runs
+   `sha256sum -c SHA256SUMS` against the vendored `google.asc`/`microsoft.asc` before either key is
+   `gpg --dearmor`'d. `lock-packages.sh`'s own key import (used only to resolve the dependency
+   closure, never shipped) got the same check, so the lock generator trusts the keys no more loosely
+   than the image build does.
+2. **Chrome's apt source used `http://dl.google.com`.** Changed to `https://` in both the
+   Containerfile and `lock-packages.sh`. `apt.lock` was regenerated against the `https` source —
+   same packages, same pins, since it's the same repository content over a different scheme.
+3. **`ca-certificates gnupg` installed unpinned before the lock was applied.** These two packages
+   must exist before any key can be imported or any `https` repo added, so they can't wait for the
+   full pinned install — but they were previously a bare `apt-get install` with no version pin.
+   `lock-packages.sh` now records their installed versions (`ca-certificates=20250419~deb12u2`,
+   `gnupg=2.2.40-1.1+deb12u2`) into `apt.lock` as `PIN` lines captured right after the bootstrap
+   install, and the Containerfile's bootstrap step installs exactly those pinned versions —
+   `apt-get install ca-certificates=<pin> gnupg=<pin>` — not a bare `apt-get install`.
+4. **ffmpeg came from `npx --yes playwright@1.57.0`, a version hardcoded in the Containerfile and
+   disconnected from the repository's own lockfile.** Added `lock-versions.sh`, which extracts the
+   single `@playwright/test` version from the repository's root `pnpm-lock.yaml` (failing if it finds
+   zero or more than one distinct version) into a generated `versions.lock`. The Containerfile reads
+   `PLAYWRIGHT_VERSION` from `versions.lock`, uses it for the `ffmpeg` install, and fails the build if
+   it doesn't match `runner-check`'s own pinned `playwright-core` dependency — so the browser driver
+   used by `runner-check` and the `ffmpeg` build it ships can never silently drift apart.
+5. **pnpm pinned in the Containerfile but not checked against the repository.** The root
+   `package.json` sets no `packageManager` field today, so the contract's fallback ("one pinned
+   version stated in the Containerfile") already applied — but nothing would have caught it if a
+   future `packageManager: pnpm@X` were added and left mismatched with the image. `lock-versions.sh`
+   also records `PNPM_VERSION` from `package.json`, and the Containerfile fails the build if that
+   value is set and differs from its own `ARG PNPM_PIN`. The root `package.json` now pins
+   `"packageManager": "pnpm@10.12.1"`, the Containerfile's pin, so `versions.lock` carries
+   `PNPM_VERSION=10.12.1` and the check is live rather than a no-op (negative check 4).
+
+A sixth, unlisted gap surfaced during verification: the no-listeners check (`ss -ltn`) needs `ss`,
+which comes from `iproute2`, not previously in `packages.list`. Added it; `apt.lock` regenerated
+(300 pins, up from 295).
+
+### New generated files
+
+- `containers/saturday-runner/versions.lock` — generated by `lock-versions.sh` from the repository's
+  own `pnpm-lock.yaml` and `package.json`. Never hand-edited, same discipline as `apt.lock`.
+- `containers/saturday-runner/lock-versions.sh` — the generator.
+
+### Verify output
+
+```
+$ docker build --platform linux/amd64 -f containers/saturday-runner/Containerfile \
+    --target debian -t saturday-runner:debian containers/saturday-runner
+...
+#26 writing image sha256:d10163b0b8da5118b4b02ed083ce54f76f3c4c951b28246b52b36e3bf32d276e done
+#26 naming to docker.io/library/saturday-runner:debian done
+
+$ docker run --rm saturday-runner:debian true; echo "exit=$?"
+exit=0
+
+$ docker run --rm saturday-runner:debian false; echo "exit=$?"
+exit=1
+
+$ docker run --rm -v "$PWD:/work" saturday-runner:debian runner-check
+runner-check: Chrome 156.0.8078.79 — ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)
+runner-check: Edge 156.0.4314.56 — ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)
+exit=0
+
+$ docker run --rm saturday-runner:debian id -u
+1000
+
+$ docker run --rm saturday-runner:debian sh -c 'ss -ltn | tail -n +2 | wc -l'
+0
+
+$ docker run --rm -e RUNNER_VIEWER=1 saturday-runner:debian sh -c 'sleep 3; ss -ltn'
+LISTEN 0      32         127.0.0.1:5900      0.0.0.0:*
+LISTEN 0      100        127.0.0.1:6080      0.0.0.0:*
+LISTEN 0      32             [::1]:5900         [::]:*
+
+$ grep -nE 'gpgcheck=0|nogpgcheck|trusted=yes|curl[^|]*\| *(ba)?sh|COPY \. \.|supervisord|http://' containers/saturday-runner/Containerfile*
+(nothing — pattern not found)
+```
+
+`scripts/ui-suite-in-chrome.sh` was **not** run: it, and the demo app's WebGL Playwright spec it
+drives, belong to the separate `ui-suite-real-chrome` factory order and live uncommitted on the
+`factory/ui-suite-real-chrome` branch, not on this one. This pass verifies the image itself; wiring
+the app suite to it is that order's job.
+
+### Negative checks
+
+```
+# 1. Corrupt one byte of keys/google.asc
+sha256sum: WARNING: 1 computed checksum did NOT match
+ERROR: failed to build — fails at the `sha256sum -c SHA256SUMS` step, before any key is imported.
+
+# 2. Pin curl to a version that doesn't exist (apt.lock: curl=999.999.999-doesnotexist)
+E: Version '999.999.999-doesnotexist' for 'curl' was not found
+ERROR: failed to build — fails naming the exact package, as the contract requires.
+
+# 3. WebGL with --disable-gpu --disable-software-rasterizer added to runner-check's launch args
+renderer: null
+
+# 4. Build with --build-arg PNPM_PIN=10.12.0 against versions.lock's PNPM_VERSION=10.12.1
+Containerfile pnpm pin (10.12.0) does not match the repository's package.json packageManager pin (10.12.1)
+ERROR: failed to build — exit 1, before pnpm is installed.
+```
+
+All four pass: each check can fail, and does, when the thing it protects is broken.
+
+### Evidence
+
+- **Chrome** 156.0.8078.79 — `webgl2` renderer: `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device
+  (Subzero) (0x0000C0DE)), SwiftShader driver)`
+- **Edge** 156.0.4314.56 — same renderer string.
+- Full installed-package list: written to `/work/evidence/webgl.txt` by `runner-check` on every run.
+
+**Correction to the design above.** The "New" section of this page says WebGL runs "through Mesa's
+software renderer (llvmpipe)". That was the intent, and `libgl1-mesa-dri`/`libegl1`/`libgles2` are
+installed for it, but it is not what actually renders. Headed Chrome under Xvfb with no GL args, and
+with `--use-gl=desktop` or `--use-gl=angle,--use-angle=gl`, all produced a null `webgl2` context in
+this container; only `--use-gl=angle --use-angle=swiftshader` (ANGLE's own software path, over
+Vulkan) produces a context. `runner-check` already uses this — that part of the first attempt was
+right — but the renderer is ANGLE/SwiftShader, not Mesa llvmpipe. The Mesa packages are still needed
+(Chrome's sandbox and GL probing touch them even when ANGLE's SwiftShader path is what ultimately
+renders), but this page's claim that llvmpipe is the renderer was wrong, and is corrected here rather
+than left standing.
+
+### Time
+
+The lock regeneration (`lock-packages.sh`) ran in under a minute, and the full image build in under
+two, on Apple Silicon under amd64 emulation — both well inside Docker's layer cache from the first
+attempt's base-image pull. A fully cold build (no cached layers, no pulled base image) will take
+longer, per the prompt's own warning; budget for that on CI's first run.

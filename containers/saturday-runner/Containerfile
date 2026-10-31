@@ -1,0 +1,111 @@
+# Saturday runner image — debian target.
+# Design: docs/runner-image.md ("The combined design"). Runs browser suites
+# in real Chrome/Edge under Xvfb, with software WebGL (ANGLE SwiftShader,
+# --use-gl=angle --use-angle=swiftshader) and an optional
+# VNC viewer. The checkout is mounted at /work at run time, never copied in.
+#
+# Build: docker build --platform linux/amd64 --target debian -t saturday-runner:debian .
+
+ARG PNPM_PIN=10.12.1
+
+FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df AS builder
+ARG PNPM_PIN
+
+WORKDIR /build
+RUN npm install -g pnpm@${PNPM_PIN}
+
+# runner-check is a small standalone tool, built here so the runtime stage
+# never runs `npm install` or needs network access to resolve it.
+COPY runner-check/package.json runner-check/pnpm-lock.yaml ./runner-check/
+RUN cd runner-check && pnpm install --frozen-lockfile --prod
+COPY runner-check/index.js ./runner-check/
+
+FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df AS debian
+ARG PNPM_PIN
+
+# --- Bootstrap: ca-certificates and gnupg, pinned from apt.lock ------------
+# Needed to dearmor the vendored keys and to validate TLS for the Chrome/Edge
+# repos below. Installed from apt.lock's own pins, not a bare `apt-get
+# install`, so these two packages are reproducible like every other one.
+COPY apt.lock /tmp/apt.lock
+RUN set -eux; \
+    apt-get update -qq; \
+    BOOTSTRAP="$(grep -E '^(ca-certificates|gnupg)=' /tmp/apt.lock | tr '\n' ' ')"; \
+    # shellcheck disable=SC2086
+    apt-get install -y -qq --no-install-recommends $BOOTSTRAP
+
+# --- Browser repositories: keys verified before import, https only --------
+COPY keys/google.asc keys/microsoft.asc keys/SHA256SUMS /tmp/keys/
+RUN set -eux; \
+    cd /tmp/keys; \
+    sha256sum -c SHA256SUMS; \
+    mkdir -p /usr/share/keyrings; \
+    gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg google.asc; \
+    gpg --dearmor -o /usr/share/keyrings/microsoft.gpg microsoft.asc; \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list; \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list; \
+    cd /; \
+    rm -rf /tmp/keys
+
+# --- The rest of the pinned system packages (Chrome, Edge, Xvfb, openbox,
+# VNC/noVNC, Mesa, fonts, dbus) ----------------------------------------------
+RUN set -eux; \
+    apt-get update -qq; \
+    PINS="$(grep -v '^#' /tmp/apt.lock | tr '\n' ' ')"; \
+    # shellcheck disable=SC2086
+    apt-get install -y --no-install-recommends $PINS; \
+    rm -rf /var/lib/apt/lists/* /tmp/apt.lock
+
+# pnpm — pinned exact version via npm, not corepack (corepack's shim
+# resolves an unpinned "latest known good" release over the network at run
+# time unless the mounted project pins packageManager itself). versions.lock
+# is generated from the repository's own package.json, so if that file ever
+# sets packageManager to a different pnpm, this fails loudly instead of
+# silently drifting from the pin below.
+COPY versions.lock /tmp/versions.lock
+RUN set -eux; \
+    . /tmp/versions.lock; \
+    if [ -n "${PNPM_VERSION:-}" ] && [ "${PNPM_VERSION}" != "${PNPM_PIN}" ]; then \
+      echo "Containerfile pnpm pin (${PNPM_PIN}) does not match the repository's package.json packageManager pin (${PNPM_VERSION})" >&2; \
+      exit 1; \
+    fi
+RUN npm install -g pnpm@${PNPM_PIN}
+
+COPY --from=builder /build/runner-check /opt/runner-check
+RUN ln -s /opt/runner-check/index.js /usr/local/bin/runner-check && \
+    chmod +x /opt/runner-check/index.js
+
+# ffmpeg — the version Playwright itself expects. Taken from versions.lock
+# (generated from the repository's own pnpm-lock.yaml), not a literal
+# hardcoded here, and checked against runner-check's own playwright-core pin
+# so the two can never silently drift apart.
+RUN set -eux; \
+    . /tmp/versions.lock; \
+    RUNNER_CHECK_PLAYWRIGHT="$(node -p "require('/opt/runner-check/package.json').dependencies['playwright-core']")"; \
+    if [ "${PLAYWRIGHT_VERSION}" != "${RUNNER_CHECK_PLAYWRIGHT}" ]; then \
+      echo "repository's @playwright/test pin (${PLAYWRIGHT_VERSION}) does not match runner-check's playwright-core pin (${RUNNER_CHECK_PLAYWRIGHT})" >&2; \
+      exit 1; \
+    fi; \
+    npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
+    rm -rf /tmp/versions.lock
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# --- Non-root ---------------------------------------------------------------
+# The base image already ships a uid/gid 1000 "node" user; rename it rather
+# than fail on a GID collision.
+RUN groupmod -n runner node && \
+    usermod -l runner -d /home/runner -m -g runner node && \
+    mkdir -p /work /work/evidence /tmp/.X11-unix /home/runner/.pnpm-store && \
+    chmod 1777 /tmp/.X11-unix && \
+    chown -R runner:runner /home/runner /work /opt/runner-check
+
+ENV HOME=/home/runner \
+    DISPLAY=:99
+
+USER runner
+WORKDIR /work
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]

@@ -1,0 +1,11 @@
+{
+  "name": "@orieken/saturday-runner-check",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Baked-in WebGL smoke test for the Saturday runner image — launches Chrome and Edge headed and verifies a webgl2 context in each.",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "dependencies": {
+    "playwright-core": "1.57.0"
+  }
+}
