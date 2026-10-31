@@ -11,6 +11,7 @@
     "mock-api:start": "node ../mock-api/server.js",
     "test:e2e": "playwright test",
     "test:pw": "playwright test",
+    "test:chrome": "playwright test --project=chrome",
     "test:bdd": "TS_NODE_PROJECT=tsconfig.cucumber.json cucumber-js",
     "test": "npm run test:bdd",
     "index:features": "npm --prefix ../../packages/saturday-cucumber-indexer ci && npm --prefix ../../packages/saturday-cucumber-indexer run build && node ../../packages/saturday-cucumber-indexer/dist/index.js --features ./features --suiteId ye-olde-magic-shop --out ./feature-index.json",
