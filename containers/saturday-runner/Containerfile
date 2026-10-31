@@ -1,6 +1,7 @@
 # Saturday runner image — debian target.
 # Design: docs/runner-image.md ("The combined design"). Runs browser suites
-# in real Chrome/Edge under Xvfb, with WebGL (Mesa llvmpipe) and an optional
+# in real Chrome/Edge under Xvfb, with software WebGL (ANGLE SwiftShader,
+# --use-gl=angle --use-angle=swiftshader) and an optional
 # VNC viewer. The checkout is mounted at /work at run time, never copied in.
 #
 # Build: docker build --platform linux/amd64 --target debian -t saturday-runner:debian .

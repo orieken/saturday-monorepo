@@ -76,9 +76,11 @@ saturday-runner:ubi9       the same set on UBI9, from UBI, Stream and EPEL
 
 **New**
 
-- **Mesa GL** (`libgl1-mesa-dri`, `libegl1`, `libgles2`) and **headed** Chrome under Xvfb, so WebGL
-  runs on llvmpipe. New-headless Chrome no longer falls back to software WebGL without
-  `--enable-unsafe-swiftshader`; headed under Xvfb avoids depending on that flag.
+- **Software WebGL through ANGLE SwiftShader**: **headed** Chrome under Xvfb, launched with
+  `--use-gl=angle --use-angle=swiftshader`. Mesa GL (`libgl1-mesa-dri`, `libegl1`, `libgles2`) is
+  still installed because Chrome's GL probing touches it, but it is not the renderer (see the
+  correction under the build record). New-headless Chrome no longer falls back to software WebGL
+  without `--enable-unsafe-swiftshader`; headed under Xvfb avoids depending on that flag.
 - **`runner-check`**: a command baked into the image that launches Chrome and Edge headed, creates
   a `webgl2` context, and records its renderer to the evidence directory. It fails the build's
   smoke step if either browser gets no context.
@@ -118,7 +120,7 @@ What the repositories hold (checked 2026-10-29):
 | Package | UBI9 | CentOS Stream 9 | EPEL 9 |
 |---|---|---|---|
 | `mesa-libGL`, `mesa-libEGL`, `mesa-libgbm`, `gtk3`, `nss` | yes | yes | |
-| `mesa-dri-drivers` (llvmpipe: software WebGL) | **no** | yes, several builds kept | |
+| `mesa-dri-drivers` (Chrome's GL probing; WebGL renders through ANGLE SwiftShader) | **no** | yes, several builds kept | |
 | `xorg-x11-server-Xvfb` | **no** | yes, several builds kept | |
 | `x11vnc`, `openbox`, `novnc`, `python3-websockify` | **no** | | yes, **latest build only** |
 
@@ -172,8 +174,10 @@ here. The `ubi9` target is not built yet — out of scope for this pass.
    `package.json` sets no `packageManager` field today, so the contract's fallback ("one pinned
    version stated in the Containerfile") already applied — but nothing would have caught it if a
    future `packageManager: pnpm@X` were added and left mismatched with the image. `lock-versions.sh`
-   also records `PNPM_VERSION` (empty today) from `package.json`, and the Containerfile fails the
-   build if that value is set and differs from its own `ARG PNPM_PIN`.
+   also records `PNPM_VERSION` from `package.json`, and the Containerfile fails the build if that
+   value is set and differs from its own `ARG PNPM_PIN`. The root `package.json` now pins
+   `"packageManager": "pnpm@10.12.1"`, the Containerfile's pin, so `versions.lock` carries
+   `PNPM_VERSION=10.12.1` and the check is live rather than a no-op (negative check 4).
 
 A sixth, unlisted gap surfaced during verification: the no-listeners check (`ss -ltn`) needs `ss`,
 which comes from `iproute2`, not previously in `packages.list`. Added it; `apt.lock` regenerated
@@ -238,9 +242,13 @@ ERROR: failed to build — fails naming the exact package, as the contract requi
 
 # 3. WebGL with --disable-gpu --disable-software-rasterizer added to runner-check's launch args
 renderer: null
+
+# 4. Build with --build-arg PNPM_PIN=10.12.0 against versions.lock's PNPM_VERSION=10.12.1
+Containerfile pnpm pin (10.12.0) does not match the repository's package.json packageManager pin (10.12.1)
+ERROR: failed to build — exit 1, before pnpm is installed.
 ```
 
-All three pass: each check can fail, and does, when the thing it protects is broken.
+All four pass: each check can fail, and does, when the thing it protects is broken.
 
 ### Evidence
 
