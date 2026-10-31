@@ -20,6 +20,9 @@ containers/*
 
 # Test run artifacts
 playwright-report/
+test-results/
+# runner-check writes here when the checkout is mounted at /work
+evidence/
 reports/
 heatmap-data/
 coverage.out

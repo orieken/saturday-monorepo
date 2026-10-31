@@ -11,6 +11,7 @@ LICENSE
 dist
 coverage
 lib
+!apps/ye-olde-magic-shop/lib
 test-results
 reports
 tmp
