@@ -59,6 +59,9 @@ install_dependencies() {
   docker exec -e CI=true "$CONTAINER_NAME" bash -lc '
     pnpm config set store-dir /home/runner/.pnpm-store >/dev/null
     cd /work && pnpm install --frozen-lockfile
+    # The suite imports workspace packages from their dist/, which a fresh
+    # checkout does not have. Build only what the demo app depends on.
+    pnpm --filter "@orieken/ye-olde-magic-shop^..." -r build
   '
 }
 
