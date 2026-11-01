@@ -34,6 +34,18 @@ The demo app depends on `file:./saturday-core` and `file:./saturday-cucumber`, c
 app that have drifted from `packages/`. It should depend on the workspace packages, so its tests
 exercise the framework as it is.
 
+## Starting point
+
+The previous run did this work and parked only on a pre-existing `tests/cart.spec.ts` bug, now fixed
+on `main` (#7). Its changes are on commit `f372a30` (branch `salvage/golden-workspace-packages`):
+the three `workspace:*` dependencies, the regenerated lockfile, the `HEADLESS` default moved into
+`packages/saturday-cucumber` with `tests/config.spec.ts`, and the vendored directories and both app
+Dockerfiles removed. Start by applying them, then verify each criterion below; do not redo them:
+
+```bash
+git diff --binary e9e4ae6 f372a30 | git apply --index
+```
+
 ## Acceptance Criteria
 
 - [ ] Given `apps/ye-olde-magic-shop/package.json`, then `@orieken/saturday-core`,
