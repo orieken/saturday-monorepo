@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.1.0",
-    "@orieken/saturday-core": "file:./saturday-core",
-    "@orieken/saturday-cucumber": "file:./saturday-cucumber",
-    "@orieken/saturday-playwright-heatmap": "file:./saturday-playwright-heatmap",
+    "@orieken/saturday-core": "workspace:*",
+    "@orieken/saturday-cucumber": "workspace:*",
+    "@orieken/saturday-playwright-heatmap": "workspace:*",
     "@orieken/saturday-playwright-k6-exporter": "workspace:*",
     "@orieken/saturday-playwright-leaflet": "workspace:*",
     "@playwright/test": "^1.57.0",
