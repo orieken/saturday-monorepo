@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { Site } from '../lib/site/MagicShop';
+import { MagicShop } from '../lib/site/MagicShop';
 
 test.describe('Shopping Cart', () => {
-  let site: Site;
+  let site: MagicShop;
 
   test.beforeEach(async ({ page }) => {
-    site = new Site(page);
+    site = new MagicShop(page);
     await site.homePage.visit();
   });
 
