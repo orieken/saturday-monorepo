@@ -1,0 +1,63 @@
+---
+feature: "leaflet-package-tests"
+bounded_context: ""
+domain_terms: ["saturdayMetadata", "LeafletFixture"]
+files_touched: ["packages/saturday-playwright-leaflet/tests/fixture.spec.ts"]
+issue_refs: ["leaflet-package-tests"]
+linked_adrs: []
+linked_kis: []
+---
+
+# Code Review: leaflet-package-tests
+
+## Overall Status
+
+**APPROVED**
+
+## Design Narrative
+
+The diff swaps Turf.js from a CDN script tag to a path resolved through @turf/turf's own exports map, so the fixture works fully offline, and fixes checkTileFailures' detection logic, which read a DOM class this installed Leaflet version never sets and so could never return true. Around that, it adds a self-contained fixture page, a path-bounded static file server, and a Playwright suite exercising all 11 README-documented helpers against known fixture values, entirely inside the package's own adapter boundary with no new package, class, or layer crossing.
+
+## Design Score
+
+- **Clarity** 4/5
+- **Cohesion** 4/5
+- **Coupling** 4/5
+- **Craft** 4/5
+
+## Security Surface
+
+- fixtures/serve.mjs is a local-only, test-infra static file server (never shipped in dist/); its two allow-listed routes resolve through resolveWithinRoot before serving, and the '/' and '/turf.min.js' exact-match routes point at fixed, non-user-controlled paths — no path-traversal surface from request input.
+
+## Performance Surface
+
+None
+
+## Test Design Review
+
+- waitForMapLoad: NO — the only assertion checks window.__SATURDAY_LEAFLET_MAP__ exists, which is already true before the helper runs; a helper that resolved immediately without waiting for in-flight tile loads would still pass this test. The await does guard against a throw/hang, but the assertion itself doesn't verify the wait-for-tiles behavior the name claims.
+- getCenter: YES — asserts the fixture's known center; fails if the map's view or fixture.ts's getCenter changes.
+- getBounds: YES — asserts viewport bounds straddle the known center; fails if bounds computation breaks.
+- getMarkers: YES — asserts all three fixture markers' coordinates and saturdayMetadata by id; fails if any marker value changes.
+- drawLine: YES — asserts the interactive-path count increases by exactly one after calling the helper; fails if drawLine stops adding a path.
+- getMarkersAlongLine: YES — asserts the buffered-line query returns exactly Marker A and C, excluding B; fails if the buffer/membership logic breaks.
+- distanceBetween: YES — asserts a precomputed geodesic distance to one decimal place; fails if the Turf-backed calculation changes.
+- isPointInPolygon: YES — asserts both a known-inside and a known-outside point; fails if polygon containment breaks either direction.
+- assertPopupContent: YES — the underlying helper throws if popup text doesn't match, so the test fails if marker-a's fixture popup text changes.
+- isLayerVisible: YES — toggles the fixture's overlay checkbox and asserts both before/after states; fails if visibility detection breaks in either direction.
+- checkTileFailures: YES — asserts false on a successfully-loading local tile; given the fixed detection logic, this now actually fails if the tile fails to load (verified manually by the developer against a 404'd tile URL, per implementation-notes.md).
+
+## Verification of Developer Self-Review
+
+- Confirmed: 11/11 tests pass locally in real Chrome (channel: 'chrome') — re-ran independently, 11 passed in 4.3s, matching the developer's reported ~4.2s.
+- Confirmed: no function in the diff exceeds ~20 lines or approaches cyclomatic complexity 7 — all fixture.ts, fixture-map.js, and serve.mjs functions are short and single-purpose.
+- Confirmed: FIXTURE_OVERLAY_NAME is used (not duplicated) in fixture-map.js — self-review's named refactor is reflected in the actual file.
+- Confirmed: fixtures/ and tests/ are excluded from tsc's build scope by the existing rootDir/include settings in tsconfig.json — no edit was needed or made.
+- Confirmed: the pre-existing `any` usage in fixture.ts's public interface was left untouched, consistent with the deferred Boy Scout item architecture-notes.md documents and scopes out.
+
+## Feedback for the Developer
+
+### 1. Strengthen Assertion (non-blocking)
+- **File**: `packages/saturday-playwright-leaflet/tests/fixture.spec.ts`
+- **Smell**: waitForMapLoad's test asserts only that window.__SATURDAY_LEAFLET_MAP__ is truthy, a condition already true before the helper is invoked. It doesn't exercise the tile-load-wait behavior the helper's name and docstring claim, so a regression that resolves too early would not be caught here.
+- **Instruction**: Add an assertion that depends on the wait having actually completed — e.g. assert checkTileFailures() === false immediately after waitForMapLoad() with no additional delay, or assert on a DOM/tile-loaded signal that would only be true post-wait. Non-blocking: the other 10 tests and the helper's manual verification elsewhere in the suite cover the package adequately without it.
