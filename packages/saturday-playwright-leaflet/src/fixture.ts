@@ -1,6 +1,14 @@
+import { dirname, join } from 'node:path';
 import { test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type * as L from 'leaflet';
+
+// @turf/turf's package.json "exports" map only allows "." and "./package.json" —
+// resolving through the latter is how we locate its sibling turf.min.js bundle
+// without depending on an unexported deep-import path.
+function resolveTurfBrowserBundle(): string {
+  return join(dirname(require.resolve('@turf/turf/package.json')), 'turf.min.js');
+}
 
 export interface LeafletFixture {
   /**
@@ -72,8 +80,10 @@ export interface LeafletFixture {
 export const test = base.extend<{ leaflet: LeafletFixture }>({
   leaflet: async ({ page }, use) => {
     
-    // Inject Turf.js for spatial operations like point-in-polygon and line buffers
-    await page.addScriptTag({ url: 'https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js' });
+    // Inject Turf.js for spatial operations like point-in-polygon and line buffers.
+    // Loaded from the package's own @turf/turf dependency (not a CDN) so this
+    // fixture works with no network access.
+    await page.addScriptTag({ path: resolveTurfBrowserBundle() });
 
     const getMap = () => {
       const map = (window as any).__SATURDAY_LEAFLET_MAP__;
@@ -233,12 +243,13 @@ export const test = base.extend<{ leaflet: LeafletFixture }>({
       },
 
       async checkTileFailures() {
-        // Playwright can intercept network requests, but doing it post-hoc here 
-        // requires we had setup an interceptor earlier.
-        // Instead, we can check if Leaflet has any error-class tiles in the DOM
+        // Leaflet 1.9 never adds a '.leaflet-tile-error' class (checked against
+        // node_modules/leaflet/dist/leaflet-src.js's _tileReady) — a failed tile
+        // stays an <img> whose load attempt completed with no pixels, so that's
+        // what we detect instead.
         return page.evaluate(() => {
-          const errorTiles = document.querySelectorAll('.leaflet-tile-loaded.leaflet-tile-error');
-          return errorTiles.length > 0;
+          const tiles = Array.from(document.querySelectorAll<HTMLImageElement>('.leaflet-tile'));
+          return tiles.some((tile) => tile.complete && tile.naturalWidth === 0);
         });
       },
 

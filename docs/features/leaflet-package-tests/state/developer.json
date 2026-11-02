@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "feature": "leaflet-package-tests",
+  "filesCreated": [
+    "packages/saturday-playwright-leaflet/fixtures/index.html",
+    "packages/saturday-playwright-leaflet/fixtures/assets/fixture-map.js",
+    "packages/saturday-playwright-leaflet/fixtures/assets/tile.png",
+    "packages/saturday-playwright-leaflet/fixtures/serve.mjs",
+    "packages/saturday-playwright-leaflet/tests/fixture.spec.ts",
+    "packages/saturday-playwright-leaflet/playwright.config.ts"
+  ],
+  "filesModified": [
+    "packages/saturday-playwright-leaflet/package.json",
+    "packages/saturday-playwright-leaflet/src/fixture.ts",
+    "pnpm-lock.yaml"
+  ],
+  "interfaceDesign": [
+    "No public LeafletFixture API signature changed — all 13 methods keep their existing names, params, and return types.",
+    "fixture.ts: new private resolveTurfBrowserBundle(): string — resolves @turf/turf's local turf.min.js path via its package.json export (not an unexported deep-import path).",
+    "fixtures/serve.mjs: minimal static file server (createServer, resolveRequestedFile, resolveWithinRoot, readIfFile, handleRequest) — test infrastructure, not part of the published package.",
+    "fixtures/assets/fixture-map.js: browser-side buildFixtureMap()/addFixtureMarkers()/addFixtureOverlay() — constructs the known Leaflet map every test in fixture.spec.ts asserts against."
+  ],
+  "refactoringLog": [
+    {
+      "operation": "Replace Magic String with Named Constant",
+      "target": "fixtures/assets/fixture-map.js: addFixtureOverlay — was passing the literal 'Fixture Overlay' string directly to L.control.layers, duplicating the already-declared FIXTURE_OVERLAY_NAME constant",
+      "reason": "Caught during self-review (Kent Beck's 'no duplication' rule) — the constant existed but wasn't actually used, so the overlay's displayed name and the constant could silently drift apart."
+    }
+  ],
+  "selfReview": [
+    { "item": "Every public method has an intention-revealing name (no process/handle/manage)", "checked": true },
+    { "item": "No function exceeds 30 LOC", "checked": true },
+    { "item": "Cyclomatic complexity < 7 on all new/changed functions", "checked": true },
+    { "item": "No primitive obsession for domain concepts", "checked": true, "note": "Test-fixture data (marker/popup records) stays as plain objects by design — this is test infrastructure, not production domain code, and the analysis explicitly scoped out any public-API-affecting typing changes to fixture.ts's existing `any` usage." },
+    { "item": "No feature envy", "checked": true },
+    { "item": "No magic numbers or strings — literals are named constants", "checked": true, "note": "fixture-map.js's FIXTURE_MARKERS/FIXTURE_POLYGON/FIXTURE_OVERLAY_NAME are the single source of truth; fixed during self-review (see refactoringLog)." },
+    { "item": "Dependency direction verified: nothing in inner layers imports from outer layers", "checked": true, "note": "No domain layer exists in this package; fixture.ts (adapter) depending on leaflet/@turf/turf directly is the only layer in play, per architecture-notes.md." }
+  ],
+  "simpleDesign": [
+    { "item": "Passes the tests", "checked": true, "note": "11/11 pass locally against real Chrome (channel: 'chrome'). Not yet re-verified via the exact AC4 docker --network none command — that run is QA's task per analysis.md." },
+    { "item": "Reveals intention", "checked": true, "note": "Each test name states the helper and the known fixture value it checks; fixture-map.js's constants name the known values directly." },
+    { "item": "No duplication", "checked": true, "note": "Deduplicated FIXTURE_OVERLAY_NAME usage (see refactoringLog); resolveTurfBrowserBundle centralizes the one path-resolution concern." },
+    { "item": "Fewest elements", "checked": true, "note": "No new package, class, or abstraction — everything lives inside this one package, following ye-olde-magic-shop's existing playwright.config.ts chrome/channel/webServer pattern verbatim." }
+  ],
+  "keyDecisions": [
+    {
+      "decision": "Load Turf.js in fixture.ts via `page.addScriptTag({ path: resolveTurfBrowserBundle() })` instead of the old CDN URL, resolving the bundle's path through @turf/turf's package.json export rather than its unexported turf.min.js deep path.",
+      "reasoning": "@turf/turf@6's package.json `exports` map only allows '.' and './package.json' — `require.resolve('@turf/turf/turf.min.js')` throws ERR_PACKAGE_PATH_NOT_EXPORTED. Resolving via './package.json' and joining its directory with the known sibling filename (listed in that same package.json's `files`/`browser` fields) stays within the exports contract and makes the suite work fully offline."
+    },
+    {
+      "decision": "Fixed checkTileFailures()'s detection logic from a '.leaflet-tile-loaded.leaflet-tile-error' DOM-class check to an img.complete && naturalWidth===0 check.",
+      "reasoning": "Verified by reading node_modules/leaflet/dist/leaflet-src.js's _tileReady: this installed Leaflet version (1.9.x) never adds a 'leaflet-tile-error' class on tile failure — the old check could never return true. Discovered while proving each helper's test can fail (AC3): deliberately pointing the fixture's tile URL at a 404 path left checkTileFailures() returning false regardless. This is a pre-existing defect in the helper itself, not a test authoring issue, and AC3 cannot be satisfied for this helper without fixing it. The public signature and documented behavior ('Returns true if any map tiles failed to load') are unchanged."
+    },
+    {
+      "decision": "Built fixtures/assets/tile.png as a hand-generated, zlib-deflated 16x16 RGB PNG rather than a copied/base64 placeholder image.",
+      "reasoning": "An initial hand-written base64 1x1 PNG passed Unix `file` magic-byte sniffing but Chrome reported naturalWidth/naturalHeight 0 for it — an undecoded, effectively broken image that would have made checkTileFailures()'s happy-path test accidentally pass for the wrong reason (same defect this order exists to avoid). Verified the replacement decodes correctly in real Chrome (naturalWidth: 16) before relying on it in any test."
+    },
+    {
+      "decision": "tests/fixture.spec.ts imports `{ test }` from '../src/fixture' (TS source) rather than the package's own published name/dist output.",
+      "reasoning": "Matches the existing precedent in packages/saturday-playwright-k6-exporter/tests/fixture.spec.ts (imports from '../src/index'). Avoids a self-referential workspace:* dependency on the package's own package name, while AC4's docker command still builds the package first as part of its own precondition, independent of what the test imports."
+    },
+    {
+      "decision": "fixtures/serve.mjs restricts its static routes to an explicit allow-list ({ '/leaflet/': ..., '/assets/': ... } plus exact matches for '/' and '/turf.min.js') with a resolveWithinRoot boundary check, rather than general directory listing.",
+      "reasoning": "No production code reads this file, but architecture-guardrails.md's conventions apply project-wide; an allow-list with a resolved-path boundary check is simpler to reason about and avoids any path-traversal surface even though this server only ever runs locally against trusted local requests."
+    }
+  ],
+  "deviations": [
+    {
+      "task": "architecture-notes.md's Developer Handoff Notes: 'Touch only the Turf.js script-tag line and its immediate surrounding code in src/fixture.ts for this order.'",
+      "reason": "AC3 requires every helper's test to demonstrably fail when its fixture value changes. checkTileFailures()'s original DOM-class check could never fail (or pass) correctly against the installed Leaflet version — it was dead logic, not a scope boundary. Fixed its detection mechanism (see keyDecisions) without changing its name, signature, or documented return contract. Flagging explicitly since it's a second touch-point in fixture.ts beyond the Turf CDN line the handoff note anticipated."
+    }
+  ],
+  "dependenciesAdded": [
+    {
+      "package": "@turf/turf",
+      "version": "^6.5.0",
+      "reason": "Replaces the CDN-loaded turf.min.js (https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js) so the suite works under AC4's --network none; same major version previously CDN-pinned. Lands in `dependencies` (not devDependencies) since fixture.ts loads its browser bundle into the page under test at runtime, the same category leaflet is already in."
+    },
+    {
+      "package": "@types/node",
+      "version": "^20.19.26",
+      "reason": "fixture.ts's new resolveTurfBrowserBundle() uses node:path and require.resolve, which need Node's ambient types to compile under this package's existing strict tsconfig. Not previously needed since fixture.ts had no Node-API usage. Version pin matches apps/ye-olde-magic-shop's own @types/node pin for consistency."
+    }
+  ],
+  "notesForQa": [
+    "AC3's per-helper fixture-break-and-revert sweep (documenting the fixture edit and failing output for all 11 helpers in the delivery record) is still outstanding — I only spot-verified two of the eleven myself during implementation: checkTileFailures (pointed the tile URL at a 404 path — see keyDecisions/deviations; this is the one where the original code was actually broken) and confirmed drawLine/getMarkersAlongLine's underlying values are fixture-sourced, not independently re-verified end-to-end per helper.",
+    "AC4's exact docker command (`docker run --rm --platform linux/amd64 --network none -v \"$PWD:/work\" saturday-runner:debian bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-leaflet test'`) has not been run — I only ran `pnpm test` locally against a non-containerized real Chrome install with network available for setup (installing @turf/turf, etc.). The suite's own test run itself required no network (fixture page is fully self-hosted via fixtures/serve.mjs), but the saturday-runner:debian image's --network none behavior itself is unverified by me.",
+    "11/11 tests pass locally in real Chrome (channel: 'chrome'), ~4.2s total, no retries needed.",
+    "checkTileFailures' detection logic changed behavior (see keyDecisions) — it previously could never return true for any caller, including apps/ye-olde-magic-shop's own 'should not have broken tiles' test. That app's test suite was not re-run as part of this order (different bounded context, per architecture-notes.md); worth a check since the fix is more correct but means that test will now actually exercise its assertion where it silently couldn't before.",
+    "Cyclomatic complexity and the 'changed lines covered by a test that can fail' bar (per AC5) weren't run through analyze-complexity/eslint tooling — no such tool is configured for this package; self-reviewed by inspection only (see selfReview)."
+  ],
+  "notesForDevops": [
+    "No CI/pipeline config changes made (out of scope for developer). AC4's literal docker command and the fitness functions proposed in architecture-notes.md (offline run, no-CDN grep, dist/ exclusion check) still need wiring into CI — none of that exists yet."
+  ],
+  "retrieval": {
+    "domainTerms": ["saturdayMetadata"],
+    "issueRefs": ["leaflet-package-tests"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

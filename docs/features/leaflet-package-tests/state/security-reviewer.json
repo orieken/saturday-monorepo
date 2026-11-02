@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "feature": "leaflet-package-tests",
+  "threatModelSummary": "This change adds a local, offline test fixture (static HTML/JS page), a path-bounded static file server for Playwright's webServer, and a browser-side helper (fixture.ts) that loads @turf/turf from a local file path instead of a CDN. The spec's own Trust Boundaries section ('None — no auth, no user input, no external calls') matches what the code shows: no authentication, no session/token handling, no user-facing API endpoint, and no network calls once the suite is running (AC4 runs it with --network none). The only new code that parses request-shaped input is fixtures/serve.mjs's route resolution, which is local-only test infrastructure never shipped in dist/. I verified its path-traversal guard empirically (encoded and raw '..' traversal attempts against both routes returned 404) rather than relying on inspection alone. The new runtime dependency, @turf/turf, was checked against the full dependency tree via pnpm audit and introduces no vulnerabilities. No fixes were required; no files were modified during this review.",
+  "dependencyAudit": [
+    "pnpm audit --prod run against the full monorepo: 33 pre-existing findings (2 low, 15 moderate, 14 high, 2 critical), none in a dependency path through @turf/turf, @types/leaflet, leaflet, or packages/saturday-playwright-leaflet. All findings trace to apps/cartridge, apps/mock-api, and packages/saturday-cucumber-otel-formatter, which this feature did not touch.",
+    "@turf/turf ^6.5.0 added to dependencies (not devDependencies) because fixture.ts loads its browser bundle into the page under test at runtime — same category leaflet is already in. No advisory applies to this version per the audit above."
+  ],
+  "stride": [
+    { "category": "SPOOFING", "assessed": "No authentication or identity concept exists anywhere in this feature. fixtures/serve.mjs serves static files with no session, cookie, or credential handling — there is nothing to spoof." },
+    { "category": "TAMPERING", "assessed": "The only request-driven code path is serve.mjs's resolveRequestedFile/resolveWithinRoot, which resolves a request path against a fixed root and rejects anything that escapes it. Verified empirically: encoded ('..%2f'), raw ('../'), and cross-route traversal attempts against both the '/leaflet/' and '/assets/' routes all returned 404. The '/' and '/turf.min.js' routes are exact-match against fixed, non-user-controlled paths with no request input involved." },
+    { "category": "REPUDIATION", "assessed": "Not applicable — no user actions, no audit-worthy operations. This is a test fixture with no concept of a user performing an action that would need non-repudiation." },
+    { "category": "INFORMATION_DISCLOSURE", "assessed": "serve.mjs's allow-listed routes only ever expose node_modules/leaflet/dist, the package's own fixtures/assets/ directory, and node_modules/@turf/turf/turf.min.js — no secrets, source code outside those two directories, or environment data are reachable even via the traversal attempts tested. The page itself (fixture-map.js) hardcodes fixture coordinates and popup text with no real user or system data. Egress: nothing in this feature makes an outbound network call — AC4 explicitly runs the suite with --network none, and the browser-side code loads Leaflet/Turf/image assets from the local server only." },
+    { "category": "DENIAL_OF_SERVICE", "assessed": "serve.mjs is a local-only server bound for the duration of a test run (default port 4173), not a long-running or internet-facing service. No unbounded loops over external input; file reads are a single readFile per request with no size cap, but inputs are limited to the fixed asset set this package ships, not arbitrary user-supplied data. Not in scope as a hardening target given its test-infra-only lifecycle." },
+    { "category": "ELEVATION_OF_PRIVILEGE", "assessed": "No roles, permissions, or privilege levels exist in this feature — there is nothing to elevate into." }
+  ],
+  "findings": [],
+  "filesModified": [],
+  "securityChecklist": [
+    { "item": "No hardcoded secrets, API keys, or tokens introduced", "checked": true },
+    { "item": "No authentication/session/token logic added that could be implemented insecurely", "checked": true, "note": "Feature has no auth surface at all." },
+    { "item": "New dependency (@turf/turf) checked against pnpm audit — no advisories", "checked": true },
+    { "item": "Path-resolution logic handling request-shaped input (serve.mjs) verified to reject directory traversal", "checked": true, "note": "Verified empirically with live requests, not just by inspection." },
+    { "item": "No OTel/logging additions that could leak PII or secrets", "checked": true, "note": "Feature adds no telemetry; existing OTel guardrails unaffected." },
+    { "item": "Test-only server (serve.mjs) confirmed excluded from published dist/ output", "checked": true }
+  ],
+  "notesForQa": [
+    "Security review found no findings requiring QA-side verification beyond what code-review already covered.",
+    "The empirical traversal check (encoded '..%2f', raw '../', cross-route) against fixtures/serve.mjs is documented here for the record; QA does not need to re-run it as a dedicated test since it's test-only local infrastructure with no production exposure, but it's safe to reuse these exact curl invocations if a regression test for the server itself is ever desired."
+  ],
+  "notesForTechWriter": [],
+  "retrieval": {
+    "domainTerms": ["saturdayMetadata", "LeafletFixture"],
+    "issueRefs": ["leaflet-package-tests"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

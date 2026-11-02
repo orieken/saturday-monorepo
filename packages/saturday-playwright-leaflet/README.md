@@ -75,3 +75,35 @@ test('my map test', async ({ page, leaflet }) => {
 - `leaflet.assertPopupContent(markerId, text)`: Programmatically opens a marker's popup and asserts the DOM content contains the text.
 - `leaflet.isLayerVisible(layerName)`: Interrogates the Leaflet Layer Control to see if a specific layer is toggled on.
 - `leaflet.checkTileFailures()`: Returns true if any map tiles failed to load (HTTP 404/500).
+
+## Testing
+
+This package tests itself against a static fixture page under `fixtures/`. The page loads Leaflet
+and Turf.js from this package's own dependencies, so the suite needs no network access. The page
+sets `window.__SATURDAY_LEAFLET_MAP__` and renders three known markers, a polygon, and a layer
+control that the tests assert against.
+
+Run the suite:
+
+```bash
+pnpm --filter @orieken/saturday-playwright-leaflet test
+```
+
+This command starts `fixtures/serve.mjs` (a local static file server), runs the Playwright suite
+in real Chrome (`channel: 'chrome'`), and stops the server. There is one test per helper listed
+above.
+
+`drawLine` and `distanceBetween` take their coordinates directly from the caller, not from the
+fixture page. Their tests prove failure a different way: each mutates the helper's own
+implementation rather than a fixture value. See
+`docs/features/leaflet-package-tests/qa-fixture-verification.md` for the full per-helper evidence.
+
+The suite also runs fully offline inside the Saturday runner image:
+
+```bash
+docker run --rm --platform linux/amd64 --network none -v "$PWD:/work" saturday-runner:debian \
+  bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-leaflet test'
+```
+
+Run `pnpm install` and `pnpm --filter @orieken/saturday-playwright-leaflet build` before this
+command, since it assumes dependencies are installed and the package is already built.
