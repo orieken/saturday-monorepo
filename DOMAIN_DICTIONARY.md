@@ -104,6 +104,19 @@ This file is the single source of truth for the **Ubiquitous Language** in the a
 | **IHttpAdapter** | Interface hiding HTTP implementation details from test logic. | `HttpService`, `RequestHandler` |
 | **api fixture** | The custom Playwright fixture providing fluent API testing. | `client`, `request` |
 
+## 7. Product Domain: Expedition Planning (Ye Olde Magic Shop)
+
+Terms from the reagent map (spec package `docs/specs/reagent-map-spec/`). They name things in the
+demo app, not in the framework.
+
+| Term | Description | Synonyms to AVOID |
+|---|---|---|
+| **Adventurer** | A shop customer who plans expeditions. Signed in to save one. | `user` (in scenarios), `player` |
+| **Reagent Site** | A place on the planet where an ingredient is gathered, published by the shop with a name and a position. | `location`, `marker`, `pin` |
+| **Expedition** | A saved plan drawn on the reagent map: in wave 1, a line between two points on the land, owned by an adventurer or by the shop. | `route`, `trip`, `shape`, `drawing` |
+| **Seeded Expedition** | An expedition owned by the shop, shown to every adventurer. | `default route`, `sample` |
+| **Aurelis** | The invented planet the reagent map shows: a perfect sphere of radius 6,000 km with one surface image. Distances on it use its radius, never Earth's. | `Earth`, `world`, `globe` (the globe is its picture) |
+
 ---
 
 *When designing a new agent, skill, or rule: if a new business concept is introduced, add it to this dictionary before merging.*

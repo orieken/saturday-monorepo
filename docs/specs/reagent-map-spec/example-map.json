@@ -1,0 +1,62 @@
+{
+  "stage": "example-map",
+  "order": "reagent-map-spec",
+  "rules": [
+    {"id": "R1", "rule": "Opening the reagent map shows every reagent site at its position on the planet.", "events": ["ReagentMapOpened"],
+     "examples": [
+       {"kind": "happy", "text": "The shop publishes 8 sites; the map shows 8 markers, each at its site's latitude and longitude."},
+       {"kind": "happy", "text": "A site at 180 degrees longitude and one near the north pole are shown where they are, not clipped or wrapped."},
+       {"kind": "negative", "text": "A site the shop has not published is not shown."}],
+     "questions": ["Q8"]},
+    {"id": "R2", "rule": "Opening the map shows the shop's seeded expeditions, and a signed-in adventurer's own saved expeditions, each where it was drawn.", "events": ["ReagentMapOpened"],
+     "examples": [
+       {"kind": "happy", "text": "Signed out: the 3 seeded lines are shown and nothing else."},
+       {"kind": "happy", "text": "Signed in as Elara, who saved one line: the 3 seeded lines and Elara's line are shown."},
+       {"kind": "negative", "text": "Signed in as Elara: a line saved by Borin is not shown."},
+       {"kind": "negative", "text": "A seeded line is not drawn more than the agreed tolerance away from its seeded endpoints."}],
+     "questions": ["Q6", "Q7", "Q3"]},
+    {"id": "R3", "rule": "Flying to a reagent site brings it on screen, on the near side of the globe.", "events": ["SiteFocused"],
+     "examples": [
+       {"kind": "happy", "text": "With the camera over the opposite side of the planet, choosing 'Moonwell Spring' turns the globe until the site is on screen and facing the camera."},
+       {"kind": "negative", "text": "Before choosing a site, a site on the far side is not on screen."}],
+     "questions": []},
+    {"id": "R4", "rule": "A line is drawn by placing two points on the land; it follows the agreed kind of line between them.", "events": ["LineStarted", "PointPlaced"],
+     "examples": [
+       {"kind": "happy", "text": "After choosing the line tool, clicking near Moonwell Spring and then near Ember Crag shows a line between those two places."},
+       {"kind": "happy", "text": "Two points far apart give a line that follows the agreed path between them (geodesic or rhumb, Q4)."},
+       {"kind": "negative", "text": "After only one click, no line is complete and Save is not offered."}],
+     "questions": ["Q4", "Q3"]},
+    {"id": "R5", "rule": "A click that is not on the land of the near side places nothing.", "events": ["PointRejected"],
+     "examples": [
+       {"kind": "happy", "text": "With the line tool waiting, a click on a point on the land is placed."},
+       {"kind": "negative", "text": "A click on space beside the globe places nothing, and the tool still waits for a point."},
+       {"kind": "negative", "text": "A click on the limb of the globe, where the far side would be, places nothing."}],
+     "questions": ["Q5"]},
+    {"id": "R6", "rule": "A signed-in adventurer can save a completed line, and sees it again after reopening the map, within the agreed tolerance.", "events": ["ExpeditionSaved"],
+     "examples": [
+       {"kind": "happy", "text": "Elara draws a line from Moonwell Spring to Ember Crag, saves it, reloads, and the line is shown with both ends within tolerance of where she placed them."},
+       {"kind": "negative", "text": "An endpoint saved 5 km from where it was placed counts as wrong."}],
+     "questions": ["Q3"]},
+    {"id": "R7", "rule": "Saving is refused when the adventurer is signed out or the line has zero length; nothing is stored.", "events": ["ExpeditionRejected"],
+     "examples": [
+       {"kind": "happy", "text": "Signed in, a line between two different places is saved."},
+       {"kind": "negative", "text": "Signed out, pressing Save asks the adventurer to sign in, and after signing in and reopening the map the line is not there."},
+       {"kind": "negative", "text": "Both points placed at the same place: Save is refused and nothing is stored."}],
+     "questions": ["Q11"]},
+    {"id": "R8", "rule": "An unsaved line can be abandoned; nothing is stored.", "events": ["LineStarted"],
+     "examples": [
+       {"kind": "happy", "text": "Elara places one point, chooses the line tool again, and starts over from no points."},
+       {"kind": "negative", "text": "Elara draws a line and leaves the map without saving; reopening it shows no new line."}],
+     "questions": []}
+  ],
+  "questions": [
+    {"id": "Q3", "blocking": true, "question": "How close must a saved or seeded endpoint be to where it was placed, in km on the planet?", "assumption": "Within 1 km."},
+    {"id": "Q4", "blocking": true, "question": "Is a line the shortest path over the surface (geodesic) or straight on a flat map (rhumb)?", "assumption": "Geodesic."},
+    {"id": "Q5", "blocking": true, "question": "After a click off the land, does the adventurer see anything (a message, a shake), or does nothing happen?", "assumption": "Nothing happens; the tool keeps waiting."},
+    {"id": "Q6", "blocking": true, "question": "Can an adventurer see other adventurers' expeditions?", "assumption": "No: own plus seeded only."},
+    {"id": "Q7", "blocking": false, "question": "Which expeditions are seeded, and who owns them?", "assumption": "3 shop-owned lines crossing named sites, one reaching the far side from the default camera."},
+    {"id": "Q8", "blocking": false, "question": "Planet name, radius, and the reagent sites.", "assumption": "Planet 'Aurelis', radius 6,000 km, 8 named sites including one near each pole and one at 180 degrees longitude."},
+    {"id": "Q9", "blocking": false, "question": "Wave 2: does a site on a circle's edge count as enclosed, and do overlapping circles count a site once or twice?", "assumption": "Edge counts; once per circle."},
+    {"id": "Q11", "blocking": false, "question": "New: when two points are 'the same place', is that exactly equal, or closer than the tolerance?", "assumption": "Closer than the tolerance (Q3)."}
+  ]
+}
