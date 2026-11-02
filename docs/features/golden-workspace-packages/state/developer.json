@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-workspace-packages",
+  "filesCreated": [
+    "packages/saturday-cucumber/tests/config.spec.ts"
+  ],
+  "filesModified": [
+    "apps/ye-olde-magic-shop/package.json",
+    "packages/saturday-cucumber/src/config/index.ts",
+    "pnpm-lock.yaml"
+  ],
+  "interfaceDesign": [
+    "No new public interface — SaturdayConfig.browser.headless's documented, already-public type (boolean) is unchanged; only its default value's source changed from a literal to process.env.HEADLESS === 'true', matching the already-published configure()/getConfig() API."
+  ],
+  "refactoringLog": [],
+  "selfReview": [
+    { "item": "Every public method has an intention-revealing name (no process/handle/manage)", "checked": true, "note": "No new public methods introduced; only a default-value literal changed." },
+    { "item": "No function exceeds 30 LOC", "checked": true },
+    { "item": "Cyclomatic complexity < 7 on all new functions", "checked": true, "note": "The one changed line is a boolean comparison inside an object literal, complexity 1." },
+    { "item": "No primitive obsession", "checked": true, "note": "headless remains a documented boolean field of the existing SaturdayConfig interface, not a new raw primitive." },
+    { "item": "No feature envy", "checked": true },
+    { "item": "No magic numbers or strings", "checked": true, "note": "The literal string 'true' is the documented env-var contract, matching the vendored copy it replaces and the analyst's/architect's confirmed behavior." },
+    { "item": "Dependency direction verified: nothing in inner layers imports from outer layers", "checked": true, "note": "apps/ye-olde-magic-shop depends on packages/saturday-core, packages/saturday-cucumber, packages/saturday-playwright-heatmap via workspace:*; grepped all three packages' src/ for any reference back to apps/ye-olde-magic-shop — none found. Direction unchanged and correct." }
+  ],
+  "simpleDesign": [
+    { "item": "Passes all tests", "checked": true, "note": "packages/saturday-cucumber: 22/22 (3 files) incl. new config.spec.ts; packages/saturday-core: 166/166 (26 files); packages/saturday-playwright-heatmap: 6/6 (1 file). All pass with workspace:* resolution and the HEADLESS fix in place." },
+    { "item": "Reveals intention", "checked": true, "note": "No renames needed — defaultConfig.browser.headless's name already revealed intent; only its default source was wrong." },
+    { "item": "No duplication", "checked": true, "note": "Removing the three vendored directories (apps/ye-olde-magic-shop/saturday-core, saturday-cucumber, saturday-playwright-heatmap) eliminates the drifted-copy duplication this feature exists to close." },
+    { "item": "Fewest elements", "checked": true, "note": "113 vendored files deleted (29 of them test files, all confirmed content-equivalent or a subset of their packages/*/tests/** counterpart — see keyDecisions), both app Dockerfiles removed, net one line changed in config/index.ts, one new test file." }
+  ],
+  "keyDecisions": [
+    {
+      "decision": "Re-applied the salvaged diff verbatim via `git diff --binary e9e4ae6 f372a30 | git apply --index` — it applied cleanly with zero conflicts against current main, including the #7 cart.spec.ts import fix (unrelated file, no overlap).",
+      "reasoning": "Dry-run `git apply --check` reported no conflicts; the three workspace:* dependency edits, the HEADLESS default fix, the new config.spec.ts, and all 113 vendored-file deletions landed exactly as the spec's starting point described."
+    },
+    {
+      "decision": "Regenerated pnpm-lock.yaml by stashing the salvaged diff's lockfile hunk alone (git stash push -u -- pnpm-lock.yaml) and running `pnpm install` fresh against current main's lockfile base, rather than trusting the salvaged lockfile bytes.",
+      "reasoning": "Per developer task 3 — the salvaged lockfile was generated against an older main; regenerating against current main's actual dependency graph is more trustworthy than reusing stale bytes. Install succeeded with only pre-existing, unrelated WARN noise (missing k6-exporter CLI dist, not yet built — unrelated to this change's packages)."
+    },
+    {
+      "decision": "Confirmed all 29 deleted vendored test files (not 13 as analysis.md estimated) have a content-equivalent or superset already under packages/*/tests/** before trusting the deletion — none were deleted blind.",
+      "reasoning": "Diffed each deleted test file's blob at e9e4ae6 against its same-named packages/ counterpart. 27 of 29 are byte-identical. The remaining two — saturday-cucumber/tests/coverage.spec.ts and world.spec.ts — differ because the packages/ versions are supersets: they already contain every test the vendored copies had, plus additional tabManager/siteManager/screenshot-error coverage the vendored copies lacked. No vendored test's coverage is lost; nothing needed to move."
+    },
+    {
+      "decision": "Removed apps/ye-olde-magic-shop/Dockerfile and Dockerfile.runner rather than rewriting them to build from the workspace.",
+      "reasoning": "Grepped .github/workflows, scripts/, and every docker-compose*.yml in the repo for a reference to either file — none found. scripts/ui-suite-in-chrome.sh (the one AC5 verification path) builds containers/saturday-runner/Containerfile instead, which is unrelated to this app's own Dockerfiles. Matches the salvaged commit's own choice and architecture-notes.md's recorded decision."
+    },
+    {
+      "decision": "Did not run scripts/ui-suite-in-chrome.sh or the app's live-browser test:bdd/test:chrome suites from this stage.",
+      "reasoning": "Per analysis.md's Task List, the before/after run of scripts/ui-suite-in-chrome.sh and the full golden Cucumber/Playwright suite is explicitly QA Tasks 1-3, not a Developer Task. Developer Tasks 1-7 (re-apply diff, reconcile, pnpm install, confirm content parity, move any gap, resolve Dockerfiles, verify the config change) are all complete and independently verified: builds succeed for all three packages, pnpm correctly symlinks @orieken/saturday-core, @orieken/saturday-cucumber and @orieken/saturday-playwright-heatmap in apps/ye-olde-magic-shop/node_modules/@orieken/ straight to packages/*, and a `tsc --noEmit` pass over the app surfaces only pre-existing, unrelated errors (missing .vue modules, missing leaflet/k6-exporter dist, vite.config moduleResolution) with zero errors referencing the three migrated packages."
+    }
+  ],
+  "deviations": [
+    {
+      "task": "QA Task 1-2 and AC5 (run scripts/ui-suite-in-chrome.sh before/after and record output)",
+      "reason": "Left to the qa-engineer stage per the pipeline route and analysis.md's own task assignment — this is explicitly a QA task, not a developer one, and running the full dockerized Chrome suite is out of this stage's scope."
+    },
+    {
+      "task": "Coverage of packages/saturday-cucumber/src/config/index.ts not reflected in the package's own vitest --coverage % report",
+      "reason": "The package's vitest.config.ts has a pre-existing, project-wide `exclude: ['**/index.ts', ...]` coverage rule that excludes every barrel/index.ts file from the %-coverage report, not something introduced by this change. The behavior itself is still proven covered and provably-failing by config.spec.ts (confirmed by reverting the fix and watching the test go red, then restoring it green) — satisfying ADR-008's mutation-can-fail intent even though the automated coverage percentage tool doesn't count index.ts lines."
+    }
+  ],
+  "dependenciesAdded": [],
+  "notesForQa": [
+    "Before this change, scripts/ui-suite-in-chrome.sh and apps/ye-olde-magic-shop's test:bdd/test:chrome fail at collection because the vendored saturday-core/saturday-cucumber/saturday-playwright-heatmap copies have no dist/ after a fresh install (per the spec's own stated starting condition) — this is the documented 'before' state to record, not something to re-diagnose.",
+    "After this change: pnpm install resolves @orieken/saturday-core, @orieken/saturday-cucumber and @orieken/saturday-playwright-heatmap as real workspace symlinks (verified: apps/ye-olde-magic-shop/node_modules/@orieken/{saturday-core,saturday-cucumber,saturday-playwright-heatmap} all resolve to ../../../../packages/*), and `pnpm --filter ... -r build` succeeds for all three, producing dist/ — the documented collection-failure cause should be cleared without any script change.",
+    "Please run scripts/ui-suite-in-chrome.sh from the repo root per AC5/QA Task 2 and record its exit code and output in the delivery record — not run from this stage.",
+    "Run the app's existing test:bdd and test:chrome suites before/after per QA Task 3 and confirm zero .feature/spec assertion diffs — none were touched by this change.",
+    "packages/saturday-cucumber/tests/config.spec.ts is new and proven to fail against the pre-fix hardcoded `headless: false` (verified by temporarily reverting the one-line fix and re-running — the 'is true when HEADLESS is the literal string true' case fails as expected, then passes again once reverted back).",
+    "If any golden spec fails through the script for a reason unrelated to the vendored packages (e.g. map.spec.ts needing network access to OpenStreetMap tiles), per the spec's Open Questions: do not change the spec or script — stop at the ship gate and name the spec and its cause in the delivery record."
+  ],
+  "notesForDevops": [
+    "pnpm-lock.yaml was regenerated via a clean `pnpm install` against current main (not reused byte-for-byte from the salvaged branch) — please confirm no existing CI step pins to the prior lockfile hash, per analyst's DevOps Task 1."
+  ],
+  "retrieval": {
+    "domainTerms": ["SaturdayConfig"],
+    "issueRefs": ["intake/golden-workspace-packages.md", "#7 (fix/cart-spec-magicshop-import)", "salvage/golden-workspace-packages @ f372a30"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}
