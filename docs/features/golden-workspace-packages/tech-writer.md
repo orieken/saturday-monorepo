@@ -88,3 +88,12 @@ None. No README, CHANGELOG, ADR, or code-level doc met the bar for a change — 
 
 - `pnpm-lock.yaml` was regenerated via a clean `pnpm install` against current `main`, not reused byte-for-byte from the salvaged branch. Confirm no existing CI step pins to the prior lockfile hash.
 - The AC4 gap affects `prototype-runner/docker-compose.yml`'s `web-app` build only. Confirm whether this environment is active in CI before the ship gate, since this run does not resolve it.
+
+## Correction (human review, 2026-11-01)
+
+The Dockerfile Decision above says nothing references `Dockerfile.runner`. That is wrong:
+`prototype-runner/local-cluster/run-local-k8s.sh` builds it from `apps/ye-olde-magic-shop/`
+(lines 23 and 176). The script checks for the file first and skips that image build with a message
+when it is missing, so it degrades rather than fails. Together with the `docker compose build
+web-app` failure QA reproduced, `prototype-runner` no longer builds the demo app's images until its
+build contexts are widened to the repository root, or it is retired.
