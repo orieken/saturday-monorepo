@@ -3,7 +3,7 @@ intake: 1
 id: saturday-playwright-cesium
 type: feature
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-10-29
 requested-by: oscar
@@ -18,7 +18,7 @@ budget:
   max-usd: 40
   max-hours: 4
 scope:
-  paths: [packages/saturday-playwright-cesium/**, packages/saturday-geo/**, pnpm-lock.yaml, docs/**]
+  paths: [packages/saturday-playwright-cesium/**, packages/saturday-geo/**, pnpm-lock.yaml, docs/features/saturday-playwright-cesium/**]
 ---
 
 # Test CesiumJS maps with a Saturday package
@@ -56,8 +56,17 @@ globe: an invented planet, with no network and no Cesium ion account.
 - [ ] Given distance, line-length and point-in-circle checks, then they take the globe's radius from
       the seam rather than assuming Earth's, and are unit-tested in Node without a browser. Whether
       they live in this package or a shared `saturday-geo` is decided at the design gate.
-- [ ] Given the package's `test` script, then it runs the fixture suite in the real-Chrome image
-      with no network, and every helper has a test that fails when the fixture's value changes.
+- [ ] Given the package's `test` script, then it runs the fixture suite in real Chrome
+      (`channel: 'chrome'`, headed, with `--use-gl=angle --use-angle=swiftshader` as in
+      `runner-check`; see `docs/runner-image.md`), and passes with this command after dependencies
+      are installed and the package is built (record its output in the delivery record):
+      `docker run --rm --platform linux/amd64 --network none -v "$PWD:/work" saturday-runner:debian
+      bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-cesium test'`.
+- [ ] Given each helper's test, then it fails when the fixture's corresponding value changes. For a
+      helper that reads nothing from the fixture, a change to the helper's own code that the test
+      catches is the proof instead. Record, per helper, the change made and the failing output in
+      the delivery record.
+- [ ] Given the fixture's static server, then it listens on 127.0.0.1 only.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/saturday-playwright-cesium/` excepted.
@@ -90,8 +99,10 @@ the geometry.
 
 ## Open Questions
 
-- Planet radius and texture: Assumption if unresolved: a sphere of radius 6,371,008.8 m, Turf's
-  default, with an in-repo equirectangular image of an invented land at 4096×2048.
+- Planet radius and texture: resolved by the reagent-map spec (`docs/specs/reagent-map-spec/`):
+  the fixture planet is a sphere of radius 6,000 km, matching Aurelis, so a helper that assumed
+  Earth's radius fails its test. The image is an in-repo equirectangular image of an invented land,
+  at most 2048×1024 to keep the repository small.
 - Pinned Cesium version supports a non-WGS84 ellipsoid for the whole viewer: Assumption if
   unresolved: pass the ellipsoid to `Globe` and to every geometry, and record any place it is not
   honoured.
