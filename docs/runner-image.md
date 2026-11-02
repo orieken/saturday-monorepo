@@ -10,8 +10,8 @@ viewer and checks:
 
 How to build both: ai-assistant-dot-files `docs/prompts/factories/06-runner-images.md`.
 
-Choose with `scripts/ui-suite-in-chrome.sh --ubi9`, or `RUNNER_VARIANT=ubi9`. Both must pass the
-same `runner-check` before either ships a change.
+Run the suite in `ubi9` with `scripts/ui-suite-in-chrome.sh --ubi9` (the default is `debian`). Both
+must pass the same `runner-check` before either ships a change. See "Choosing a variant" below.
 
 An image for running browser suites in real Chrome and Edge under a virtual display, with an
 optional VNC viewer. It is built from the best of two existing images, and replaces Saturday's
@@ -139,6 +139,37 @@ So:
   several builds, so its pins last. EPEL keeps only the latest build, so an EPEL pin breaks at the
   next update. The four EPEL packages are therefore copied into the build context as signed RPMs,
   checked against recorded SHA-256s, and installed from there.
+
+## Choosing a variant
+
+Use `debian` unless a team's policy names one of the things only `ubi9` gives:
+
+- a Red Hat base image lineage;
+- Red Hat's FIPS OpenSSL (`openssl-fips-provider`, from UBI; Stream's `openssl*` is excluded);
+- Red Hat security errata for the packages that come from UBI.
+
+`ubi9` is not more locked down. Its display, viewer and Mesa packages come from CentOS Stream 9
+and EPEL 9, which Red Hat does not support, and `debian` pins every package at least as tightly.
+A policy of "UBI packages only" cannot be met by either variant, because UBI has no virtual display.
+Ask the team which of the three it needs before choosing `ubi9` for it.
+
+## Updating the browsers (both locks)
+
+Chrome and Edge are pinned in both locks, and vendors drop old versions, so a browser bump (or a
+build failing because a pinned browser disappeared) regenerates both:
+
+```bash
+containers/saturday-runner/lock-packages.sh          # apt.lock (debian)
+containers/saturday-runner/lock-packages.sh --ubi9   # rpm.lock and rpms/ (ubi9)
+docker build --platform linux/amd64 --target debian -t saturday-runner:debian containers/saturday-runner
+docker build --platform linux/amd64 --target ubi9 -t saturday-runner:ubi9 containers/saturday-runner
+scripts/ui-suite-in-chrome.sh && scripts/ui-suite-in-chrome.sh --ubi9
+```
+
+Commit both locks together, with the browser versions `runner-check` printed. Never unpin a package
+to get past a missing version; regenerate. `--ubi9` also re-downloads the EPEL RPMs into `rpms/`
+and rewrites `rpms/SHA256SUMS`; review that diff, since it is the only place a package enters the
+image from the build context.
 
 ## Debian variant: first build record (2026-10-30)
 

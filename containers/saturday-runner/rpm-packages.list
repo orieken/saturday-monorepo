@@ -1,0 +1,27 @@
+# Top-level packages for the runner image's ubi9 target.
+# containers/saturday-runner/lock-packages.sh --ubi9 resolves this list's full
+# dependency closure against the pinned UBI9 base image with the UBI (mesa*
+# excluded), CentOS Stream 9 (openssl* excluded), EPEL 9, Chrome and Edge
+# repositories, writes every non-EPEL package to rpm.lock at its exact
+# version, and downloads the EPEL packages into rpms/ with SHA256SUMS.
+# Edit this file, then rerun lock-packages.sh --ubi9; never hand-edit
+# rpm.lock or rpms/.
+google-chrome-stable
+microsoft-edge-stable
+xorg-x11-server-Xvfb
+xorg-x11-utils
+openbox
+x11vnc
+novnc
+python3-websockify
+mesa-dri-drivers
+mesa-libGL
+mesa-libEGL
+mesa-libgbm
+liberation-fonts
+google-noto-emoji-color-fonts
+dbus-x11
+fontconfig
+procps-ng
+iproute
+python3
