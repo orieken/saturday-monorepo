@@ -34,6 +34,18 @@ scope:
 and read back what is on it, without depending on pixels. It is tested against its own fixture
 globe: an invented planet, with no network and no Cesium ion account.
 
+## Starting point
+
+The first run's developer stage was killed at the 30-minute stage timeout (L3.78), and the stage
+was finished by hand. The package is on commit `926ad56` (branch
+`salvage/saturday-playwright-cesium`), and its suite passes offline with the command below: 7 Vitest
+and 11 Playwright tests. Apply it, then verify each criterion and record the evidence; do not
+rewrite it:
+
+```bash
+git diff --binary 68a5901 926ad56 | git apply --index
+```
+
 ## Acceptance Criteria
 
 - [ ] Given the package's seam contract in its README, then an app under test exposes
