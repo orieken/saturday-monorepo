@@ -61,7 +61,7 @@ test('reagent site is visible from the default view', async ({ page, cesium }) =
 ## Available Helpers
 
 - `cesium.waitForSettled(timeoutMs = 15000)`: Waits until the globe's tiles are loaded, the camera
-  has stopped moving, and the first render has completed. Rejects with a message naming which
+  has stopped moving, and a frame has rendered since the camera last moved. Rejects with a message naming which
   condition (`tiles`, `camera`, `render`) is still pending if the globe never settles within the
   timeout.
 - `cesium.getEntities()`: Returns every entity carrying `saturdayMetadata`, with its geometry in
@@ -75,6 +75,8 @@ test('reagent site is visible from the default view', async ({ page, cesium }) =
   waits for the globe to settle at the destination.
 - `cesium.metersPerPixelAt(lat, lng)`: Ground resolution, in metres per pixel, at the given point
   under the current camera position — used to size the pick-accuracy tolerance for `clickAt`.
+- `cesium.globeRadiusMeters()`: The globe's radius, read from the seam's ellipsoid. Pass it to the
+  geometry helpers below.
 
 ## Domain Language
 
@@ -87,14 +89,15 @@ test('reagent site is visible from the default view', async ({ page, cesium }) =
 
 `distance`, `lineLength` and `pointInCircle` (exported from this package) compute great-circle
 distance, polyline length, and point-in-circle membership on a sphere — all parameterized by an
-explicit `radiusMeters`, never a hardcoded Earth radius. Pass your globe's own radius (read from
-`viewer.scene.globe.ellipsoid` on the app side):
+explicit `radiusMeters`, never a hardcoded Earth radius. Read your globe's radius from the seam:
 
 ```typescript
-import { distance } from '@orieken/saturday-playwright-cesium';
+import { test, distance } from '@orieken/saturday-playwright-cesium';
 
-const radiusMeters = 6_000_000; // read from your app's own ellipsoid, not assumed
-const metres = distance({ lat: 0, lng: 0 }, { lat: 0, lng: 1 }, radiusMeters);
+test('two sites are 1,000 km apart', async ({ cesium }) => {
+  const radiusMeters = await cesium.globeRadiusMeters();
+  const metres = distance({ lat: 0, lng: 0 }, { lat: 0, lng: 9.55 }, radiusMeters);
+});
 ```
 
 These are pure functions with no dependency on `cesium` or `@playwright/test`, so they also run in

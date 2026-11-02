@@ -115,10 +115,12 @@ test.describe('CesiumFixture against the local fixture globe', () => {
     await cesium.waitForSettled();
     const point = await cesium.toScreen(5, 10);
     expect(point).not.toBeNull();
-    expect(point!.x).toBeGreaterThanOrEqual(0);
-    expect(point!.x).toBeLessThanOrEqual(1024);
-    expect(point!.y).toBeGreaterThanOrEqual(0);
-    expect(point!.y).toBeLessThanOrEqual(512);
+    // The fixture canvas is 1024x512 at page offset (64, 48): page coordinates,
+    // not canvas coordinates, fall inside that box.
+    expect(point!.x).toBeGreaterThanOrEqual(64);
+    expect(point!.x).toBeLessThanOrEqual(64 + 1024);
+    expect(point!.y).toBeGreaterThanOrEqual(48);
+    expect(point!.y).toBeLessThanOrEqual(48 + 512);
   });
 
   test('toScreen returns null for a point on the far side of the globe', async ({ cesium }) => {
@@ -167,7 +169,14 @@ test.describe('CesiumFixture against the local fixture globe', () => {
     expect(errorMeters).toBeLessThanOrEqual(toleranceMeters);
   });
 
-  test('flyTo moves the camera to the requested location and settles there', async ({
+  test('globeRadiusMeters reads the fixture planet’s radius from the seam, not Earth’s', async ({
+    cesium,
+  }) => {
+    await cesium.waitForSettled();
+    expect(await cesium.globeRadiusMeters()).toBe(AURELIS_RADIUS_METERS);
+  });
+
+    test('flyTo moves the camera to the requested location and settles there', async ({
     cesium,
     page,
   }) => {

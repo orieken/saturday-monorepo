@@ -69,6 +69,13 @@ export interface CesiumFixture {
    * clickAt's pick-accuracy assertions.
    */
   metersPerPixelAt(lat: number, lng: number): Promise<number>;
+
+  /**
+   * The globe's radius in metres, read from the seam's ellipsoid. Pass it to
+   * the geometry helpers (`distance`, `lineLength`, `pointInCircle`) instead
+   * of assuming Earth's radius.
+   */
+  globeRadiusMeters(): Promise<number>;
 }
 
 function installSettleTracking(): void {
@@ -78,11 +85,14 @@ function installSettleTracking(): void {
 
   const state = { cameraMoving: false, renderPending: true };
   const { viewer } = seam;
+  // A camera change needs a fresh frame before the globe counts as settled.
   viewer.camera.moveStart.addEventListener(() => {
     state.cameraMoving = true;
+    state.renderPending = true;
   });
   viewer.camera.moveEnd.addEventListener(() => {
     state.cameraMoving = false;
+    state.renderPending = true;
   });
   viewer.scene.postRender.addEventListener(() => {
     state.renderPending = false;
@@ -197,7 +207,9 @@ function projectToScreen({ lat, lng }: { lat: number; lng: number }): CesiumScre
   if (!canvasPosition) return null;
 
   if (!isWithinCanvasBounds(canvasPosition.x, canvasPosition.y)) return null;
-  return { x: canvasPosition.x, y: canvasPosition.y };
+  // Cesium returns canvas coordinates; page.mouse needs page coordinates.
+  const rect = viewer.scene.canvas.getBoundingClientRect();
+  return { x: rect.left + canvasPosition.x, y: rect.top + canvasPosition.y };
 }
 
 function pixelSizeAt({ lat, lng }: { lat: number; lng: number }): number {
@@ -214,6 +226,12 @@ function pixelSizeAt({ lat, lng }: { lat: number; lng: number }): number {
   const boundingSphere = new Cesium.BoundingSphere(cartesian, 0);
   const canvas = viewer.scene.canvas;
   return viewer.camera.getPixelSize(boundingSphere, canvas.clientWidth, canvas.clientHeight);
+}
+
+function readGlobeRadius(): number {
+  const seam = (window as any).__SATURDAY_CESIUM__;
+  if (!seam) throw new Error('Cesium seam not found: expected window.__SATURDAY_CESIUM__ = { viewer, Cesium }');
+  return seam.viewer.scene.globe.ellipsoid.maximumRadius;
 }
 
 function flyCameraTo({
@@ -268,6 +286,10 @@ export const test = base.extend<{ cesium: CesiumFixture }>({
 
       async metersPerPixelAt(lat, lng) {
         return page.evaluate(pixelSizeAt, { lat, lng });
+      },
+
+      async globeRadiusMeters() {
+        return page.evaluate(readGlobeRadius);
       },
     };
 
