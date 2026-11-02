@@ -1,0 +1,280 @@
+{
+  "stage": "acceptance-criteria",
+  "order": "reagent-map-spec",
+  "settled": {
+    "tolerance": "1 km on the planet's surface (Q3)",
+    "line": "geodesic: the shortest path over the surface (Q4)",
+    "offLand": "nothing happens; the line tool keeps waiting (Q5)",
+    "visibility": "an adventurer sees the shop's seeded expeditions and their own; signed out, seeded only (Q6)",
+    "samePlace": "two points closer than the tolerance are the same place (Q11)"
+  },
+  "seed": {
+    "planet": {
+      "name": "Aurelis",
+      "radiusKm": 6000
+    },
+    "reagentSites": [
+      {
+        "name": "Moonwell Spring",
+        "lat": 10,
+        "lng": 20
+      },
+      {
+        "name": "Ember Crag",
+        "lat": 25,
+        "lng": 60
+      },
+      {
+        "name": "Frostcap Hollow",
+        "lat": 85,
+        "lng": 0
+      },
+      {
+        "name": "Ashen Reach",
+        "lat": -84,
+        "lng": 90
+      },
+      {
+        "name": "Tidewrack Shoals",
+        "lat": 0,
+        "lng": 180
+      },
+      {
+        "name": "Thornveil Glade",
+        "lat": -30,
+        "lng": -45
+      },
+      {
+        "name": "Glimmerdeep Caves",
+        "lat": 40,
+        "lng": -100
+      },
+      {
+        "name": "Saltmarsh Cairn",
+        "lat": -15,
+        "lng": 130
+      }
+    ],
+    "seededExpeditions": [
+      {
+        "name": "Spring to Crag",
+        "from": "Moonwell Spring",
+        "to": "Ember Crag",
+        "owner": "shop"
+      },
+      {
+        "name": "Glade to Caves",
+        "from": "Thornveil Glade",
+        "to": "Glimmerdeep Caves",
+        "owner": "shop"
+      },
+      {
+        "name": "Cairn to Shoals",
+        "from": "Saltmarsh Cairn",
+        "to": "Tidewrack Shoals",
+        "owner": "shop",
+        "note": "On the far side of the globe from the default view, centred over Moonwell Spring."
+      }
+    ],
+    "adventurers": [
+      {
+        "name": "Elara",
+        "savedExpeditions": [
+          "Moonwell Spring to Frostcap Hollow"
+        ]
+      },
+      {
+        "name": "Borin",
+        "savedExpeditions": [
+          "Ember Crag to Saltmarsh Cairn"
+        ]
+      }
+    ]
+  },
+  "criteria": [
+    {
+      "id": "AC1",
+      "rule": "R1",
+      "events": [
+        "ReagentMapOpened"
+      ],
+      "observableVia": "both",
+      "given": "the shop publishes the eight reagent sites of Aurelis",
+      "when": "an adventurer opens the reagent map",
+      "then": "all eight sites are listed, and each is shown within 1 km of its published position"
+    },
+    {
+      "id": "AC2",
+      "rule": "R1",
+      "events": [
+        "ReagentMapOpened"
+      ],
+      "observableVia": "ui",
+      "given": "Frostcap Hollow lies near the north pole and Tidewrack Shoals on the 180th meridian",
+      "when": "the adventurer turns the globe to each of them",
+      "then": "each is shown at its position, neither clipped nor repeated"
+    },
+    {
+      "id": "AC3",
+      "rule": "R2",
+      "events": [
+        "ReagentMapOpened"
+      ],
+      "observableVia": "both",
+      "given": "no adventurer is signed in",
+      "when": "the reagent map is opened",
+      "then": "exactly the three seeded expeditions are shown, each with both ends within 1 km of its seeded sites"
+    },
+    {
+      "id": "AC4",
+      "rule": "R2",
+      "events": [
+        "ReagentMapOpened"
+      ],
+      "observableVia": "both",
+      "given": "Elara is signed in and has saved one expedition, and Borin has saved another",
+      "when": "Elara opens the reagent map",
+      "then": "the three seeded expeditions and Elara's expedition are shown, and Borin's is not"
+    },
+    {
+      "id": "AC5",
+      "rule": "R3",
+      "events": [
+        "SiteFocused"
+      ],
+      "observableVia": "ui",
+      "given": "the default view, in which Tidewrack Shoals is on the far side of the globe",
+      "when": "the adventurer flies to Tidewrack Shoals",
+      "then": "Tidewrack Shoals is on screen, on the near side of the globe"
+    },
+    {
+      "id": "AC6",
+      "rule": "R4",
+      "events": [
+        "LineStarted",
+        "PointPlaced"
+      ],
+      "observableVia": "ui",
+      "given": "the adventurer has started a line",
+      "when": "they place a point at Moonwell Spring and a second point at Ember Crag",
+      "then": "a completed line joins the two points, and it can be saved"
+    },
+    {
+      "id": "AC7",
+      "rule": "R4",
+      "events": [
+        "LineStarted",
+        "PointPlaced"
+      ],
+      "observableVia": "ui",
+      "given": "the adventurer has started a line and placed one point",
+      "when": "no second point has been placed",
+      "then": "no line is complete and it cannot be saved"
+    },
+    {
+      "id": "AC8",
+      "rule": "R4",
+      "events": [
+        "PointPlaced"
+      ],
+      "observableVia": "ui",
+      "given": "a completed line from Thornveil Glade to Glimmerdeep Caves",
+      "when": "the line is shown",
+      "then": "it follows the shortest path over the surface of Aurelis between them, not a straight line on a flat map"
+    },
+    {
+      "id": "AC9",
+      "rule": "R5",
+      "events": [
+        "PointRejected"
+      ],
+      "observableVia": "ui",
+      "given": "the adventurer has started a line",
+      "when": "they try to place a point on space beside the globe",
+      "then": "no point is placed and the line tool is still waiting for its first point"
+    },
+    {
+      "id": "AC10",
+      "rule": "R5",
+      "events": [
+        "PointRejected"
+      ],
+      "observableVia": "ui",
+      "given": "the adventurer has started a line",
+      "when": "they try to place a point on the edge of the globe, where the land faces away",
+      "then": "no point is placed"
+    },
+    {
+      "id": "AC11",
+      "rule": "R6",
+      "events": [
+        "ExpeditionSaved"
+      ],
+      "observableVia": "both",
+      "given": "Elara is signed in",
+      "when": "she draws a line from Moonwell Spring to Ember Crag, saves it, and opens the reagent map again",
+      "then": "her new expedition is shown, and the shop holds it for Elara with both ends within 1 km of where she placed them"
+    },
+    {
+      "id": "AC12",
+      "rule": "R7",
+      "events": [
+        "ExpeditionRejected"
+      ],
+      "observableVia": "both",
+      "given": "no adventurer is signed in and a completed line is on the map",
+      "when": "they try to save it",
+      "then": "they are asked to sign in, and the shop holds no new expedition"
+    },
+    {
+      "id": "AC13",
+      "rule": "R7",
+      "events": [
+        "ExpeditionRejected"
+      ],
+      "observableVia": "both",
+      "given": "Elara is signed in and has placed both points less than 1 km apart",
+      "when": "she tries to save the line",
+      "then": "the save is refused as a zero-length line, and the shop holds no new expedition"
+    },
+    {
+      "id": "AC14",
+      "rule": "R8",
+      "events": [
+        "LineStarted"
+      ],
+      "observableVia": "both",
+      "given": "Elara has placed one point of a line",
+      "when": "she starts a new line",
+      "then": "the new line has no points, and the shop holds no new expedition"
+    },
+    {
+      "id": "AC15",
+      "rule": "R8",
+      "events": [
+        "LineStarted"
+      ],
+      "observableVia": "both",
+      "given": "Elara has drawn a line without saving it",
+      "when": "she leaves the reagent map and opens it again",
+      "then": "the unsaved line is not shown, and the shop holds no new expedition"
+    }
+  ],
+  "critique": [
+    {
+      "round": 1,
+      "finding": "AC8 was marked observable via both; the shop holds only the two endpoints, so whether the line is geodesic is visible only in how it is drawn.",
+      "change": "AC8 observableVia: ui"
+    },
+    {
+      "round": 1,
+      "finding": "AC1 'listed' depends on H5 (sites listed beside the globe); kept, since H5 was accepted.",
+      "change": "none"
+    },
+    {
+      "round": 1,
+      "finding": "No criterion says what a signed-out adventurer sees while drawing (H3: they can draw). AC12 covers the save; drawing itself is covered by AC6 regardless of sign-in.",
+      "change": "none"
+    }
+  ]
+}
