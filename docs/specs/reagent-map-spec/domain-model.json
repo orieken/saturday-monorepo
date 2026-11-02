@@ -1,0 +1,46 @@
+{
+  "stage": "domain-model",
+  "order": "reagent-map-spec",
+  "boundedContexts": [
+    {"name": "Expedition Planning", "new": true, "owns": ["Expedition", "ReagentSite", "Planet"]},
+    {"name": "Identity", "new": false, "owns": ["Adventurer session"], "note": "Existing sign-in (mock API sessions). Expedition Planning reads who is signed in; it does not change sign-in."}
+  ],
+  "aggregates": [
+    {"name": "Expedition", "fields": ["id", "owner (an adventurer, or the shop for seeded ones)", "shape: a line with exactly two endpoints, each a latitude and longitude on the planet", "savedAt"], "invariants": ["Both endpoints are on the planet's surface.", "The two endpoints are not the same place (zero-length line rejected, Q10)."]},
+    {"name": "ReagentSite", "fields": ["id", "name", "latitude", "longitude"], "invariants": ["Published by the shop; adventurers cannot add or move one in wave 1."]},
+    {"name": "Planet", "fields": ["name", "radius in km", "surface image"], "invariants": ["A perfect sphere; distances on it use its own radius, never Earth's (D-13, D-14)."]}
+  ],
+  "commands": [
+    {"name": "OpenReagentMap", "actor": "Adventurer (signed in or not)", "events": ["ReagentMapOpened"]},
+    {"name": "FlyToSite", "actor": "Adventurer", "events": ["SiteFocused"]},
+    {"name": "StartLine", "actor": "Adventurer", "events": ["LineStarted"]},
+    {"name": "PlacePoint", "actor": "Adventurer", "events": ["PointPlaced", "PointRejected"]},
+    {"name": "SaveExpedition", "actor": "Signed-in adventurer", "events": ["ExpeditionSaved", "ExpeditionRejected"]}
+  ],
+  "events": [
+    {"name": "ReagentMapOpened", "meaning": "The globe is shown with the reagent sites and the expeditions this adventurer may see."},
+    {"name": "SiteFocused", "meaning": "The camera has moved so a chosen reagent site is on screen, on the near side of the globe."},
+    {"name": "LineStarted", "meaning": "The adventurer chose to draw a line; no point is placed yet."},
+    {"name": "PointPlaced", "meaning": "A point on the land became an endpoint of the line being drawn. The second one completes the line."},
+    {"name": "PointRejected", "meaning": "A click on space or on the far side of the globe placed nothing (Q5)."},
+    {"name": "ExpeditionSaved", "meaning": "A completed line is stored for its owner and is shown again when the view opens."},
+    {"name": "ExpeditionRejected", "meaning": "Saving was refused: not signed in, or the line has zero length."}
+  ],
+  "policies": [
+    {"when": "ReagentMapOpened", "then": "Show every reagent site, the shop's seeded expeditions, and, for a signed-in adventurer, their own saved expeditions (Q6)."},
+    {"when": "PointPlaced (second point)", "then": "The line is complete and can be saved."},
+    {"when": "ExpeditionSaved", "then": "The expedition is among that adventurer's visible expeditions from then on."}
+  ],
+  "readModels": [
+    {"name": "ReagentSites", "contents": "Every site's name and position.", "source": "the shop's reagent-site data"},
+    {"name": "VisibleExpeditions", "contents": "Seeded expeditions plus the signed-in adventurer's own; seeded only when signed out.", "source": "the shop's expedition data, filtered by owner"}
+  ],
+  "hotspots": [
+    {"id": "H1", "question": "Does an expedition need a name or anything else besides its line when saved?", "assumption": "No: a line and its owner. A name can come in a later wave."},
+    {"id": "H2", "question": "Can an adventurer abandon a line before saving it, and start again?", "assumption": "Yes: choosing the line tool again, or leaving the view, discards the unsaved line. Nothing is stored."},
+    {"id": "H3", "question": "Can a signed-out adventurer draw a line at all, or only not save it?", "assumption": "They can draw; Save tells them to sign in. The line is not kept."},
+    {"id": "H4", "question": "What does a reagent site carry besides its name and position (the reagent it yields, a description)?", "assumption": "Name and position only in wave 1."},
+    {"id": "H5", "question": "How does the adventurer choose the site to fly to: from a list beside the globe, or by clicking its marker?", "assumption": "From a list of site names beside the globe."},
+    {"id": "H6", "question": "Is 'Expedition' the right word for a saved shape, and 'Reagent site' for a place? These become domain terms in DOMAIN_DICTIONARY.md.", "assumption": "Yes, as used in prompt 05."}
+  ]
+}

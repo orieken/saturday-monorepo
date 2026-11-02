@@ -16,8 +16,8 @@ not in `intake/` (`loom intake check` rejects a plan the project cannot run); it
 
 | Gate | Stage | Owner | Status |
 |---|---|---|---|
-| `confirm-problem` | discovery | requester (Oscar) | **waiting** |
-| `confirm-domain` | domain-model | analyst | not started |
+| `confirm-problem` | discovery | requester (Oscar) | accepted 2026-11-02, no corrections |
+| `confirm-domain` | domain-model | analyst | **waiting** |
 | `answer-questions` | example-map | analyst | not started |
 | `confirm-scenarios` | scenarios | tester | not started |
 | `confirm-ship` | package | requester | not started |
@@ -28,3 +28,4 @@ to the draft, is recorded in `corrections.md` (the factory's quality metric).
 ## Stage outputs
 
 - `discovery.json` / `discovery.md`: goal ladder, outcomes, actors, impact map, questions
+- `domain-model.json` / `domain-model.md`: event storm draft with hotspots
