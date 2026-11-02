@@ -3,7 +3,7 @@ intake: 1
 id: leaflet-package-tests
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 3
 created: 2026-10-29
 requested-by: oscar
@@ -18,7 +18,7 @@ budget:
   max-usd: 25
   max-hours: 3
 scope:
-  paths: [packages/saturday-playwright-leaflet/**, docs/**]
+  paths: [packages/saturday-playwright-leaflet/**, pnpm-lock.yaml, docs/features/leaflet-package-tests/**]
 ---
 
 # Give the Leaflet package its own tests
@@ -40,7 +40,12 @@ serves as the pattern for the Cesium package.
 - [ ] Given the package's `test` script, then it serves that page and runs a Playwright suite with at
       least one test per helper in the README, each asserting a known value from the fixture.
 - [ ] Given each helper's test, then it fails when the fixture's corresponding value is changed.
-- [ ] Given the suite, then it runs in the real-Chrome image with no network.
+      Record, per helper, the fixture change made and the failing output in the delivery record.
+- [ ] Given the suite, then it runs in real Chrome (`channel: 'chrome'`) inside the runner image with
+      no network, and passes with this command after dependencies are installed and the package is
+      built (record its output in the delivery record):
+      `docker run --rm --platform linux/amd64 --network none -v "$PWD:/work" saturday-runner:debian
+      bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-leaflet test'`.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/leaflet-package-tests/` excepted.
