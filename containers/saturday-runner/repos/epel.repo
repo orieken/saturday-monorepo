@@ -1,0 +1,8 @@
+# Used only by lock-packages.sh --ubi9 to resolve and download the EPEL
+# packages into rpms/. EPEL keeps only the latest build, so the image installs
+# those vendored RPMs and never reads this repository.
+[epel]
+name=EPEL 9
+baseurl=https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9

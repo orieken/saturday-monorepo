@@ -109,3 +109,104 @@ WORKDIR /work
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]
+
+# --- ubi9 target ------------------------------------------------------------
+# Design: docs/runner-image.md, "The UBI9 variant". Same entrypoint,
+# runner-check and evidence as debian. Display, viewer and Mesa packages come
+# from CentOS Stream 9 and EPEL 9, which Red Hat does not support.
+#
+# Build: docker build --platform linux/amd64 --target ubi9 -t saturday-runner:ubi9 .
+FROM registry.access.redhat.com/ubi9/ubi:9.6@sha256:dec374e05cc13ebbc0975c9f521f3db6942d27f8ccdf06b180160490eef8bdbc AS ubi9
+ARG PNPM_PIN
+
+# --- Repository keys: checked against SHA256SUMS.ubi9 before import ---------
+COPY keys/ /tmp/keys/
+RUN set -eux; \
+    cd /tmp/keys; \
+    sha256sum -c SHA256SUMS.ubi9; \
+    cp centos-official.asc /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Official; \
+    cp epel9.asc /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9; \
+    cp google.asc microsoft.asc /etc/pki/rpm-gpg/; \
+    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-Official /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9 \
+      /etc/pki/rpm-gpg/google.asc /etc/pki/rpm-gpg/microsoft.asc; \
+    rm -rf /tmp/keys
+
+# --- Repositories: Stream excludes openssl*, UBI excludes mesa* -------------
+# So UBI's FIPS OpenSSL stays, and every Mesa package comes from Stream at one
+# version. Every repository has gpgcheck=1.
+COPY repos/stream.repo repos/browsers.repo /etc/yum.repos.d/
+RUN sed -i '/^\[/a excludepkgs=mesa*' /etc/yum.repos.d/ubi.repo
+
+# --- Pinned packages: rpm.lock from the repositories, EPEL from rpms/ -------
+# EPEL keeps only its latest build, so its packages are vendored, checked
+# against rpms/SHA256SUMS and EPEL's key, and installed from the build context.
+# The build fails if a locked version is unavailable, and if anything outside
+# the lock gets installed.
+COPY rpm.lock /tmp/rpm.lock
+COPY rpms/ /tmp/rpms/
+RUN set -eux; \
+    cd /tmp/rpms; \
+    sha256sum -c SHA256SUMS; \
+    rpm -K ./*.rpm | tee /tmp/rpm-k.txt; \
+    if grep -v 'digests signatures OK$' /tmp/rpm-k.txt; then exit 1; fi; \
+    rpm -qa --qf '%{NAME}\n' | sort -u >/tmp/before; \
+    PINS="$(grep -v '^#' /tmp/rpm.lock | tr '\n' ' ')"; \
+    # shellcheck disable=SC2086
+    dnf --disableplugin=subscription-manager install -y --setopt=localpkg_gpgcheck=1 \
+      $PINS /tmp/rpms/*.rpm; \
+    rpm -qa --qf '%{NAME}\n' | sort -u >/tmp/after; \
+    { grep -v '^#' /tmp/rpm.lock | sed -E 's/-[0-9]+:.*$//'; \
+      rpm -qp --qf '%{NAME}\n' /tmp/rpms/*.rpm; } | sort -u >/tmp/expected; \
+    UNLOCKED="$(comm -13 /tmp/before /tmp/after | comm -23 - /tmp/expected)"; \
+    if [ -n "$UNLOCKED" ]; then echo "installed but not in rpm.lock: $UNLOCKED" >&2; exit 1; fi; \
+    dnf clean all; \
+    rm -rf /tmp/rpms /tmp/rpm.lock /tmp/rpm-k.txt /tmp/before /tmp/after /tmp/expected /var/cache/dnf
+
+# --- Node and pnpm, from the pinned Node image's builder stage --------------
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    ln -s ../lib/node_modules/pnpm/bin/pnpm.cjs /usr/local/bin/pnpm && \
+    node --version && pnpm --version
+
+COPY versions.lock /tmp/versions.lock
+RUN set -eux; \
+    . /tmp/versions.lock; \
+    if [ -n "${PNPM_VERSION:-}" ] && [ "${PNPM_VERSION}" != "${PNPM_PIN}" ]; then \
+      echo "Containerfile pnpm pin (${PNPM_PIN}) does not match the repository's package.json packageManager pin (${PNPM_VERSION})" >&2; \
+      exit 1; \
+    fi; \
+    [ "$(pnpm --version)" = "${PNPM_PIN}" ]
+
+COPY --from=builder /build/runner-check /opt/runner-check
+RUN ln -s /opt/runner-check/index.js /usr/local/bin/runner-check && \
+    chmod +x /opt/runner-check/index.js
+
+RUN set -eux; \
+    . /tmp/versions.lock; \
+    RUNNER_CHECK_PLAYWRIGHT="$(node -p "require('/opt/runner-check/package.json').dependencies['playwright-core']")"; \
+    if [ "${PLAYWRIGHT_VERSION}" != "${RUNNER_CHECK_PLAYWRIGHT}" ]; then \
+      echo "repository's @playwright/test pin (${PLAYWRIGHT_VERSION}) does not match runner-check's playwright-core pin (${RUNNER_CHECK_PLAYWRIGHT})" >&2; \
+      exit 1; \
+    fi; \
+    npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
+    rm -rf /tmp/versions.lock
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# --- Non-root ---------------------------------------------------------------
+RUN useradd -u 1000 -U -m -d /home/runner runner && \
+    mkdir -p /work /work/evidence /tmp/.X11-unix /home/runner/.pnpm-store && \
+    chmod 1777 /tmp/.X11-unix && \
+    chown -R runner:runner /home/runner /work /opt/runner-check
+
+ENV HOME=/home/runner \
+    DISPLAY=:99
+
+USER runner
+WORKDIR /work
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]

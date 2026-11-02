@@ -1,0 +1,11 @@
+[google-chrome]
+name=Google Chrome
+baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/google.asc
+
+[microsoft-edge]
+name=Microsoft Edge
+baseurl=https://packages.microsoft.com/yumrepos/edge
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/microsoft.asc

@@ -40,10 +40,12 @@ async function checkWebgl2(channel) {
   }
 }
 
+// dpkg on the debian target, rpm on the ubi9 target.
 function listInstalledPackages() {
-  const output = execFileSync('dpkg-query', ['-W', '-f=${Package}=${Version}\n'], {
-    encoding: 'utf8',
-  });
+  const [command, args] = fs.existsSync('/usr/bin/dpkg-query')
+    ? ['dpkg-query', ['-W', '-f=${Package}=${Version}\n']]
+    : ['rpm', ['-qa', '--qf', '%{NAME}=%{EPOCH}:%{VERSION}-%{RELEASE}\n']];
+  const output = execFileSync(command, args, { encoding: 'utf8' });
   return output.trim().split('\n').sort().join('\n');
 }
 

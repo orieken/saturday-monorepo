@@ -3,20 +3,39 @@
 # runner image, under Xvfb. One command for the factory's pre-ship check —
 # see docs/runner-image.md and containers/saturday-runner/.
 #
-# Usage: scripts/ui-suite-in-chrome.sh   (run from the repository root)
+# Usage: scripts/ui-suite-in-chrome.sh [--ubi9]   (run from the repository root)
+#   --ubi9  run in the image's ubi9 target instead of debian
 set -euo pipefail
 
 EXIT_NO_DOCKER=2
 EXIT_BUILD_FAILED=3
 EXIT_APP_UNHEALTHY=4
 EXIT_RUNNER_CHECK_FAILED=5
+EXIT_INSTALL_FAILED=6
+EXIT_USAGE=64
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VARIANT="debian"
 IMAGE_TAG="saturday-runner:debian"
 CONTAINER_NAME="ui-suite-in-chrome-$$"
 PNPM_STORE_VOLUME="ui-suite-pnpm-store"
 APP_HEALTH_TIMEOUT_SECONDS=180
 ARTIFACTS_DIR="$REPO_ROOT/artifacts/ui-suite"
+
+parse_args() {
+  case "${1:-}" in
+    "") ;;
+    --ubi9)
+      VARIANT="ubi9"
+      IMAGE_TAG="saturday-runner:ubi9"
+      PNPM_STORE_VOLUME="ui-suite-pnpm-store-ubi9"
+      ;;
+    *)
+      echo "ui-suite-in-chrome: unknown argument '$1' (usage: scripts/ui-suite-in-chrome.sh [--ubi9])" >&2
+      exit "$EXIT_USAGE"
+      ;;
+  esac
+}
 
 require_docker() {
   if ! command -v docker >/dev/null 2>&1; then
@@ -26,7 +45,7 @@ require_docker() {
 }
 
 build_image() {
-  if ! docker build --platform linux/amd64 --target debian \
+  if ! docker build --platform linux/amd64 --target "$VARIANT" \
       -t "$IMAGE_TAG" \
       -f "$REPO_ROOT/containers/saturday-runner/Containerfile" \
       "$REPO_ROOT/containers/saturday-runner"; then
@@ -56,13 +75,17 @@ stop_container() {
 # indefinitely, silently skipping the 180s app-health budget entirely since
 # that budget starts only after this step returns.
 install_dependencies() {
-  docker exec -e CI=true "$CONTAINER_NAME" bash -lc '
+  if ! docker exec -e CI=true "$CONTAINER_NAME" bash -lc '
+    set -euo pipefail
     pnpm config set store-dir /home/runner/.pnpm-store >/dev/null
     cd /work && pnpm install --frozen-lockfile
     # The suite imports workspace packages from their dist/, which a fresh
     # checkout does not have. Build only what the demo app depends on.
     pnpm --filter "@orieken/ye-olde-magic-shop^..." -r build
-  '
+  '; then
+    echo "ui-suite-in-chrome: dependency install or workspace build failed" >&2
+    exit "$EXIT_INSTALL_FAILED"
+  fi
 }
 
 start_app_and_mock_api() {
@@ -114,6 +137,7 @@ copy_report() {
 }
 
 main() {
+  parse_args "$@"
   require_docker
   build_image
   trap stop_container EXIT

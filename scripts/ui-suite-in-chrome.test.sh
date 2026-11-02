@@ -56,6 +56,10 @@ dispatch_exec() {
   dispatch_exec_command "$*"
 }
 
+if [[ -n "${FAKE_DOCKER_LOG:-}" ]]; then
+  echo "$*" >>"$FAKE_DOCKER_LOG"
+fi
+
 case "$1" in
   build) exit "${FAKE_DOCKER_BUILD_EXIT:-0}" ;;
   run) exit "${FAKE_DOCKER_RUN_EXIT:-0}" ;;
@@ -148,6 +152,42 @@ test_suite_success() {
   assert_exit_code "full happy path: exits 0" 0 "$exit_code"
 }
 
+test_install_failed() {
+  local stderr exit_code
+  stderr="$(PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_INSTALL_EXIT=1 \
+    bash "$SCRIPT_UNDER_TEST" 2>&1 1>/dev/null)"
+  exit_code=$?
+  assert_exit_code "install failed: distinct exit code" 6 "$exit_code"
+  assert_contains "install failed: stderr names the cause" "dependency install or workspace build failed" "$stderr"
+}
+
+test_ubi9_variant() {
+  local log exit_code
+  log="$FAKE_BIN_DIR/docker-ubi9.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" --ubi9 >/dev/null 2>&1
+  exit_code=$?
+  assert_exit_code "--ubi9: exits 0" 0 "$exit_code"
+  assert_contains "--ubi9: builds the ubi9 target" "--target ubi9 -t saturday-runner:ubi9" "$(cat "$log")"
+  assert_contains "--ubi9: runs the ubi9 image" "ui-suite-pnpm-store-ubi9:/home/runner/.pnpm-store" "$(cat "$log")"
+}
+
+test_default_variant_is_debian() {
+  local log
+  log="$FAKE_BIN_DIR/docker-debian.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" >/dev/null 2>&1
+  assert_contains "default: builds the debian target" "--target debian -t saturday-runner:debian" "$(cat "$log")"
+}
+
+test_unknown_argument() {
+  local stderr exit_code
+  stderr="$(PATH="$FAKE_BIN_DIR:/usr/bin:/bin" bash "$SCRIPT_UNDER_TEST" --bogus 2>&1 1>/dev/null)"
+  exit_code=$?
+  assert_exit_code "unknown argument: usage exit code" 64 "$exit_code"
+  assert_contains "unknown argument: stderr names it" "unknown argument '--bogus'" "$stderr"
+}
+
 main() {
   write_fake_docker
   write_fake_sleep
@@ -158,6 +198,10 @@ main() {
   test_runner_check_failed
   test_suite_failure_passthrough
   test_suite_success
+  test_install_failed
+  test_ubi9_variant
+  test_default_variant_is_debian
+  test_unknown_argument
 
   echo ""
   if [[ "$FAILURES" -eq 0 ]]; then
