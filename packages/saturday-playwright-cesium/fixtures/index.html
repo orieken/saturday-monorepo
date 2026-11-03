@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>saturday-playwright-cesium fixture</title>
+    <link rel="stylesheet" href="/cesium/Widgets/widgets.css" />
+    <style>
+      html, body { margin: 0; background: #000; }
+      /* Fixed pixel size, independent of the browser viewport, so every
+         projection/occlusion test in fixture.spec.ts runs against a known
+         canvas size (see tests/fixture.spec.ts for the geometry this implies). */
+      #cesiumContainer { width: 1024px; height: 512px; margin: 48px 0 0 64px; }
+      /* The margin puts the canvas away from the page origin, as in a real app
+         with a header and sidebar, so a helper that returns canvas coordinates
+         instead of page coordinates misses its click and fails its test. */
+    </style>
+    <script>
+      // Must be set before Cesium.js loads so it can find its own Workers,
+      // Assets and Widgets relative to this fixture server — never a CDN.
+      window.CESIUM_BASE_URL = '/cesium/';
+    </script>
+    <script src="/cesium/Cesium.js"></script>
+  </head>
+  <body>
+    <div id="cesiumContainer"></div>
+    <script src="/assets/fixture-globe.js"></script>
+  </body>
+</html>

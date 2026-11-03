@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "feature": "saturday-playwright-cesium",
+  "verdict": "APPROVED",
+  "designNarrative": "A new Saturday-family package adds a CesiumFixture Playwright fixture (adapter layer, src/fixture.ts) that reads a host app's window.__SATURDAY_CESIUM__ seam to settle-wait, read entities, project/click geographic points, and fly the camera, plus a pure radius-parameterized spherical-geometry module (src/geometry.ts) kept package-local per the architect's ratified decision. A self-contained, offline fixture harness (fixtures/) exercises both against an invented 6,000km planet with no network dependency, mirroring saturday-playwright-leaflet's existing shape.",
+  "designScore": {
+    "clarity": 4,
+    "cohesion": 4,
+    "coupling": 4,
+    "craft": 3
+  },
+  "securitySurface": [
+    "fixtures/serve.mjs is a test-only static file server, bound to 127.0.0.1 only (verified at the .listen() call); its resolveWithinRoot() boundary check correctly rejects path-traversal requests outside each route's root before reading from disk.",
+    "No auth, user input, API endpoints, or secret handling — this package ships no production code (tsconfig.json includes only src/**, fixtures/ is excluded from the build); no security-reviewer surface beyond the path-traversal check already verified here."
+  ],
+  "performanceSurface": [
+    "No N+1, pagination, or network-timeout concerns apply — all 'network' calls are to the package's own loopback fixture server, and getEntities()/waitForSettled() operate on a small, test-only fixture scene, not a production data path."
+  ],
+  "testDesignReview": [
+    "fixture.spec.ts 'waitForSettled resolves once the fixture globe's tiles are loaded' — YES: asserts tilesLoaded === true after await; a broken settle-wait would leave this false or hang.",
+    "fixture.spec.ts 'waitForSettled rejects with a message naming the stuck condition after a timeout' — YES: manually forces cameraMoving=true then asserts the rejection message matches /camera/; a wrong describeUnsettledConditions would miss the match.",
+    "fixture.spec.ts 'getEntities returns metadata-tagged entities with geometry in degrees and metres, excluding the untagged one' — YES: asserts exact length (4, not 5) and per-entity lat/lng/radius values against fixture-globe.js's literals; developer's recorded perturbation (lat 5→6) confirms it goes red.",
+    "fixture.spec.ts 'toScreen returns page coordinates for a point visible on the near side' — YES: asserts point is non-null and falls inside the known 1024x512 canvas box at its known page offset; developer's CAMERA_HEIGHT_METERS perturbation confirms failure.",
+    "fixture.spec.ts 'toScreen returns null for a point on the far side of the globe' — YES: asserts strict null; a broken occlusion check would return a point instead.",
+    "fixture.spec.ts 'toScreen returns null for a point outside the visible canvas' — YES: same strict-null assertion on a different known out-of-bounds point.",
+    "fixture.spec.ts 'clickAt drives a real mouse click that picks the requested geographic location' — YES: compares the real Cesium pick result against the requested point via distance(), within a tolerance derived from metersPerPixelAt; not self-fulfilling since the pick comes from an independent screenSpaceEventHandler, not from clickAt's own return value.",
+    "fixture.spec.ts 'clickAt near the horizon still picks within tolerance' — YES: same mechanism at a different, more marginal point.",
+    "fixture.spec.ts 'globeRadiusMeters reads the fixture planet's radius, not Earth's' — YES: exact-equality assertion against AURELIS_RADIUS_METERS; developer's +1 perturbation confirms failure.",
+    "fixture.spec.ts 'flyTo moves the camera to the requested location and settles there' — YES: asserts camera lat/lng/height against the requested destination; developer's lat/lng-swap perturbation confirms failure.",
+    "fixture.spec.ts 'fixture page makes no request off its own origin' — YES: collects all http(s) requests and asserts the off-origin array is empty; any CDN/ion request would populate it.",
+    "geometry.spec.ts 'distance returns a quarter of the great circle for two points 90 degrees apart' — YES: exact closed-form expected value, not a value the test itself computed from the function under test.",
+    "geometry.spec.ts 'distance fails if Earth's radius is substituted for the globe's own radius' — YES: explicitly asserts the Aurelis and Earth results differ, directly encoding the one property (radius-parameterization) this module exists to guarantee.",
+    "geometry.spec.ts 'distance returns zero for two identical points' — YES: degenerate-case check with a fixed expected value.",
+    "geometry.spec.ts 'lineLength sums the great-circle distance of each consecutive segment' — YES: independently-derived expected sum for a two-segment path.",
+    "geometry.spec.ts 'lineLength returns zero for a single point' — YES: degenerate case, fixed expected value.",
+    "geometry.spec.ts 'pointInCircle is true when the globe's own radius keeps the point inside' — YES: fixed boolean against a geometrically-derived point.",
+    "geometry.spec.ts 'pointInCircle is false when Earth's radius pushes the same point outside' — YES: same point, different radius, opposite expected boolean — directly tests the radius-parameterization contract."
+  ],
+  "selfReviewCheck": [
+    "'No function exceeds 30 LOC' is checked [x] but the same bullet admits extractEntities is ~37 lines — the checklist literal claim and the admitted fact disagree; flagged as a finding below (non-blocking, since complexity is low and the code is unchanged salvage per the spec's 'do not rewrite' instruction).",
+    "'Dependency direction verified... src/geometry.ts has zero imports' — confirmed true by direct inspection of geometry.ts.",
+    "'No for/while+sleep polling loop... every wait has explicit timeout' (architecture-notes.md's Stability Design claim, cross-checked against fixture.ts) — confirmed true: both waits go through page.waitForFunction(..., { timeout }).",
+    "'fixtures/serve.mjs binds 127.0.0.1 only' — confirmed true at the literal .listen(port, '127.0.0.1', ...) call.",
+    "'No primitive obsession... GeoPoint, CesiumEntityMetadata... wrap every multi-field concept' — confirmed true; radiusMeters/heightMeters remain named scalar parameters, consistent with the sibling leaflet package's shape.",
+    "Self-review does not mention architecture-guardrails.md #4 (no raw `any`) at all — the checklist has no item for it, and the code has pervasive `(window as any)` / `any`-typed parameters throughout fixture.ts. This is a real gap in the self-review's coverage, not just an omission; flagged as a non-blocking finding below given the matching pre-existing pattern in saturday-playwright-leaflet and the spec's verbatim-apply instruction."
+  ],
+  "behaviorChange": true,
+  "findings": [
+    {
+      "operation": "Introduce narrow seam type (replace raw `any`)",
+      "file": "packages/saturday-playwright-cesium/src/fixture.ts",
+      "smell": "Every browser-context function casts `window` to `any` and types `viewer`, `Cesium`, `entity`, and `cartesian` as `any` throughout (installSettleTracking, isSettled, describeUnsettledConditions, extractEntities, projectToScreen, pixelSizeAt, readGlobeRadius, flyCameraTo). architecture-guardrails.md #4 is a hard constraint with no boundary carve-out for TypeScript: 'No raw `any` types allowed... use `unknown` and perform runtime narrowing/validation.'",
+      "instruction": "Define a minimal `unknown`-shaped type for `window.__SATURDAY_CESIUM__` and narrow it once per evaluate-callback with a small runtime guard, instead of casting to `any`. Not blocking this delivery: saturday-playwright-leaflet/src/fixture.ts already carries the identical pattern across the monorepo, and the feature's own intake spec requires applying the salvage commit verbatim rather than rewriting it. Raise fixing both packages together as its own order rather than partially fixing one.",
+      "blocking": false
+    },
+    {
+      "operation": "Extract Function (extractEntities) / correct self-review claim",
+      "file": "packages/saturday-playwright-cesium/src/fixture.ts",
+      "smell": "implementation-notes.md's Self-Review Checklist marks 'No function exceeds 30 LOC' as a passing check while the same bullet discloses extractEntities is ~37 lines — the checked box and the admitted fact contradict each other.",
+      "instruction": "Either uncheck the item and state the documented exception plainly, or split the nested geometryOf dispatch from the viewer.entities.values loop via Extract Function to bring it under 30 lines. Non-blocking: cyclomatic complexity is low (single-level branching) and this is unchanged salvage code the spec instructs not to rewrite — but the checklist itself should not represent this as a clean pass.",
+      "blocking": false
+    },
+    {
+      "operation": "Formatting fix",
+      "file": "packages/saturday-playwright-cesium/tests/fixture.spec.ts",
+      "smell": "The 'flyTo moves the camera to the requested location and settles there' test (around line 179) is indented two spaces further than its sibling tests inside the same describe block — a formatter miss, not a logic issue.",
+      "instruction": "Run the repo's formatter over this file. Purely cosmetic, non-blocking.",
+      "blocking": false
+    }
+  ],
+  "retrieval": {
+    "domainTerms": ["Aurelis", "Seam contract", "Settled", "saturdayMetadata"],
+    "issueRefs": ["saturday-playwright-cesium"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

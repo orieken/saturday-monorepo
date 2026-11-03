@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "feature": "saturday-playwright-cesium",
+  "scenarios": [
+    {
+      "criterion": "An app under test exposes window.__SATURDAY_CESIUM__ = { viewer, Cesium } and attaches saturdayMetadata (id, name, kind) to each entity it wants tests to find, as documented in the package's own README seam contract.",
+      "name": "Fixture page exposes the Cesium seam for test discovery",
+      "given": ["an app under test has loaded a page with a Cesium Viewer"],
+      "when": ["the app follows the package's seam contract to attach the viewer and tag entities"],
+      "then": [
+        "window.__SATURDAY_CESIUM__ exposes the viewer and the Cesium namespace",
+        "every entity the app wants tests to find carries saturdayMetadata with an id, a name, and a kind"
+      ]
+    },
+    {
+      "criterion": "packages/saturday-playwright-cesium/fixtures/ serves a static page with a Cesium Viewer on a spherical ellipsoid of a declared radius, one equirectangular image covering the whole globe from the package's own files, baseLayerPicker/geocoder/ion imagery off, known point/line/circle entities carrying metadata, and makes no request off its own origin.",
+      "name": "Fixture page renders a self-contained globe with known tagged entities",
+      "given": ["the fixture's static page is requested"],
+      "when": ["the page finishes loading"],
+      "then": [
+        "the globe uses a spherical ellipsoid of the fixture's declared radius",
+        "the globe's whole surface is covered by one equirectangular image served from the package's own files",
+        "baseLayerPicker, geocoder, and ion imagery are all off",
+        "a point, a line, and a circle entity each carry saturdayMetadata, plus one entity whose kind is not a recognized value",
+        "one additional point entity carries no saturdayMetadata",
+        "no request made while loading the page leaves the page's own origin"
+      ]
+    },
+    {
+      "criterion": "cesium.waitForSettled() resolves once the globe's tiles are loaded, the camera has stopped, and no render is pending, and rejects with a message naming the stuck condition (tiles/camera/render/seam) after a timeout.",
+      "name": "waitForSettled resolves once tiles, camera, and render are stable",
+      "given": ["the fixture page has loaded and the Cesium seam is present"],
+      "when": ["the globe finishes loading tiles, the camera stops moving, and no render is pending, and the test calls cesium.waitForSettled()"],
+      "then": ["the call resolves"]
+    },
+    {
+      "criterion": "cesium.waitForSettled() resolves once the globe's tiles are loaded, the camera has stopped, and no render is pending, and rejects with a message naming the stuck condition (tiles/camera/render/seam) after a timeout.",
+      "name": "waitForSettled rejects naming the camera as the stuck condition",
+      "given": ["the fixture page has loaded and the Cesium seam is present", "the camera is forced to appear still moving"],
+      "when": ["the test calls cesium.waitForSettled() and waits past the timeout"],
+      "then": ["the call rejects with a message that names the camera as the condition preventing settlement"]
+    },
+    {
+      "criterion": "cesium.getEntities() returns each saturdayMetadata-tagged entity's metadata and geometry in degrees and metres: point position, line endpoints, circle centre and radius.",
+      "name": "getEntities returns metadata and geometry for every tagged entity",
+      "given": ["the fixture page has loaded with its tagged point, line, circle, and unrecognized-kind entities, plus one untagged point"],
+      "when": ["the test calls cesium.getEntities()"],
+      "then": [
+        "the result includes each tagged entity's saturdayMetadata",
+        "the point entity's position is reported in degrees",
+        "the line entity's endpoints are reported in degrees",
+        "the circle entity's centre is reported in degrees and its radius in metres",
+        "the entity whose kind is not a recognized value is still included with its geometry",
+        "the untagged entity is not included in the result"
+      ]
+    },
+    {
+      "criterion": "cesium.toScreen(lat, lng) returns page coordinates, or null when the point is on the far side of the globe or off-screen.",
+      "name": "toScreen returns page coordinates for a point facing the camera",
+      "given": ["the fixture page has loaded with the camera looking at a known location"],
+      "when": ["the test calls cesium.toScreen(lat, lng) for a point facing the camera"],
+      "then": ["it returns the point's page coordinates"]
+    },
+    {
+      "criterion": "cesium.toScreen(lat, lng) returns page coordinates, or null when the point is on the far side of the globe or off-screen.",
+      "name": "toScreen returns null for a point on the globe's far side",
+      "given": ["the fixture page has loaded"],
+      "when": ["the test calls cesium.toScreen(lat, lng) for a point on the far side of the globe"],
+      "then": ["it returns null"]
+    },
+    {
+      "criterion": "cesium.toScreen(lat, lng) returns page coordinates, or null when the point is on the far side of the globe or off-screen.",
+      "name": "toScreen returns null for a point that is visible but off-canvas",
+      "given": ["the fixture page has loaded"],
+      "when": ["the test calls cesium.toScreen(lat, lng) for a point that faces the camera but falls outside the canvas bounds"],
+      "then": ["it returns null"]
+    },
+    {
+      "criterion": "cesium.clickAt(lat, lng) clicks through page.mouse, and a fixture test shows the globe's pick returned that location within the tolerance metersPerPixelAt gives.",
+      "name": "clickAt clicks through to the correct location near the globe's centre",
+      "given": ["the fixture page has loaded and a pick handler is installed on the globe"],
+      "when": ["the test calls cesium.clickAt(lat, lng) for a visible point near the centre of the view"],
+      "then": ["the pick handler reports a location within metersPerPixelAt(lat, lng) times two metres of the requested point"]
+    },
+    {
+      "criterion": "cesium.clickAt(lat, lng) clicks through page.mouse, and a fixture test shows the globe's pick returned that location within the tolerance metersPerPixelAt gives.",
+      "name": "clickAt clicks through to the correct location near the horizon",
+      "given": ["the fixture page has loaded and a pick handler is installed on the globe"],
+      "when": ["the test calls cesium.clickAt(lat, lng) for a visible point near the horizon"],
+      "then": ["the pick handler reports a location within metersPerPixelAt(lat, lng) times two metres of the requested point"]
+    },
+    {
+      "criterion": "cesium.flyTo(lat, lng, heightMeters) moves the camera and waits until settled.",
+      "name": "flyTo moves the camera to the requested destination and waits until settled",
+      "given": ["the fixture page has loaded"],
+      "when": ["the test calls cesium.flyTo(lat, lng, heightMeters)"],
+      "then": [
+        "the camera's resulting latitude, longitude, and height match the requested destination within tolerance",
+        "the call does not resolve until the globe reports settled"
+      ]
+    },
+    {
+      "criterion": "distance, lineLength and point-in-circle checks take the globe's radius from the seam rather than assuming Earth's, and are unit-tested in Node without a browser; whether they live in this package or a shared saturday-geo is decided at the design gate.",
+      "name": "Geometry helpers use the globe's own radius instead of assuming Earth's",
+      "given": ["a declared globe radius of 6,000,000 metres, differing from Earth's 6,371,000 metres"],
+      "when": ["distance, lineLength, and point-in-circle are computed for the same coordinates once with the declared globe radius and once with Earth's radius, in a Node environment with no browser"],
+      "then": ["the two radii produce different results, showing each helper used the radius it was given rather than an assumed Earth radius"]
+    },
+    {
+      "criterion": "The package's test script runs the fixture suite in real Chrome (channel: 'chrome', headed, --use-gl=angle --use-angle=swiftshader) and passes with the literal AC9 docker command after dependencies are installed and the package is built; record its output in the delivery record.",
+      "name": "The fixture suite passes in real Chrome via the published docker command",
+      "given": ["dependencies are installed and the package is built"],
+      "when": ["the docker command `docker run --rm --platform linux/amd64 --network none -v \"$PWD:/work\" saturday-runner:debian bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-cesium test'` is run"],
+      "then": ["both the Vitest suite and the Playwright chrome-project suite pass with no network access"]
+    },
+    {
+      "criterion": "Each helper's test fails when the fixture's corresponding value changes; for a helper reading nothing from the fixture, a change to the helper's own code that the test catches is the proof instead. Record, per helper, the change made and the failing output in the delivery record.",
+      "name": "Each helper's test fails when its proof value changes",
+      "given": ["a helper under test and, where one exists, the fixture value its test depends on"],
+      "when": ["the fixture's corresponding value is deliberately changed, or, for a helper reading no fixed fixture value, the helper's own code is deliberately changed, and the test is re-run"],
+      "then": ["the test fails, showing it can detect a real regression, and passes again once the change is reverted"]
+    },
+    {
+      "criterion": "The fixture's static server listens on 127.0.0.1 only.",
+      "name": "The fixture server binds the loopback interface only",
+      "given": ["the fixture's static server is started"],
+      "when": ["the server begins listening"],
+      "then": ["it binds to 127.0.0.1 and does not accept connections on other interfaces"]
+    },
+    {
+      "criterion": "Every new or changed function has cyclomatic complexity below 7, every changed line is covered by a test that can fail, and no file outside scope.paths changes except the run's own delivery record under docs/features/saturday-playwright-cesium/.",
+      "name": "Changed code stays within complexity, coverage, and scope limits",
+      "given": ["the implementation for this feature is complete"],
+      "when": ["complexity analysis and coverage tooling run against the changed files, and the changed file list is compared against scope.paths"],
+      "then": [
+        "every new or changed function has cyclomatic complexity below 7",
+        "every changed line is covered by a test proven able to fail",
+        "no file outside scope.paths changed, except the feature's own delivery record under docs/features/saturday-playwright-cesium/"
+      ]
+    }
+  ]
+}

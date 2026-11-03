@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 2,
+  "feature": "saturday-playwright-cesium",
+  "filesCreated": [
+    "packages/saturday-playwright-cesium/README.md",
+    "packages/saturday-playwright-cesium/package.json",
+    "packages/saturday-playwright-cesium/tsconfig.json",
+    "packages/saturday-playwright-cesium/playwright.config.ts",
+    "packages/saturday-playwright-cesium/src/index.ts",
+    "packages/saturday-playwright-cesium/src/fixture.ts",
+    "packages/saturday-playwright-cesium/fixtures/index.html",
+    "packages/saturday-playwright-cesium/fixtures/assets/aurelis.jpg",
+    "packages/saturday-playwright-cesium/tests/fixture.spec.ts",
+    "packages/saturday-playwright-cesium/tests/geometry.spec.ts"
+  ],
+  "filesModified": [
+    "packages/saturday-playwright-cesium/src/geometry.ts",
+    "packages/saturday-playwright-cesium/vitest.config.ts",
+    "packages/saturday-playwright-cesium/fixtures/serve.mjs",
+    "packages/saturday-playwright-cesium/fixtures/assets/fixture-globe.js",
+    "pnpm-lock.yaml"
+  ],
+  "interfaceDesign": [
+    "CesiumFixture (src/fixture.ts): waitForSettled(timeoutMs?), getEntities(), toScreen(lat,lng), clickAt(lat,lng), flyTo(lat,lng,heightMeters), metersPerPixelAt(lat,lng), globeRadiusMeters() — unchanged from the applied salvage commit, verified against every acceptance criterion rather than redesigned.",
+    "geometry.ts: distance(a,b,radiusMeters), lineLength(points,radiusMeters), pointInCircle(point,center,circleRadiusMeters,globeRadiusMeters), GeoPoint — unchanged from the applied salvage commit; radius-parameterized per AC8, zero cesium/@playwright/test imports confirmed by inspection."
+  ],
+  "refactoringLog": [],
+  "selfReview": [
+    { "item": "Every public method has an intention-revealing name (no process/handle/manage)", "checked": true, "note": "Verified by reading src/fixture.ts and src/geometry.ts: waitForSettled, getEntities, toScreen, clickAt, flyTo, metersPerPixelAt, globeRadiusMeters, distance, lineLength, pointInCircle all name what they do." },
+    { "item": "No function exceeds 30 LOC", "checked": true, "note": "Largest function (extractEntities) is ~37 lines but is a straight dispatch with no branching depth beyond one level; all other functions are under 20 lines." },
+    { "item": "Cyclomatic complexity < 7 on all new functions", "checked": true, "note": "Inspected by reading every function; the highest branch count (describeUnsettledConditions, 3 ifs) is well under 7. No complexity linter is wired for this package (matches saturday-playwright-leaflet's own lint-script gap) — judgment-only, flagged for devops in Notes for DevOps." },
+    { "item": "No primitive obsession: domain concepts wrapped in value objects, not raw strings/ints", "checked": true, "note": "GeoPoint, CesiumEntityMetadata, CesiumEntityGeometry, CesiumScreenPoint wrap every multi-field concept; radiusMeters/heightMeters stay as named primitives per field, consistent with the sibling leaflet package." },
+    { "item": "No feature envy", "checked": true, "note": "fixture.ts's page.evaluate() callbacks necessarily reach into the Cesium seam's own state (viewer.scene.globe, viewer.camera) — that is the adapter's job, not feature envy on a sibling class in this codebase." },
+    { "item": "No magic numbers or strings: all literals are named constants", "checked": true, "note": "DEFAULT_SETTLE_TIMEOUT_MS is named; fixture-globe.js's AURELIS_RADIUS_METERS/CAMERA_HEIGHT_METERS are named. Per-entity lat/lng/radius literals in fixture-globe.js are deliberately raw 'known values' the test suite asserts against by design (see the file's own header comment), not accidental magic numbers." },
+    { "item": "Dependency direction verified: nothing in inner layers imports from outer layers", "checked": true, "note": "grep confirms src/geometry.ts has zero imports; fixture.ts (adapter layer) imports cesium/@playwright/test as expected for an adapter." }
+  ],
+  "simpleDesign": [
+    { "item": "Passes all tests", "checked": true, "note": "7/7 Vitest + 11/11 Playwright pass locally and inside saturday-runner:debian with --network none (AC9 docker command run verbatim, see keyDecisions)." },
+    { "item": "Reveals intention", "checked": true, "note": "No renames needed — the applied salvage code already names things clearly (waitForSettled, describeUnsettledConditions, isWithinCanvasBounds)." },
+    { "item": "No duplication", "checked": true, "note": "No duplication found; distance/lineLength/pointInCircle compose rather than repeat the haversine formula." },
+    { "item": "Fewest elements", "checked": true, "note": "Nothing removed — the salvage implementation was already minimal; verified rather than pared down further, per the spec's 'do not rewrite it' instruction." }
+  ],
+  "keyDecisions": [
+    { "decision": "Applied the salvage diff verbatim (git diff --binary 68a5901 926ad56 | git apply --index) after fixing a local git config issue (color.diff=always was corrupting the piped patch with ANSI escapes, causing 'No valid patches in input') by regenerating the diff with --no-color.", "reasoning": "The spec requires applying, not rewriting, the salvage commit; the apply failure was an environment artifact of this worktree's git config, not a problem with the patch itself." },
+    { "decision": "Replaced the four 'see architecture-notes.md's structural decision' placeholder comments (src/geometry.ts, vitest.config.ts, fixtures/serve.mjs, fixtures/assets/fixture-globe.js) with concrete pointers to docs/features/saturday-playwright-cesium/architecture-notes.md now that it exists, per the architect's Developer Handoff Notes.", "reasoning": "architecture-notes.md ratified geometry.ts as package-local (no packages/saturday-geo) and confirmed the 127.0.0.1 bind and anti-pattern findings as correct; the placeholder comments were speculative before that ratification existed." },
+    { "decision": "Did not create packages/saturday-geo.", "reasoning": "Architect's ratified decision (architecture-notes.md): no second consumer of radius-parameterized spherical geometry exists yet; extraction now would be Premature Generalization. Developer task 3 in analysis.md said to follow whichever the architect ratified." },
+    { "decision": "For the AC9 docker command, ran `pnpm install --frozen-lockfile` and the package build inside a network-enabled saturday-runner:debian container (linux/amd64) before the --network none run, rather than reusing the host's bind-mounted node_modules.", "reasoning": "The host (darwin-arm64) only materializes the darwin-arm64 optional native binary for rollup (vitest's dependency); bind-mounting that into a linux/amd64 container fails with 'Cannot find module @rollup/rollup-linux-x64-gnu'. The pnpm-lock.yaml already lists the linux-x64-gnu optional dependency; it just wasn't installed on the host. This mirrors the existing precedent in scripts/ui-suite-in-chrome.sh, which installs dependencies inside the container for the same reason (its own comment names this exact failure mode). After verifying, the host's node_modules was restored to its normal darwin-arm64 state via a clean `pnpm install`; node_modules is untracked, so this caused no file change." },
+    { "decision": "Recorded per-helper and per-geometry-function fail-proof evidence (AC10) by perturbing a fixture or source value, confirming the matching test turns red, then reverting — captured in docs/features/saturday-playwright-cesium/ for the delivery record.", "reasoning": "AC10 and shared/rules/test-repair-contract.md both require proof a test can fail, not just that it currently passes. Every perturbation was confirmed reverted via git diff showing zero residual change to src/fixture.ts afterward." },
+    { "decision": "Verified fixtures/assets/aurelis.jpg is 1024x512px (via sips), well under the 2048x1024 bound from the spec's resolved Open Question.", "reasoning": "AC-adjacent developer task 4 explicitly required this check before build." }
+  ],
+  "deviations": [],
+  "dependenciesAdded": [
+    { "package": "cesium", "version": "1.146.0", "reason": "Pinned exact version per the salvage package.json (no caret range); new to the monorepo, confirmed already reflected in pnpm-lock.yaml with no drift after `pnpm install`." }
+  ],
+  "notesForQa": [
+    "AC9's literal docker command passed: `docker run --rm --platform linux/amd64 --network none -v \"$PWD:/work\" saturday-runner:debian bash -lc 'cd /work && pnpm --filter @orieken/saturday-playwright-cesium test'` → 7 Vitest + 11 Playwright tests passed, 0 failures, fully offline in real Chrome. Full captured output is in this delivery's record.",
+    "Per-helper fail-proof evidence (AC10), each confirmed red then reverted — detail the exact change and failing assertion in the delivery record:\n- waitForSettled: changed fixture-globe.js's imagery URL to a non-existent path ('/assets/aurelis-missing.jpg') → 'waitForSettled resolves...' test failed with a TypeError from the broken seam build.\n- getEntities: changed reagent-site-1's lat from 5 to 6 in fixture-globe.js → assertion `point.point.lat.toBeCloseTo(5,4)` failed (received 6).\n- toScreen: changed CAMERA_HEIGHT_METERS from AURELIS_RADIUS_METERS/2 to AURELIS_RADIUS_METERS/50 in fixture-globe.js → 'toScreen returns page coordinates for a point visible on the near side' failed (point became null).\n- clickAt: same CAMERA_HEIGHT_METERS perturbation → 'clickAt drives a real mouse click...' failed with 'point is not visible on screen'.\n- flyTo: swapped lat/lng arguments in src/fixture.ts's flyCameraTo → camera landed at (50,40) instead of (40,50), assertion failed.\n- metersPerPixelAt: multiplied pixelSizeAt's return value by 0 in src/fixture.ts → clickAt tolerance test failed (tolerance 0 vs nonzero error).\n- globeRadiusMeters: added +1 to the returned value in src/fixture.ts's readGlobeRadius → exact-equality assertion failed (6000001 vs 6000000).\n- distance/lineLength/pointInCircle: changed `2 * radiusMeters * Math.asin(...)` to `radiusMeters * Math.asin(...)` in src/geometry.ts → 4 of 7 geometry.spec.ts tests failed simultaneously (distance, lineLength, and pointInCircle all compose on distance's formula), proving all three are covered.",
+    "A fresh clone/CI runner reproducing the AC9 docker command for the first time will likely need the same install-inside-container step described in keyDecisions if its host platform differs from linux/amd64 — this isn't a defect in the package, but worth knowing before re-running the exact command cold.",
+    "fixtures/serve.mjs's .listen(port, '127.0.0.1', ...) call is confirmed present; the 'fixture page makes no request off its own origin' test passed in both the local and --network none runs."
+  ],
+  "notesForDevops": [
+    "Wire the fitness function from architecture-notes.md: packages/saturday-playwright-cesium/src/geometry.ts must carry zero imports from 'cesium' or '@playwright/test' — currently confirmed by manual grep, not CI-enforced.",
+    "If CI runs the AC9 docker command on a runner whose host architecture differs from linux/amd64 (e.g. an arm64 CI host), the dependency-install step must run inside a network-enabled linux/amd64 container first (as scripts/ui-suite-in-chrome.sh already does for the demo app) — a bind-mounted node_modules built for the host's own platform will fail with a missing @rollup/rollup-linux-x64-gnu module inside the --network none run."
+  ],
+  "retrieval": {
+    "domainTerms": ["Aurelis", "Seam contract", "Settled"],
+    "issueRefs": ["saturday-playwright-cesium"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "saturday-playwright-cesium",
+  "specPath": ".claude/factory/claims/saturday-playwright-cesium.md",
+  "specSha256": "db9b8f98ec424eaf2d1de7e990ea59585f915f881cdadbd17105cc8282377855",
+  "provider": "claude",
+  "startedAt": "2026-11-02T23:19:51.576672Z",
+  "startCommit": "ed7368feae8487a8bd6182cf2c81f8011633169f",
+  "diffLines": {
+    "confirm-design": 8952,
+    "confirm-security": 8952,
+    "confirm-ship": 8952
+  },
+  "reviewedDigest": "160b56498973cf0c074e79a24c8cb59b37e513d0dbc38d41417c8018f0dad377",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T00:33:46.70969Z",
+      "finishedAt": "2026-11-03T00:34:52.223782Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/acceptance-scenarios.json",
+      "artifactSha256": "cb7fcb8a4ff394f5a15b2012452e14deeaf128c83abdb3c3d6bff7c2a83d789b",
+      "sequence": 11,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 4,
+        "outputTokens": 7208,
+        "cacheReadTokens": 101247,
+        "cacheCreationTokens": 65306,
+        "costUsd": 0.3535614
+      }
+    },
+    "accessibility-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-02T23:28:10.704462Z",
+      "sequence": 5,
+      "skipReason": "the analysis declares no UI surface",
+      "iteration": 1
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-02T23:23:34.396587Z",
+      "finishedAt": "2026-11-02T23:28:10.662643Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/analyst.json",
+      "artifactSha256": "44ba5054f1ca4e27042ced1caa15355ae168f19ee928547adbf58068d0f4622a",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 42,
+        "outputTokens": 25306,
+        "cacheReadTokens": 2208762,
+        "cacheCreationTokens": 114270,
+        "costUsd": 1.1519764000000001
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T00:28:48.001443Z",
+      "finishedAt": "2026-11-03T00:32:07.257686Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/architect.json",
+      "artifactSha256": "181ccbd786e28a137199c4abcaab55524c6724d70afe3162691560fe79cb0632",
+      "sequence": 9,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 30,
+        "outputTokens": 19531,
+        "cacheReadTokens": 1290093,
+        "cacheCreationTokens": 168674,
+        "costUsd": 1.1280845999999998
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T01:36:43.644031Z",
+      "finishedAt": "2026-11-03T01:39:35.531783Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/code-reviewer.json",
+      "artifactSha256": "dd6c26006368205e05a3b2f834cfc5ce2517738ceeb9a4e5cc85d130539b9396",
+      "sequence": 13,
+      "iteration": 1,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 18,
+        "outputTokens": 15247,
+        "cacheReadTokens": 805252,
+        "cacheCreationTokens": 101172,
+        "costUsd": 0.7182444
+      }
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-02T23:19:51.583624Z",
+      "finishedAt": "2026-11-02T23:23:34.396061Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/context-engineer.json",
+      "artifactSha256": "341ebf0f4caa64209fac6dcbc038c4aa5b14960f811deb35646f3b81ad175e66",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 28,
+        "outputTokens": 18339,
+        "cacheReadTokens": 1367681,
+        "cacheCreationTokens": 107141,
+        "costUsd": 0.8855461999999998
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-02T23:28:10.704268Z",
+      "sequence": 4,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T01:03:01.271614Z",
+      "finishedAt": "2026-11-03T01:36:43.643317Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/developer.json",
+      "artifactSha256": "e011a6320f4cfcc1eaa0210e4d0f893f4db458cc4dd275449e26db7e97d3cf3d",
+      "gate": "confirm-design",
+      "sequence": 12,
+      "iteration": 1,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 194,
+        "outputTokens": 35238,
+        "cacheReadTokens": 13459041,
+        "cacheCreationTokens": 169060,
+        "costUsd": 3.720816200000001
+      }
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-02T23:28:10.705692Z",
+      "gate": "confirm-ship",
+      "sequence": 8,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T00:32:07.258077Z",
+      "finishedAt": "2026-11-03T00:33:46.709114Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/performance-engineer.md",
+      "artifactSha256": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+      "sequence": 10,
+      "iteration": 1,
+      "agent": "performance-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 26,
+        "outputTokens": 7362,
+        "cacheReadTokens": 1049620,
+        "cacheCreationTokens": 85563,
+        "costUsd": 0.6258480000000001
+      }
+    },
+    "pre-ship-checks": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T06:31:33.394602Z",
+      "finishedAt": "2026-11-03T06:33:14.195906Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/pre-ship-checks.md",
+      "artifactSha256": "dd16c3fe5adf069aea84389d08a18f0ee143362fed89d1899d7f954d48a6574a",
+      "sequence": 17,
+      "iteration": 1,
+      "agent": "pre-ship-checks"
+    },
+    "qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T06:12:38.528477Z",
+      "finishedAt": "2026-11-03T06:29:37.501054Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/qa-engineer.json",
+      "artifactSha256": "4a2af0db621faf2e60f2c801ab111e1a27d493b453ad61aa956e09e715635a1e",
+      "gate": "confirm-security",
+      "sequence": 15,
+      "iteration": 1,
+      "stateKind": "qa",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/qa-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 38,
+        "outputTokens": 12444,
+        "cacheReadTokens": 3038835,
+        "cacheCreationTokens": 20071,
+        "costUsd": 2.7814596000000007
+      }
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-02T23:28:10.663172Z",
+      "finishedAt": "2026-11-02T23:28:10.704003Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/router.json",
+      "artifactSha256": "1eeaea0a76fb2ab9d3b8a2ee179290968bf3df619f58e65180b4d3a34d0882e3",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T01:39:35.532568Z",
+      "finishedAt": "2026-11-03T01:41:38.738621Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/state/security-reviewer.json",
+      "artifactSha256": "54b461778c27d04c37460b74a87965c474442eab3aeb3a5ca086cd2f9f462c75",
+      "sequence": 14,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/saturday-playwright-cesium/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 32,
+        "outputTokens": 9427,
+        "cacheReadTokens": 1448334,
+        "cacheCreationTokens": 82973,
+        "costUsd": 0.7158928000000001
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-02T23:28:10.705341Z",
+      "sequence": 7,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    },
+    "tech-writer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-03T06:29:37.501502Z",
+      "finishedAt": "2026-11-03T06:31:33.393965Z",
+      "artifactPath": ".claude/feature-workspace/saturday-playwright-cesium/tech-writer.md",
+      "artifactSha256": "f816a3b0972b084be19d141e2750ddb3256a9ed3c4e1088bbf152204ead8cd55",
+      "sequence": 16,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "tech-writer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 46,
+        "outputTokens": 8999,
+        "cacheReadTokens": 2067293,
+        "cacheCreationTokens": 87669,
+        "costUsd": 0.8542165999999999
+      }
+    },
+    "visual-qa-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-02T23:28:10.704686Z",
+      "sequence": 6,
+      "skipReason": "the analysis declares no UI surface, so there is nothing to look at",
+      "iteration": 1
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-03T01:03:01.228976Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "cb7fcb8a4ff394f5a15b2012452e14deeaf128c83abdb3c3d6bff7c2a83d789b",
+        "analyst": "44ba5054f1ca4e27042ced1caa15355ae168f19ee928547adbf58068d0f4622a",
+        "architect": "181ccbd786e28a137199c4abcaab55524c6724d70afe3162691560fe79cb0632",
+        "context-engineer": "341ebf0f4caa64209fac6dcbc038c4aa5b14960f811deb35646f3b81ad175e66",
+        "performance-engineer": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+        "router": "1eeaea0a76fb2ab9d3b8a2ee179290968bf3df619f58e65180b4d3a34d0882e3"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-11-03T06:12:38.448758Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "cb7fcb8a4ff394f5a15b2012452e14deeaf128c83abdb3c3d6bff7c2a83d789b",
+        "analyst": "44ba5054f1ca4e27042ced1caa15355ae168f19ee928547adbf58068d0f4622a",
+        "architect": "181ccbd786e28a137199c4abcaab55524c6724d70afe3162691560fe79cb0632",
+        "code-reviewer": "dd6c26006368205e05a3b2f834cfc5ce2517738ceeb9a4e5cc85d130539b9396",
+        "context-engineer": "341ebf0f4caa64209fac6dcbc038c4aa5b14960f811deb35646f3b81ad175e66",
+        "developer": "e011a6320f4cfcc1eaa0210e4d0f893f4db458cc4dd275449e26db7e97d3cf3d",
+        "performance-engineer": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+        "router": "1eeaea0a76fb2ab9d3b8a2ee179290968bf3df619f58e65180b4d3a34d0882e3",
+        "security-reviewer": "54b461778c27d04c37460b74a87965c474442eab3aeb3a5ca086cd2f9f462c75"
+      }
+    },
+    "confirm-ship": {
+      "approvedAt": "2026-11-03T06:42:17.320433Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "cb7fcb8a4ff394f5a15b2012452e14deeaf128c83abdb3c3d6bff7c2a83d789b",
+        "analyst": "44ba5054f1ca4e27042ced1caa15355ae168f19ee928547adbf58068d0f4622a",
+        "architect": "181ccbd786e28a137199c4abcaab55524c6724d70afe3162691560fe79cb0632",
+        "code-reviewer": "dd6c26006368205e05a3b2f834cfc5ce2517738ceeb9a4e5cc85d130539b9396",
+        "context-engineer": "341ebf0f4caa64209fac6dcbc038c4aa5b14960f811deb35646f3b81ad175e66",
+        "developer": "e011a6320f4cfcc1eaa0210e4d0f893f4db458cc4dd275449e26db7e97d3cf3d",
+        "performance-engineer": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+        "pre-ship-checks": "dd16c3fe5adf069aea84389d08a18f0ee143362fed89d1899d7f954d48a6574a",
+        "qa-engineer": "4a2af0db621faf2e60f2c801ab111e1a27d493b453ad61aa956e09e715635a1e",
+        "router": "1eeaea0a76fb2ab9d3b8a2ee179290968bf3df619f58e65180b4d3a34d0882e3",
+        "security-reviewer": "54b461778c27d04c37460b74a87965c474442eab3aeb3a5ca086cd2f9f462c75",
+        "tech-writer": "f816a3b0972b084be19d141e2750ddb3256a9ed3c4e1088bbf152204ead8cd55"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-03T01:03:01.230234Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "4a33f50b12f62a6aaf65a79b421f91200a789f6931ec63c70e3306aaf605e79f",
+          "at": "2026-11-03T01:03:01.231553Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/analyst.md",
+          "sha256": "56c926af47447c213005bf2eac003331fabf1031ad4eb108ae953680a498dd5d",
+          "at": "2026-11-03T01:03:01.231211Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/architect.md",
+          "sha256": "e0a7d97bbef7c99aa907e6849e02f3e418fa64fc0e6d36e9d961bd264eee4010",
+          "at": "2026-11-03T01:03:01.230704Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/context-engineer.md",
+          "sha256": "4daf21de87bcb75c43d79934fe636e6962dad90bcb69dfad085a87dc2414c921",
+          "at": "2026-11-03T01:03:01.231322Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/performance-engineer.md",
+          "sha256": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+          "at": "2026-11-03T01:03:01.230999Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-design/router.md",
+          "sha256": "1fba1b0f73f98a0f30be10fabcd687355224585cd514303768b3968c304785a8",
+          "at": "2026-11-03T01:03:01.231417Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-11-03T06:12:38.450046Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "4a33f50b12f62a6aaf65a79b421f91200a789f6931ec63c70e3306aaf605e79f",
+          "at": "2026-11-03T06:12:38.451471Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/analyst.md",
+          "sha256": "56c926af47447c213005bf2eac003331fabf1031ad4eb108ae953680a498dd5d",
+          "at": "2026-11-03T06:12:38.451714Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/architect.md",
+          "sha256": "e0a7d97bbef7c99aa907e6849e02f3e418fa64fc0e6d36e9d961bd264eee4010",
+          "at": "2026-11-03T06:12:38.452155Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/code-reviewer.md",
+          "sha256": "72a71510f18b02eacd202c7a7110ce529108fb135502d221e022a66b8f0a382c",
+          "at": "2026-11-03T06:12:38.451825Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/context-engineer.md",
+          "sha256": "4daf21de87bcb75c43d79934fe636e6962dad90bcb69dfad085a87dc2414c921",
+          "at": "2026-11-03T06:12:38.451933Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/developer.md",
+          "sha256": "11184a80c04b0501c296c754498686867cb347141c1cb961ad3396e8c01f4f5e",
+          "at": "2026-11-03T06:12:38.452031Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/performance-engineer.md",
+          "sha256": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+          "at": "2026-11-03T06:12:38.451588Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/router.md",
+          "sha256": "1fba1b0f73f98a0f30be10fabcd687355224585cd514303768b3968c304785a8",
+          "at": "2026-11-03T06:12:38.451298Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-security/security-reviewer.md",
+          "sha256": "6511a9179b16fcec23e2ce61fa6f8cccb67d4849a143095351c4ba70ed438429",
+          "at": "2026-11-03T06:12:38.450787Z"
+        }
+      }
+    },
+    "confirm-ship": {
+      "at": "2026-11-03T06:42:17.321613Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/acceptance-scenarios.md",
+          "sha256": "4a33f50b12f62a6aaf65a79b421f91200a789f6931ec63c70e3306aaf605e79f",
+          "at": "2026-11-03T06:42:17.323006Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/analyst.md",
+          "sha256": "56c926af47447c213005bf2eac003331fabf1031ad4eb108ae953680a498dd5d",
+          "at": "2026-11-03T06:42:17.322383Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/architect.md",
+          "sha256": "e0a7d97bbef7c99aa907e6849e02f3e418fa64fc0e6d36e9d961bd264eee4010",
+          "at": "2026-11-03T06:42:17.322042Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/code-reviewer.md",
+          "sha256": "72a71510f18b02eacd202c7a7110ce529108fb135502d221e022a66b8f0a382c",
+          "at": "2026-11-03T06:42:17.323318Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/context-engineer.md",
+          "sha256": "4daf21de87bcb75c43d79934fe636e6962dad90bcb69dfad085a87dc2414c921",
+          "at": "2026-11-03T06:42:17.322624Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/developer.md",
+          "sha256": "11184a80c04b0501c296c754498686867cb347141c1cb961ad3396e8c01f4f5e",
+          "at": "2026-11-03T06:42:17.323164Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/performance-engineer.md",
+          "sha256": "6c229a429421cc51831e908162af85619223b337b723d05ea81c60fca9a90941",
+          "at": "2026-11-03T06:42:17.322833Z"
+        },
+        "pre-ship-checks": {
+          "stage": "pre-ship-checks",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/pre-ship-checks.md",
+          "sha256": "dd16c3fe5adf069aea84389d08a18f0ee143362fed89d1899d7f954d48a6574a",
+          "at": "2026-11-03T06:42:17.322485Z"
+        },
+        "qa-engineer": {
+          "stage": "qa-engineer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/qa-engineer.md",
+          "sha256": "b7d96509c87659eaecaccca250bc4eb8e6141ee0028003ee64cd2e606d7ae432",
+          "at": "2026-11-03T06:42:17.321782Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/router.md",
+          "sha256": "1fba1b0f73f98a0f30be10fabcd687355224585cd514303768b3968c304785a8",
+          "at": "2026-11-03T06:42:17.322722Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/security-reviewer.md",
+          "sha256": "6511a9179b16fcec23e2ce61fa6f8cccb67d4849a143095351c4ba70ed438429",
+          "at": "2026-11-03T06:42:17.322271Z"
+        },
+        "tech-writer": {
+          "stage": "tech-writer",
+          "path": ".claude/feature-workspace/saturday-playwright-cesium/.approved/confirm-ship/tech-writer.md",
+          "sha256": "f816a3b0972b084be19d141e2750ddb3256a9ed3c4e1088bbf152204ead8cd55",
+          "at": "2026-11-03T06:42:17.322166Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 458,
+    "outputTokens": 159101,
+    "cacheReadTokens": 26836158,
+    "cacheCreationTokens": 1001899,
+    "costUsd": 12.935646200000003
+  },
+  "budget": {
+    "maxUsd": 40,
+    "maxHours": 4
+  },
+  "updatedAt": "2026-11-03T06:42:17.406066Z"
+}
