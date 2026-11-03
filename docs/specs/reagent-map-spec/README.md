@@ -38,7 +38,10 @@ to the draft, is recorded in `corrections.md` (the factory's quality metric).
 - Digest: `sha256:18f9820d26a2013205ab0bec91e32bc6fe3a49166f2eb079342ee71b32604413`, over the files in
   `package.sha256` (the four stage JSON files and the five `.feature` files).
 - Draft orders, each pinning that digest:
-  - D1 `intake/reagent-map-view.md` (`deliver-feature`, status draft; promote to `ready` after C1 ships)
+  - D1, split on 2026-11-03 into six `deliver-feature` orders so each developer stage fits the
+    30-minute stage limit, with the view behind `VITE_FEATURE_REAGENT_MAP` until the last one:
+    `intake/reagent-sites-api.md`, `expeditions-api.md`, `reagent-map-globe.md`,
+    `reagent-map-expeditions.md`, `reagent-map-line-tool.md`, `reagent-map-save.md`
   - E1 `orders/reagent-map-ui-tests.md` (by hand)
   - F1 `orders/reagent-map-api-tests.md` (by hand)
 - Check the pin: `shasum -a 256 docs/specs/reagent-map-spec/package.sha256` and

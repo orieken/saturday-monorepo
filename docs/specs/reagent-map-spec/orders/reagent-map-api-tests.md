@@ -4,7 +4,7 @@
 |---|---|
 | plan | `deliver-tests-sunday` (by hand; the plan does not exist yet, so not in `intake/`, D-27) |
 | status | draft |
-| depends on | `reagent-map-view` (D1) |
+| depends on | `expeditions-api` and `reagent-sites-api` (D1 slices) |
 | spec package | `sha256:18f9820d26a2013205ab0bec91e32bc6fe3a49166f2eb079342ee71b32604413` (`package.sha256`) |
 | gates | testability → developer; model, ship → tester |
 

@@ -4,7 +4,7 @@
 |---|---|
 | plan | `deliver-tests-saturday` (by hand; the plan does not exist yet, so not in `intake/`, D-27) |
 | status | draft |
-| depends on | `reagent-map-view` (D1), `saturday-playwright-cesium` (C1) |
+| depends on | `reagent-map-save` (the last D1 slice), `saturday-playwright-cesium` (C1) |
 | spec package | `sha256:18f9820d26a2013205ab0bec91e32bc6fe3a49166f2eb079342ee71b32604413` (`package.sha256`) |
 | gates | testability → developer; model, ship → tester |
 
