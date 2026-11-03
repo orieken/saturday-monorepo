@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 2,
+  "feature": "saturday-playwright-cesium",
+  "structuralDecisions": [
+    {
+      "decision": "Keep distance/lineLength/pointInCircle (src/geometry.ts) package-local inside packages/saturday-playwright-cesium. Do NOT create a new packages/saturday-geo workspace for this feature.",
+      "rationale": "Only one real consumer exists today. I checked saturday-playwright-leaflet/src/fixture.ts (the only other mapping-library package in the monorepo): its distanceBetween() calls turf.distance() against Earth directly and is not radius-parameterized, so it is not a second consumer of this module's radius-parameterized spherical geometry — it solves a different problem. Extracting a shared package now, before a second consumer exists, is exactly the Premature Generalization anti-pattern design-principles.md's Anti-Pattern Radar calls out, and violates Kent Beck's 'fewest elements' once intention-revealing/no-duplication are satisfied. The salvage code's own geometry.ts header already anticipated this and wrote the module with zero 'cesium'/'@playwright/test' imports specifically so the extraction stays cheap later — that design choice is sound and is preserved, only the placement is ratified as package-local now.",
+      "tradeOffs": [
+        "If a second Playwright extension (e.g. a future saturday-playwright-mapbox) needs the same radius-parameterized spherical geometry, it will either duplicate ~60 lines or be the trigger for extracting packages/saturday-geo then — an accepted, explicitly deferred cost, not a decision to silently re-litigate.",
+        "Keeps this package's own test suite self-contained (tests/geometry.spec.ts runs under vitest/node with zero cross-package dependency), which is a minor win on top of avoiding the premature split."
+      ],
+      "fitness": {
+        "property": "packages/saturday-playwright-cesium/src/geometry.ts carries zero imports from 'cesium' or '@playwright/test'",
+        "verification": "grep/import-boundary check in CI (devops-engineer to wire): fail the build if geometry.ts imports 'cesium' or '@playwright/test'. This is what keeps the extraction cheap if a second consumer ever appears.",
+        "owner": "devops-engineer"
+      }
+    },
+    {
+      "decision": "fixtures/serve.mjs binds its static server to 127.0.0.1 explicitly via .listen(port, '127.0.0.1', callback) — confirmed correct and intentional, not to be changed to match saturday-playwright-leaflet's serve.mjs (which omits the host argument and binds all interfaces).",
+      "rationale": "Read both files directly. Cesium's package is the one getting it right; leaflet's is the pre-existing gap. Fixing leaflet's serve.mjs is out of this feature's scope.paths (packages/saturday-playwright-leaflet/** is not in scope) and must not be folded into this delivery — it should be raised as its own order.",
+      "tradeOffs": [
+        "The leaflet package keeps its wider bind surface until a separate order fixes it; this is an accepted, explicitly flagged gap, not a silent omission."
+      ],
+      "fitness": {
+        "property": "fixtures/serve.mjs's .listen() call always passes '127.0.0.1' as the host argument",
+        "verification": "code review (already satisfied by the salvage code as written) plus indirect confirmation: the AC9 docker run --network none test run passing proves no interface beyond loopback is required",
+        "owner": "code-reviewer",
+        "judgmentOnly": true
+      }
+    },
+    {
+      "decision": "CesiumFixture's settle-wait (src/fixture.ts's pollUntilSettled) uses Playwright's own page.waitForFunction(..., { timeout }) rather than a hand-rolled for/while+sleep loop — confirmed compliant with architecture-guardrails.md #5 and ratified as the correct pattern for this package.",
+      "rationale": "Read fixture.ts directly: every wait (seam-attached, isSettled) goes through page.waitForFunction with an explicit timeoutMs, and rejects with a message naming the stuck condition (tiles/camera/render/seam) rather than looping with sleep(). Playwright's waitForFunction is the framework-provided bounded-wait primitive here, playing the same role guardrail #5 reserves for CircuitBreaker/ExponentialBackoffStrategy on network calls — there is no network retry in this package, so no CircuitBreaker is needed, but the explicit-timeout requirement is met.",
+      "tradeOffs": [],
+      "fitness": {
+        "property": "No for/while+sleep polling loop exists in src/fixture.ts; every wait has an explicit timeout",
+        "verification": "code review (already satisfied); no automated lint rule distinguishes Playwright's waitForFunction from a custom loop, so this stays a documented judgment call",
+        "owner": "code-reviewer",
+        "judgmentOnly": true
+      }
+    }
+  ],
+  "componentPlacement": [
+    {
+      "component": "CesiumFixture (src/fixture.ts: waitForSettled, getEntities, toScreen, clickAt, flyTo, metersPerPixelAt, globeRadiusMeters)",
+      "layer": "Interface Adapters",
+      "package": "packages/saturday-playwright-cesium/src/fixture.ts",
+      "reason": "Translates the window.__SATURDAY_CESIUM__ seam (Cesium viewer + Cesium global) and Playwright's Page into the framework-neutral CesiumFixture contract — the same adapter role saturday-playwright-leaflet/src/fixture.ts plays for Leaflet. Lives in its own package, not saturday-core, mirroring the existing one-package-per-mapping-library split."
+    },
+    {
+      "component": "distance, lineLength, pointInCircle, GeoPoint (src/geometry.ts)",
+      "layer": "Entities (pure, framework-free utility)",
+      "package": "packages/saturday-playwright-cesium/src/geometry.ts",
+      "reason": "Ratified structural decision above: stays package-local. Zero imports from cesium or @playwright/test and an explicit radiusMeters parameter give it Entities-layer purity even though it isn't a full domain model."
+    },
+    {
+      "component": "Fixture test harness (fixtures/index.html, fixtures/serve.mjs, fixtures/assets/fixture-globe.js, fixtures/assets/aurelis.jpg)",
+      "layer": "Frameworks & Drivers (test-only static harness, never published)",
+      "package": "packages/saturday-playwright-cesium/fixtures/",
+      "reason": "Mirrors saturday-playwright-leaflet/fixtures/ exactly: a throwaway static page plus a minimal node:http server used only by this package's own suite, excluded from the tsc build by tsconfig.json."
+    },
+    {
+      "component": "Public re-exports (src/index.ts)",
+      "layer": "Interface Adapters (package boundary)",
+      "package": "packages/saturday-playwright-cesium/src/index.ts",
+      "reason": "Single public entry point re-exporting test, CesiumFixture types, and the geometry functions — matches saturday-playwright-leaflet/src/index.ts's shape."
+    }
+  ],
+  "boundedContext": {
+    "owning": "Test Automation",
+    "crossings": [
+      "containers/saturday-runner (the runner image) — read-only: consumes runner-check's verified ANGLE/SwiftShader launch-arg contract and the debian build target without modifying the image.",
+      "docs/specs/reagent-map-spec — read-only: the fixture planet's name (Aurelis) and radius (6,000 km) are taken from that spec's resolved Q8, confirmed in DOMAIN_DICTIONARY.md's own Aurelis entry, not redecided here."
+    ]
+  },
+  "stabilityDesign": [
+    {
+      "pattern": "Fail Fast / bounded timeout (Playwright page.waitForFunction)",
+      "appliesTo": "CesiumFixture.waitForSettled() and the seam-attach wait inside pollUntilSettled()",
+      "rationale": "Rejects within DEFAULT_SETTLE_TIMEOUT_MS (15000ms) naming the exact stuck condition (tiles/camera/render/seam) instead of hanging indefinitely — satisfies architecture-guardrails.md #5's explicit-timeout requirement using Playwright's own bounded-wait primitive rather than a hand-rolled retry loop."
+    }
+  ],
+  "observabilityDesign": [
+    {
+      "signal": "waitForSettled() timeout error message naming which condition is stuck (tiles, camera, render, or seam)",
+      "emittedFrom": "Adapter-layer test fixture (src/fixture.ts: describeUnsettledConditions/pollUntilSettled) — test diagnostic output, not production OTel telemetry, so guardrails #8/#9 apply only by analogy",
+      "cardinality": "Fully bounded: exactly 4 fixed string values can appear, no risk of high cardinality or payload leakage"
+    }
+  ],
+  "layerBoundaryChecks": [
+    {
+      "rule": "geometry.ts (Entities-equivalent pure utility) must not import 'cesium' or '@playwright/test'",
+      "verdict": "PASS",
+      "notes": "mcp__loom__* graph tools were not available in this session; confirmed by reading src/geometry.ts and src/index.ts directly instead. Zero such imports present."
+    },
+    {
+      "rule": "fixture.ts (adapter layer) may import 'cesium' (via the seam) and '@playwright/test' — expected, not a boundary violation",
+      "verdict": "PASS",
+      "notes": "fixture.ts is the adapter translating the Cesium seam and Playwright's Page into CesiumFixture; importing both is the adapter's job, not a layering defect."
+    },
+    {
+      "rule": "fixtures/serve.mjs binds 127.0.0.1 only, never all interfaces",
+      "verdict": "PASS",
+      "notes": "Confirmed .listen(port, '127.0.0.1', callback) in the salvage commit's serve.mjs. Diverges intentionally from saturday-playwright-leaflet's serve.mjs, which omits the host argument; that is leaflet's pre-existing gap, tracked separately, out of this feature's scope.paths."
+    }
+  ],
+  "antiPatternChecks": [
+    {
+      "pattern": "Premature generalization",
+      "found": false,
+      "notes": "Checked specifically because the salvage code's own comments proposed a future packages/saturday-geo. Ratified decision above keeps geometry.ts package-local until a second real consumer exists — this check is the reason that decision was made, not a finding against the delivered code."
+    },
+    {
+      "pattern": "Leaky abstraction",
+      "found": false,
+      "notes": "getEntities/toScreen/clickAt/flyTo/metersPerPixelAt/globeRadiusMeters all return plain lat/lng/metres/pixel primitives, never raw Cesium SDK types (Cartesian3, Entity, etc.) — callers never need Cesium knowledge to use the fixture."
+    },
+    {
+      "pattern": "God object",
+      "found": false,
+      "notes": "CesiumFixture groups 7 cohesive helpers behind one seam-reading fixture, matching the existing saturday-playwright-leaflet shape; no unrelated responsibilities mixed in."
+    },
+    {
+      "pattern": "Anemic domain model",
+      "found": false,
+      "notes": "Not applicable — this package is a test-fixture adapter, not a domain model. CesiumEntityMetadata/CesiumEntityResult are read-only projections of fixture state, not business entities expected to carry behavior."
+    },
+    {
+      "pattern": "Distributed monolith",
+      "found": false,
+      "notes": "Single self-contained package; its only 'network' call is to its own 127.0.0.1 fixture server, not a synchronous call to another service."
+    }
+  ],
+  "fitnessFunctions": [
+    {
+      "property": "packages/saturday-playwright-cesium/src/geometry.ts carries zero imports from 'cesium' or '@playwright/test'",
+      "verification": "grep/import-boundary check in CI",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "The package's test command (vitest run && playwright test --project=chrome) passes fully offline, in real Chrome, inside saturday-runner:debian with --network none",
+      "verification": "the literal AC9 docker run command, exit code checked by devops-engineer/CI",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "Zero off-origin network requests during fixture page load and tile load",
+      "verification": "tests/fixture.spec.ts's existing 'fixture page makes no request off its own origin' test, filtering http(s) requests and asserting hostname === '127.0.0.1'",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "Geometry helpers never fall back to Earth's radius",
+      "verification": "tests/geometry.spec.ts's existing tests proving Aurelis's radius (6,000,000m) and Earth's radius (6,371,000m) produce different, independently-verified results for identical inputs",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "Cyclomatic complexity below 7 for every new/changed function in the package",
+      "verification": "analyze-complexity skill / ESLint complexity rule in CI",
+      "owner": "developer"
+    },
+    {
+      "property": "fixtures/serve.mjs binds 127.0.0.1 only, never all interfaces",
+      "verification": "code review of the .listen(port, '127.0.0.1', ...) call, confirmed indirectly by the --network none AC9 run passing",
+      "owner": "code-reviewer",
+      "judgmentOnly": true
+    },
+    {
+      "property": "Every helper's and geometry function's test demonstrably fails when its fixture value (or, for value-free helpers, the helper's own code) changes",
+      "verification": "manual fixture/code-break-and-revert per helper, output recorded in the delivery record; no automated mutation tool is wired for this package",
+      "owner": "qa-engineer",
+      "judgmentOnly": true
+    }
+  ],
+  "refactoringOpportunities": [],
+  "retrieval": {
+    "domainTerms": [
+      "Aurelis",
+      "saturdayMetadata"
+    ],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "developerHandoffNotes": [
+    "Ratified: keep distance/lineLength/pointInCircle package-local in src/geometry.ts — do NOT create packages/saturday-geo for this feature. Replace the four 'see architecture-notes.md's structural decision' comments (src/geometry.ts, fixtures/assets/fixture-globe.js, fixtures/serve.mjs, vitest.config.ts) with a concrete pointer to this architecture-notes.md now that it exists, stating the decision in one line: kept package-local, no second consumer exists yet.",
+    "Apply the salvage diff verbatim (git diff --binary 68a5901 926ad56 -- packages/saturday-playwright-cesium | git apply --index) — this review confirms the salvage code's layer placement, geometry-module boundary, 127.0.0.1 bind, and timeout/Fail-Fast pattern are all already correct. No structural rework is needed before implementation.",
+    "fixtures/serve.mjs's explicit 127.0.0.1 bind is correct and must not be changed to match saturday-playwright-leaflet's serve.mjs (which binds all interfaces by omitting the host argument) — that is a pre-existing gap in the leaflet package, out of this feature's scope.paths; raise it as a separate order instead of fixing it here.",
+    "Verify fixtures/assets/aurelis.jpg is at most 2048x1024px per the spec's resolved open question before build — this is a data/asset check (e.g. `file` or `identify`), not a structural one.",
+    "Residual, accepted risk on the non-WGS84 ellipsoid question: fixture-globe.js's Cesium.Viewer(...) call does not pass an explicit mapProjection, so viewer.scene.mapProjection likely still defaults to Cesium's WGS84 GeographicProjection even though viewer.scene.globe.ellipsoid is Aurelis's 6,000,000m sphere. Every helper in fixture.ts reads viewer.scene.globe.ellipsoid directly (never scene.mapProjection), and the fixture never switches to 2D/Columbus view (sceneModePicker: false), so this mismatch is inert for every acceptance criterion this suite exercises. This is a judgment-only call, not independently verifiable by a fitness function without exercising Cesium's internal 2D/Columbus code paths — flag it in the delivery record rather than silently closing the analyst's open question."
+  ],
+  "openQuestions": [
+    "If a second Playwright-extension package ever needs radius-parameterized spherical geometry, that is the trigger to extract packages/saturday-geo — not a decision to make speculatively now. No action needed unless/until that second consumer appears."
+  ]
+}

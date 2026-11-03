@@ -1,0 +1,48 @@
+---
+feature: "saturday-playwright-cesium"
+bounded_context: ""
+domain_terms: ["Aurelis", "Seam contract", "Settled", "saturdayMetadata"]
+files_touched: []
+issue_refs: ["saturday-playwright-cesium"]
+linked_adrs: []
+linked_kis: []
+---
+
+# QA Report: saturday-playwright-cesium
+
+## Test Files Created
+
+None
+
+## Test Files Modified
+
+None
+
+## Coverage Summary
+
+- Acceptance criteria covered: 12/12
+
+## Test Results
+
+- Passed: 18
+- Failed: 0
+- Skipped: 0
+
+## Accessibility Check
+
+- N/A — fixtures/index.html is an internal Playwright test fixture, not a product UI: every Cesium UI widget (baseLayerPicker, geocoder, animation, timeline, fullscreenButton, homeButton, sceneModePicker, navigationHelpButton, infoBox, selectionIndicator) is explicitly disabled in fixtures/assets/fixture-globe.js, and the page has zero interactive elements and is never opened by an end user. WCAG keyboard-reachability, label, and color-only-state checks do not apply to this package.
+
+## Bugs Found
+
+None
+
+## Known Gaps
+
+- AC12 — statement coverage percentage: No coverage provider (@vitest/coverage-v8) is configured for this package's vitest.config.ts, and its direct sibling saturday-playwright-leaflet has no vitest suite at all to copy a precedent from — running `vitest run --coverage` fails with 'Cannot find module @vitest/coverage-v8'. No numeric statement-coverage percentage could be produced without adding a new devDependency outside this delivery's requested scope. Verified manually instead: every exported function in src/fixture.ts (waitForSettled, getEntities, toScreen, clickAt, flyTo, metersPerPixelAt, globeRadiusMeters) and every exported function in src/geometry.ts (distance, lineLength, pointInCircle) is exercised by at least one assertion in tests/fixture.spec.ts or tests/geometry.spec.ts, and the developer's recorded per-helper perturbation evidence (implementation-notes.md's Notes for QA) independently proves each covering test can fail and was confirmed by code-reviewer's per-test Test Design Review (all YES).
+
+## Notes for Tech Writer
+
+- Independently re-ran the literal AC9 docker command end to end: 7/7 Vitest tests and 11/11 Playwright `chrome`-project tests passed, fully offline (`--network none`), in real headed Chrome with software WebGL. Output matches the counts already recorded in implementation-notes.md.
+- Reproducing AC9 required the install-inside-a-network-enabled-container step the developer already documented in README.md's Testing section and implementation-notes.md's Key Decisions: this host is darwin-arm64, so its bind-mounted node_modules only carries the darwin-arm64 rollup/esbuild optional binaries, which fail with 'Cannot find module @rollup/rollup-linux-x64-gnu' when mounted straight into the linux/amd64 --network none container. Ran `pnpm install --frozen-lockfile && pnpm --filter @orieken/saturday-playwright-cesium build` inside a network-enabled instance of the same image first, then the --network none run passed. Confirms README.md's documented caveat is accurate and does not need a correction.
+- After verification, restored the host's node_modules to its normal darwin-arm64 state via `pnpm install --frozen-lockfile` and removed the untracked .pnpm-store/ directory the container-side install left behind — git status matches the pre-session state exactly, no file outside scope.paths changed.
+- code-reviewer's Test Design Review already walks through all 18 tests with a YES/evidence verdict per test; this QA pass did not find any gap in that table and added no new tests, since every acceptance scenario from acceptance-scenarios.md already has a dedicated, passing, fail-provable test.
