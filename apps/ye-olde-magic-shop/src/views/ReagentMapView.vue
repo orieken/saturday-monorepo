@@ -43,6 +43,9 @@ declare global {
 const AURELIS_RADIUS_METERS = 6_000_000;
 const CESIUM_SCRIPT_URL = '/cesium/Cesium.js';
 const SITE_MARKER_PIXEL_SIZE = 10;
+// The spec's default view is centred over Moonwell Spring. Without this, Cesium
+// falls back to its Earth-sized home view, far from the planet's seeded sites.
+const DEFAULT_VIEW = { lat: 10, lng: 20, heightMeters: 12_000_000 };
 
 const sites = ref<ReagentSite[]>([]);
 let viewer: CesiumModule.Viewer | null = null;
@@ -93,6 +96,11 @@ async function buildViewer() {
     shouldAnimate: false
   });
   newViewer.scene.mode = Cesium.SceneMode.SCENE3D;
+  // No ion in this view, so its default credit logo would only mislead.
+  (newViewer.cesiumWidget.creditContainer as HTMLElement).style.display = 'none';
+  newViewer.camera.setView({
+    destination: Cesium.Cartesian3.fromDegrees(DEFAULT_VIEW.lng, DEFAULT_VIEW.lat, DEFAULT_VIEW.heightMeters, ellipsoid)
+  });
 
   return { Cesium, viewer: newViewer, ellipsoid };
 }

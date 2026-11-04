@@ -50,6 +50,44 @@ test.describe('Reagent map globe (AC2, AC3, AC4)', () => {
     await page.goto('/reagent-map');
   });
 
+  test('every reagent site sits on land in the planet image', async ({ cesium, page }) => {
+    await cesium.waitForSettled();
+
+    const landBySite = await page.evaluate(async (sites) => {
+      const image = new Image();
+      image.src = '/aurelis.jpg';
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext('2d')!;
+      context.drawImage(image, 0, 0);
+      return sites.map((site) => {
+        const x = Math.min(image.width - 1, Math.floor(((site.lng + 180) / 360) * image.width));
+        const y = Math.min(image.height - 1, Math.floor(((90 - site.lat) / 180) * image.height));
+        const [, green, blue] = context.getImageData(x, y, 1, 1).data;
+        return [site.name, green > blue];
+      });
+    }, SEEDED_SITES);
+
+    expect(landBySite).toEqual(SEEDED_SITES.map((site) => [site.name, true]));
+  });
+
+  test('shows no Cesium ion credit, since the view does not use ion', async ({ cesium, page }) => {
+    await cesium.waitForSettled();
+    await expect(page.locator('.cesium-widget-credits')).toBeHidden();
+  });
+
+  test('the default view is centred over Moonwell Spring, with Tidewrack Shoals on the far side', async ({
+    cesium,
+  }) => {
+    await cesium.waitForSettled();
+    const moonwell = SEEDED_SITES.find((site) => site.id === 'moonwell-spring')!;
+
+    expect(await cesium.toScreen(moonwell.lat, moonwell.lng)).not.toBeNull();
+    expect(await cesium.toScreen(TIDEWRACK_SHOALS.lat, TIDEWRACK_SHOALS.lng)).toBeNull();
+  });
+
   test('runs Cesium with no ion token/imagery, pickers off, SCENE3D, and a 6,000km-radius sphere (AC2)', async ({
     cesium,
     page,

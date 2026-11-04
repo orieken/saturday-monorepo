@@ -55,7 +55,8 @@ build_image() {
 }
 
 start_container() {
-  docker run -d --rm --platform linux/amd64 --name "$CONTAINER_NAME" \
+  # Chrome keeps renderer memory in /dev/shm; Docker's default 64 MB crashes tabs under load.
+  docker run -d --rm --platform linux/amd64 --shm-size=1g --name "$CONTAINER_NAME" \
     -v "$REPO_ROOT:/work" \
     -v "$PNPM_STORE_VOLUME:/home/runner/.pnpm-store" \
     -e "RUNNER_SLOW_MO=${RUNNER_SLOW_MO:-}" \
@@ -128,9 +129,10 @@ run_runner_check() {
   fi
 }
 
+# Each Cesium page renders in software under emulation; too many at once starve tile loading.
 run_chrome_suite() {
   docker exec "$CONTAINER_NAME" bash -lc \
-    'cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome'
+    'cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=3'
 }
 
 copy_report() {
