@@ -396,6 +396,48 @@ test('expeditions endpoints', async (t) => {
     assert.match(body.error, /from and to/i);
     assert.equal(fs.readFileSync(EXPEDITIONS_PATH, 'utf8'), before);
   });
+
+  await t.test('POST with an out-of-range longitude is refused with 400 and nothing is stored', async () => {
+    const token = await loginAs('elara@aurelis.example');
+    const before = fs.readFileSync(EXPEDITIONS_PATH, 'utf8');
+
+    const { status } = await post(
+      baseUrl,
+      '/api/expeditions',
+      { from: { lat: 10, lng: 20 }, to: { lat: 10, lng: -181 } },
+      { Authorization: `Bearer ${token}` }
+    );
+
+    assert.equal(status, 400);
+    assert.equal(fs.readFileSync(EXPEDITIONS_PATH, 'utf8'), before);
+  });
+
+  await t.test('POST accepts coordinates exactly at the limits of the planet', async () => {
+    const token = await loginAs('elara@aurelis.example');
+
+    const { status } = await post(
+      baseUrl,
+      '/api/expeditions',
+      { from: { lat: 90, lng: 180 }, to: { lat: -90, lng: -180 } },
+      { Authorization: `Bearer ${token}` }
+    );
+
+    assert.equal(status, 200);
+  });
+
+  await t.test('every seeded expedition has the name the spec refers to it by', async () => {
+    const seeded = JSON.parse(fs.readFileSync(EXPEDITIONS_PATH, 'utf8')).map((e) => e.name);
+
+    for (const name of [
+      'Spring to Crag',
+      'Glade to Caves',
+      'Cairn to Shoals',
+      'Moonwell Spring to Frostcap Hollow',
+      'Ember Crag to Saltmarsh Cairn',
+    ]) {
+      assert.ok(seeded.includes(name), `missing seeded expedition: ${name}`);
+    }
+  });
 });
 
 /**

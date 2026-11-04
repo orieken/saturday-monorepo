@@ -25,6 +25,7 @@
   },
   {
     "id": "expedition-elara-1",
+    "name": "Moonwell Spring to Frostcap Hollow",
     "owner": "user-4",
     "from": { "lat": 10, "lng": 20 },
     "to": { "lat": 85, "lng": 0 },
@@ -32,6 +33,7 @@
   },
   {
     "id": "expedition-borin-1",
+    "name": "Ember Crag to Saltmarsh Cairn",
     "owner": "user-5",
     "from": { "lat": 25, "lng": 60 },
     "to": { "lat": -15, "lng": 130 },

@@ -96,16 +96,12 @@ function geodesicDistanceKm(from, to, radiusKm) {
 // Number.isFinite (not typeof) excludes NaN/Infinity — both pass `typeof x === 'number'` but
 // make distanceKm NaN, and NaN < MIN_EXPEDITION_DISTANCE_KM is false, so the zero-length guard
 // would silently accept and persist them (JSON.stringify then writes them to disk as null).
+function isCoordinateInRange(value, limit) {
+  return Number.isFinite(value) && Math.abs(value) <= limit;
+}
+
 function isValidPoint(point) {
-  return (
-    !!point &&
-    Number.isFinite(point.lat) &&
-    Number.isFinite(point.lng) &&
-    point.lat >= -90 &&
-    point.lat <= 90 &&
-    point.lng >= -180 &&
-    point.lng <= 180
-  );
+  return !!point && isCoordinateInRange(point.lat, 90) && isCoordinateInRange(point.lng, 180);
 }
 
 // ============ HEALTH CHECK ============
