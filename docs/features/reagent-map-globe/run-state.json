@@ -1,0 +1,579 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "reagent-map-globe",
+  "specPath": ".claude/factory/claims/reagent-map-globe.md",
+  "specSha256": "33bbd732f3c6eab26c1422edfbfdd3676cf4f7910780135e33edca51c5f6de5b",
+  "provider": "claude",
+  "startedAt": "2026-11-04T06:43:10.474412Z",
+  "startCommit": "76bbfeaf2f11d3d9028a5ebd4b93bdc02bfbf1a3",
+  "diffLines": {
+    "confirm-design": 8812,
+    "confirm-security": 8812,
+    "confirm-ship": 8812
+  },
+  "reviewedDigest": "073dc9e421a42b1926a1d22ae4929d7c2db01a370aa98c9011a22e3db7dcc233",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T07:59:32.762063Z",
+      "finishedAt": "2026-11-04T08:00:32.315881Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/acceptance-scenarios.json",
+      "artifactSha256": "db4be1879ef7358595b239c15dccad7692ac785c16068a3707f295ed7806379a",
+      "sequence": 8,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 4,
+        "outputTokens": 6709,
+        "cacheReadTokens": 100367,
+        "cacheCreationTokens": 62427,
+        "costUsd": 0.3368794
+      }
+    },
+    "accessibility-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T08:38:56.720527Z",
+      "finishedAt": "2026-11-04T08:41:13.802626Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/accessibility-engineer.md",
+      "artifactSha256": "078ffffcfd4c32144792e2217771b9be3b2dcef00d24e32ccabe85ac637a7c27",
+      "sequence": 11,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "accessibility-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 28,
+        "outputTokens": 11781,
+        "cacheReadTokens": 1241228,
+        "cacheCreationTokens": 85902,
+        "costUsd": 0.7097196
+      }
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T07:49:11.317726Z",
+      "finishedAt": "2026-11-04T07:56:23.40305Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/analyst.json",
+      "artifactSha256": "fe8d3c07f190c86c9f5c02ae24f2d31f2a7c750c181c6cc44d41b582d9738987",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 36,
+        "outputTokens": 41926,
+        "cacheReadTokens": 2124640,
+        "cacheCreationTokens": 158760,
+        "costUsd": 1.4792999999999998
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T07:56:23.451404Z",
+      "finishedAt": "2026-11-04T07:59:32.760979Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/architect.json",
+      "artifactSha256": "35f7599e1775e8f65ce19be6d0cf9322ab04697c6ce880bff26e607366c669de",
+      "sequence": 7,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 17077,
+        "cacheReadTokens": 1159857,
+        "cacheCreationTokens": 96109,
+        "costUsd": 0.7872254
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T08:37:53.192612Z",
+      "finishedAt": "2026-11-04T08:38:56.719653Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/code-reviewer.json",
+      "artifactSha256": "d90b34c84f0a45c8fac7a7d979ba608592a8ebe1c832dd43526b1be07cd19d0a",
+      "sequence": 10,
+      "iteration": 3,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 56,
+        "outputTokens": 39189,
+        "cacheReadTokens": 2670162,
+        "cacheCreationTokens": 157614,
+        "costUsd": 1.5564904000000004
+      },
+      "iterationArtifacts": [
+        {
+          "iteration": 1,
+          "path": ".claude/feature-workspace/reagent-map-globe/.iterations/code-reviewer.1.json",
+          "sha256": "877734dfb97538c205b1122b08dd8fa2b2d912314412f303c8ddc47a04c678e6",
+          "at": "2026-11-04T08:31:26.047525Z"
+        },
+        {
+          "iteration": 2,
+          "path": ".claude/feature-workspace/reagent-map-globe/.iterations/code-reviewer.2.json",
+          "sha256": "0ad62249e3e6b738748745259ad46a330e153b71da0c27af27ff68dc3fb48b8d",
+          "at": "2026-11-04T08:36:34.115004Z"
+        }
+      ]
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T07:44:43.674391Z",
+      "finishedAt": "2026-11-04T07:49:11.316988Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/context-engineer.json",
+      "artifactSha256": "99e82fe9db8140c2e9ac1cd7cef799fc0e1d1aba90d0a02a467ec6edebfe3dbc",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 90,
+        "outputTokens": 25757,
+        "cacheReadTokens": 4311807,
+        "cacheCreationTokens": 208318,
+        "costUsd": 1.9533834000000008
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-04T07:56:23.450859Z",
+      "sequence": 5,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T08:36:34.142178Z",
+      "finishedAt": "2026-11-04T08:37:53.191897Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/developer.json",
+      "artifactSha256": "578c653d58e3c343f992fbd18181db17f748587348fc0a96d7f500767e517037",
+      "gate": "confirm-design",
+      "sequence": 9,
+      "editedAfterReview": true,
+      "iteration": 3,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 204,
+        "outputTokens": 59046,
+        "cacheReadTokens": 12777454,
+        "cacheCreationTokens": 311950,
+        "costUsd": 4.3941588
+      },
+      "iterationArtifacts": [
+        {
+          "iteration": 1,
+          "path": ".claude/feature-workspace/reagent-map-globe/.iterations/developer.1.json",
+          "sha256": "308d28eb389cd041edaa1b0ecf073f8112d049719f7b490b7bb25473249581af",
+          "at": "2026-11-04T08:31:26.047067Z"
+        },
+        {
+          "iteration": 2,
+          "path": ".claude/feature-workspace/reagent-map-globe/.iterations/developer.2.json",
+          "sha256": "834ff8980abfd4a57acf1d33d1fd3e46ba8d49a8a0bd96078ef423327eedecc9",
+          "at": "2026-11-04T08:36:34.114621Z"
+        }
+      ]
+    },
+    "devops-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T16:12:55.60206Z",
+      "finishedAt": "2026-11-04T16:15:51.277696Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/devops-engineer.md",
+      "artifactSha256": "c0fdf58844c67c7ff186fbb31d912640d74fe9b4b0f94219d0fafee81acc839a",
+      "gate": "confirm-ship",
+      "sequence": 17,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "devops-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 46,
+        "outputTokens": 13874,
+        "cacheReadTokens": 2019414,
+        "cacheCreationTokens": 108789,
+        "costUsd": 0.9778708000000003
+      }
+    },
+    "performance-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-04T07:56:23.450656Z",
+      "sequence": 4,
+      "skipReason": "no performance requirement carries a threshold with a number and a unit",
+      "iteration": 1
+    },
+    "pre-ship-checks": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T14:35:46.299198Z",
+      "finishedAt": "2026-11-04T14:37:44.73486Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/pre-ship-checks.md",
+      "artifactSha256": "b65ebe48ca44dccb01737e764b6b52dc57008f053003adfddee1556df3c5497a",
+      "sequence": 16,
+      "iteration": 1,
+      "agent": "pre-ship-checks"
+    },
+    "qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T14:21:03.45323Z",
+      "finishedAt": "2026-11-04T14:31:18.151384Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/qa-engineer.json",
+      "artifactSha256": "5bfc772da6c83d29482ca5145282f99c95c868ec08d396ab5c8baf93d420379a",
+      "gate": "confirm-security",
+      "sequence": 13,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "stateKind": "qa",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/qa-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 170,
+        "outputTokens": 76779,
+        "cacheReadTokens": 11554446,
+        "cacheCreationTokens": 332226,
+        "costUsd": 4.4079232
+      }
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T07:56:23.403768Z",
+      "finishedAt": "2026-11-04T07:56:23.450219Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/router.json",
+      "artifactSha256": "a07f09acb23c9789b118ab68677bd9971e4f5190c6cc1392c223a88d3318230d",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T08:41:13.803457Z",
+      "finishedAt": "2026-11-04T08:43:45.762394Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/state/security-reviewer.json",
+      "artifactSha256": "711eb2895de89a483f2dffb16d4c6aef408dd10808c09a13d8b9ad10fc47f2b0",
+      "sequence": 12,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-globe/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 26,
+        "outputTokens": 11968,
+        "cacheReadTokens": 1152752,
+        "cacheCreationTokens": 83615,
+        "costUsd": 0.6847424
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-04T07:56:23.451065Z",
+      "sequence": 6,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    },
+    "tech-writer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T14:33:31.620267Z",
+      "finishedAt": "2026-11-04T14:35:46.298667Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/tech-writer.md",
+      "artifactSha256": "601a33d291362a3291f07883ba0b7fb10fc27a3429196b73739384af86c50f36",
+      "sequence": 15,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "tech-writer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 34,
+        "outputTokens": 11797,
+        "cacheReadTokens": 1546615,
+        "cacheCreationTokens": 96291,
+        "costUsd": 0.8125249999999999
+      }
+    },
+    "visual-qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-04T14:31:18.15263Z",
+      "finishedAt": "2026-11-04T14:33:31.619659Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-globe/visual-qa-engineer.md",
+      "artifactSha256": "cca4b2c9eb784dec75c36c4fcbf675f0e9684b9d5494ba61b41e46247c951839",
+      "sequence": 14,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "visual-qa-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 32,
+        "outputTokens": 11505,
+        "cacheReadTokens": 1323029,
+        "cacheCreationTokens": 75880,
+        "costUsd": 0.6832398
+      }
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-04T08:18:39.492104Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "db4be1879ef7358595b239c15dccad7692ac785c16068a3707f295ed7806379a",
+        "analyst": "fe8d3c07f190c86c9f5c02ae24f2d31f2a7c750c181c6cc44d41b582d9738987",
+        "architect": "35f7599e1775e8f65ce19be6d0cf9322ab04697c6ce880bff26e607366c669de",
+        "context-engineer": "99e82fe9db8140c2e9ac1cd7cef799fc0e1d1aba90d0a02a467ec6edebfe3dbc",
+        "router": "a07f09acb23c9789b118ab68677bd9971e4f5190c6cc1392c223a88d3318230d"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-11-04T14:09:42.93159Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "db4be1879ef7358595b239c15dccad7692ac785c16068a3707f295ed7806379a",
+        "accessibility-engineer": "078ffffcfd4c32144792e2217771b9be3b2dcef00d24e32ccabe85ac637a7c27",
+        "analyst": "fe8d3c07f190c86c9f5c02ae24f2d31f2a7c750c181c6cc44d41b582d9738987",
+        "architect": "35f7599e1775e8f65ce19be6d0cf9322ab04697c6ce880bff26e607366c669de",
+        "code-reviewer": "d90b34c84f0a45c8fac7a7d979ba608592a8ebe1c832dd43526b1be07cd19d0a",
+        "context-engineer": "99e82fe9db8140c2e9ac1cd7cef799fc0e1d1aba90d0a02a467ec6edebfe3dbc",
+        "developer": "578c653d58e3c343f992fbd18181db17f748587348fc0a96d7f500767e517037",
+        "router": "a07f09acb23c9789b118ab68677bd9971e4f5190c6cc1392c223a88d3318230d",
+        "security-reviewer": "711eb2895de89a483f2dffb16d4c6aef408dd10808c09a13d8b9ad10fc47f2b0"
+      }
+    },
+    "confirm-ship": {
+      "approvedAt": "2026-11-04T16:12:55.498219Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "db4be1879ef7358595b239c15dccad7692ac785c16068a3707f295ed7806379a",
+        "accessibility-engineer": "078ffffcfd4c32144792e2217771b9be3b2dcef00d24e32ccabe85ac637a7c27",
+        "analyst": "fe8d3c07f190c86c9f5c02ae24f2d31f2a7c750c181c6cc44d41b582d9738987",
+        "architect": "35f7599e1775e8f65ce19be6d0cf9322ab04697c6ce880bff26e607366c669de",
+        "code-reviewer": "d90b34c84f0a45c8fac7a7d979ba608592a8ebe1c832dd43526b1be07cd19d0a",
+        "context-engineer": "99e82fe9db8140c2e9ac1cd7cef799fc0e1d1aba90d0a02a467ec6edebfe3dbc",
+        "developer": "578c653d58e3c343f992fbd18181db17f748587348fc0a96d7f500767e517037",
+        "pre-ship-checks": "b65ebe48ca44dccb01737e764b6b52dc57008f053003adfddee1556df3c5497a",
+        "qa-engineer": "5bfc772da6c83d29482ca5145282f99c95c868ec08d396ab5c8baf93d420379a",
+        "router": "a07f09acb23c9789b118ab68677bd9971e4f5190c6cc1392c223a88d3318230d",
+        "security-reviewer": "711eb2895de89a483f2dffb16d4c6aef408dd10808c09a13d8b9ad10fc47f2b0",
+        "tech-writer": "601a33d291362a3291f07883ba0b7fb10fc27a3429196b73739384af86c50f36",
+        "visual-qa-engineer": "cca4b2c9eb784dec75c36c4fcbf675f0e9684b9d5494ba61b41e46247c951839"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-04T08:18:39.493889Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "474302a4a9e4ad2f5f44adf8f9c55f82d99ec18f638c342cdbb956e0e85916de",
+          "at": "2026-11-04T08:18:39.494605Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-design/analyst.md",
+          "sha256": "f8872a42ff675479e9c514ce56da83cefa0edeb9446a20153424e175a439c8f4",
+          "at": "2026-11-04T08:18:39.49448Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-design/architect.md",
+          "sha256": "1a866a11f7be2d2874732f9045b0ce6b0c040de99734ebd35137eb09d9f3735e",
+          "at": "2026-11-04T08:18:39.494728Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-design/context-engineer.md",
+          "sha256": "06d89e65d47deea0f468d10c76aef376aa97e5cacaa3a74d548d8c9a0fda9d9e",
+          "at": "2026-11-04T08:18:39.494851Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-design/router.md",
+          "sha256": "62a2b0a0245307d9cb2d4c4d73c69cbf1e22d25f9c871bf2067e546260f99905",
+          "at": "2026-11-04T08:18:39.494084Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-11-04T14:09:42.932806Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "474302a4a9e4ad2f5f44adf8f9c55f82d99ec18f638c342cdbb956e0e85916de",
+          "at": "2026-11-04T14:09:42.937416Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/accessibility-engineer.md",
+          "sha256": "078ffffcfd4c32144792e2217771b9be3b2dcef00d24e32ccabe85ac637a7c27",
+          "at": "2026-11-04T14:09:42.936706Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/analyst.md",
+          "sha256": "f8872a42ff675479e9c514ce56da83cefa0edeb9446a20153424e175a439c8f4",
+          "at": "2026-11-04T14:09:42.937701Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/architect.md",
+          "sha256": "1a866a11f7be2d2874732f9045b0ce6b0c040de99734ebd35137eb09d9f3735e",
+          "at": "2026-11-04T14:09:42.933471Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/code-reviewer.md",
+          "sha256": "50a16830fdd3eff7d12306efbdb74b17169c50f34c2e9b595b8a7835c4ddf921",
+          "at": "2026-11-04T14:09:42.936897Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/context-engineer.md",
+          "sha256": "06d89e65d47deea0f468d10c76aef376aa97e5cacaa3a74d548d8c9a0fda9d9e",
+          "at": "2026-11-04T14:09:42.937296Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/developer.md",
+          "sha256": "c77878bc54ec93b7c3cb0475c06d6fb26aaa1fbebcfa07e3afeb71e9620fec3d",
+          "at": "2026-11-04T14:09:42.936984Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/router.md",
+          "sha256": "62a2b0a0245307d9cb2d4c4d73c69cbf1e22d25f9c871bf2067e546260f99905",
+          "at": "2026-11-04T14:09:42.937059Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-security/security-reviewer.md",
+          "sha256": "baad9ac0ec3e03c805eae0da354cddce518e2a0b1a11bad66dba3a8f31fb334b",
+          "at": "2026-11-04T14:09:42.936442Z"
+        }
+      }
+    },
+    "confirm-ship": {
+      "at": "2026-11-04T16:12:55.49957Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/acceptance-scenarios.md",
+          "sha256": "474302a4a9e4ad2f5f44adf8f9c55f82d99ec18f638c342cdbb956e0e85916de",
+          "at": "2026-11-04T16:12:55.50072Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/accessibility-engineer.md",
+          "sha256": "078ffffcfd4c32144792e2217771b9be3b2dcef00d24e32ccabe85ac637a7c27",
+          "at": "2026-11-04T16:12:55.499896Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/analyst.md",
+          "sha256": "f8872a42ff675479e9c514ce56da83cefa0edeb9446a20153424e175a439c8f4",
+          "at": "2026-11-04T16:12:55.500411Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/architect.md",
+          "sha256": "1a866a11f7be2d2874732f9045b0ce6b0c040de99734ebd35137eb09d9f3735e",
+          "at": "2026-11-04T16:12:55.500027Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/code-reviewer.md",
+          "sha256": "50a16830fdd3eff7d12306efbdb74b17169c50f34c2e9b595b8a7835c4ddf921",
+          "at": "2026-11-04T16:12:55.50012Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/context-engineer.md",
+          "sha256": "06d89e65d47deea0f468d10c76aef376aa97e5cacaa3a74d548d8c9a0fda9d9e",
+          "at": "2026-11-04T16:12:55.501075Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/developer.md",
+          "sha256": "c77878bc54ec93b7c3cb0475c06d6fb26aaa1fbebcfa07e3afeb71e9620fec3d",
+          "at": "2026-11-04T16:12:55.500585Z"
+        },
+        "pre-ship-checks": {
+          "stage": "pre-ship-checks",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/pre-ship-checks.md",
+          "sha256": "b65ebe48ca44dccb01737e764b6b52dc57008f053003adfddee1556df3c5497a",
+          "at": "2026-11-04T16:12:55.500215Z"
+        },
+        "qa-engineer": {
+          "stage": "qa-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/qa-engineer.md",
+          "sha256": "9917f94e782e2b6fb02ea05961ea63bee66cb1d209939fc8fd5267ec7ef4a0a6",
+          "at": "2026-11-04T16:12:55.501163Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/router.md",
+          "sha256": "62a2b0a0245307d9cb2d4c4d73c69cbf1e22d25f9c871bf2067e546260f99905",
+          "at": "2026-11-04T16:12:55.500501Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/security-reviewer.md",
+          "sha256": "baad9ac0ec3e03c805eae0da354cddce518e2a0b1a11bad66dba3a8f31fb334b",
+          "at": "2026-11-04T16:12:55.500992Z"
+        },
+        "tech-writer": {
+          "stage": "tech-writer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/tech-writer.md",
+          "sha256": "601a33d291362a3291f07883ba0b7fb10fc27a3429196b73739384af86c50f36",
+          "at": "2026-11-04T16:12:55.500815Z"
+        },
+        "visual-qa-engineer": {
+          "stage": "visual-qa-engineer",
+          "path": ".claude/feature-workspace/reagent-map-globe/.approved/confirm-ship/visual-qa-engineer.md",
+          "sha256": "cca4b2c9eb784dec75c36c4fcbf675f0e9684b9d5494ba61b41e46247c951839",
+          "at": "2026-11-04T16:12:55.50091Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 750,
+    "outputTokens": 327408,
+    "cacheReadTokens": 41981771,
+    "cacheCreationTokens": 1777881,
+    "costUsd": 18.783458200000002
+  },
+  "budget": {
+    "maxUsd": 30,
+    "maxHours": 3
+  },
+  "updatedAt": "2026-11-04T16:15:51.277765Z"
+}

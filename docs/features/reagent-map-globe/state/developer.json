@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-globe",
+  "filesModified": [
+    "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue"
+  ],
+  "interfaceDesign": [
+    "onMounted's viewer/sites bootstrap now resolves via Promise.allSettled with explicit per-settlement status narrowing instead of Promise.all — no new public surface, internal control flow only."
+  ],
+  "refactoringLog": [
+    {
+      "operation": "Guard Clause (replace implicit happy-path destructuring with explicit rejection checks)",
+      "target": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue:onMounted",
+      "reason": "code-reviewer finding: Promise.all discarded a fully-constructed Cesium Viewer (WebGL context, canvas, render loop) with no reference to destroy it whenever fetchReagentSites() rejected after buildViewer() had already resolved, leaking a WebGL context per failed visit. Switched to Promise.allSettled, checked viewerResult.status and sitesResult.status explicitly, and call newViewer.destroy() on a sites-fetch rejection before rethrowing, so a fetch failure never orphans a live viewer. No retry or fallback logic was added."
+    }
+  ],
+  "selfReview": [
+    { "item": "Every public method has an intention-revealing name", "checked": true },
+    { "item": "No function exceeds 30 LOC", "checked": true },
+    { "item": "Cyclomatic complexity < 7 on all new functions", "checked": true, "note": "onMounted gained two guard-clause branches; still well under 7." },
+    { "item": "No primitive obsession", "checked": true },
+    { "item": "No feature envy", "checked": true },
+    { "item": "No magic numbers or strings", "checked": true },
+    { "item": "Dependency direction verified", "checked": true, "note": "No import changes." }
+  ],
+  "simpleDesign": [
+    { "item": "Passes all tests", "checked": true, "note": "No unit-test framework is wired for this app (E2E/BDD only, per package.json); tsc/eslint binaries aren't installed in this environment, so the fix was verified by manual type-narrowing inspection rather than a tool run." },
+    { "item": "Reveals intention", "checked": true, "note": "viewerResult/sitesResult names and explicit 'rejected' checks make the cleanup-on-partial-failure path explicit instead of implicit in a destructuring Promise.all." },
+    { "item": "No duplication", "checked": true },
+    { "item": "Fewest elements", "checked": true, "note": "No new helpers added — reused buildViewer/fetchReagentSites, changed only the combinator and added two guard clauses." }
+  ],
+  "keyDecisions": [
+    {
+      "decision": "Used Promise.allSettled with per-result status checks rather than wrapping the original Promise.all in try/catch.",
+      "reasoning": "allSettled gives independent settlement for buildViewer() and fetchReagentSites() without needing a catch block that would have to re-inspect which of the two promises actually failed; a rejected viewerResult has nothing to clean up and can just rethrow, while a rejected sitesResult can call newViewer.destroy() on the already-resolved viewer before rethrowing — exactly the cleanup the code-reviewer asked for, with no retry/fallback behavior added."
+    }
+  ],
+  "deviations": [],
+  "dependenciesAdded": [],
+  "notesForQa": [
+    "Verify: if fetchReagentSites() rejects (e.g. mock API down or past its 5s timeout) after buildViewer() has resolved, the Cesium viewer's destroy() is called and no WebGL context or #cesiumContainer canvas is left behind — repeat the failing-fetch scenario across multiple mounts to confirm no accumulation.",
+    "Verify: if buildViewer() itself rejects, onMounted simply rethrows (no destroy call attempted on a viewer that never existed) and the component shows no entities/sites.",
+    "The non-blocking DRY finding on apps/ye-olde-magic-shop/src/api/reagentSites.ts (duplicated API-base resolution with items.ts) was explicitly deferred per architecture-notes.md and intentionally left unchanged."
+  ],
+  "notesForDevops": [],
+  "retrieval": {
+    "domainTerms": ["ReagentSite", "Viewer"],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

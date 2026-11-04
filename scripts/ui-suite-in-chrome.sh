@@ -89,7 +89,11 @@ install_dependencies() {
 }
 
 start_app_and_mock_api() {
-  docker exec -d "$CONTAINER_NAME" bash -lc '
+  # VITE_FEATURE_REAGENT_MAP=true overrides apps/ye-olde-magic-shop/.env's
+  # 'false' — Vite's loadEnv lets a process.env value win over a matching
+  # .env key — so this pre-ship check exercises the reagent map view while
+  # .env itself keeps the flag off for every other run (AC6).
+  docker exec -d -e VITE_FEATURE_REAGENT_MAP=true "$CONTAINER_NAME" bash -lc '
     cd /work/apps/ye-olde-magic-shop && npm run dev >/tmp/app.log 2>&1
   '
 }
