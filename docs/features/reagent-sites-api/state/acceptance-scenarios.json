@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-sites-api",
+  "scenarios": [
+    {
+      "criterion": "apps/mock-api/data/reagent-sites.json MUST hold exactly the eight sites in docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites, each with an id, name, lat and lng.",
+      "name": "The seeded reagent sites match the specification exactly",
+      "given": [
+        "The reagent sites seed data file has been created for the mock API"
+      ],
+      "when": [
+        "The seed data is compared against the specification's seed list of reagent sites"
+      ],
+      "then": [
+        "Exactly eight reagent sites are present",
+        "Each site has an id, a name, a latitude, and a longitude",
+        "Every site's id, name, latitude, and longitude matches the specification's seed list"
+      ]
+    },
+    {
+      "criterion": "GET /api/reagent-sites MUST return all eight sites with their positions unchanged, whether or not the request carries a session (spec AC1; features/reagent-map/reagent-sites.feature @AC1 @level-api).",
+      "name": "A request with no session still receives all reagent sites at their original positions",
+      "given": [
+        "No session is present on the request"
+      ],
+      "when": [
+        "A client requests the list of reagent sites"
+      ],
+      "then": [
+        "The response contains all eight reagent sites",
+        "Every site's position is unchanged from the seed data"
+      ]
+    },
+    {
+      "criterion": "GET /api/reagent-sites MUST return all eight sites with their positions unchanged, whether or not the request carries a session (spec AC1; features/reagent-map/reagent-sites.feature @AC1 @level-api).",
+      "name": "A request with a valid session receives all reagent sites at their original positions",
+      "given": [
+        "A client holds a valid session"
+      ],
+      "when": [
+        "The client requests the list of reagent sites"
+      ],
+      "then": [
+        "The response contains all eight reagent sites",
+        "Every site's position is unchanged from the seed data"
+      ]
+    },
+    {
+      "criterion": "GET /api/reagent-sites MUST return all eight sites with their positions unchanged, whether or not the request carries a session (spec AC1; features/reagent-map/reagent-sites.feature @AC1 @level-api).",
+      "name": "A request with an invalid or garbage session still receives all reagent sites at their original positions",
+      "given": [
+        "A client holds an invalid or garbage session credential"
+      ],
+      "when": [
+        "The client requests the list of reagent sites"
+      ],
+      "then": [
+        "The response contains all eight reagent sites",
+        "Every site's position is unchanged from the seed data",
+        "The request is not rejected on account of the session credential"
+      ]
+    },
+    {
+      "criterion": "apps/mock-api MUST run its tests through Node's built-in node:test, with no new dependency, via a test script in apps/mock-api/package.json.",
+      "name": "The mock API's test suite runs on Node's built-in test runner with no added dependency",
+      "given": [
+        "The mock API project as delivered"
+      ],
+      "when": [
+        "The test script declared in apps/mock-api/package.json is run"
+      ],
+      "then": [
+        "The suite executes using Node's built-in node:test runner",
+        "No new test-framework dependency has been added to run it"
+      ]
+    },
+    {
+      "criterion": "Every new or changed function MUST have cyclomatic complexity below 7, every changed line MUST be covered by a test that can fail, and no file outside scope.paths MUST change, excepting the run's own delivery record under docs/features/reagent-sites-api/.",
+      "name": "The implementation stays within complexity, coverage, and scope limits",
+      "given": [
+        "The feature has been implemented"
+      ],
+      "when": [
+        "The change is reviewed for complexity, test coverage, and file scope"
+      ],
+      "then": [
+        "Every new or changed function has cyclomatic complexity below 7",
+        "Every changed line is covered by a test that can fail",
+        "No file outside apps/mock-api/** has changed, other than the delivery record under docs/features/reagent-sites-api/"
+      ]
+    }
+  ]
+}
