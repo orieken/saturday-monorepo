@@ -55,6 +55,9 @@ app behaves exactly as it does today.
 - [ ] Given the line tool started, when two points are placed on the land, then a completed geodesic
       line joins them and is ready to save (spec AC6, AC8); after one point, no line is complete and it
       cannot be saved (spec AC7).
+- [ ] Given the line tool started, then any point on the near side of the globe can be placed, sea
+      included; "the land" in the spec means the planet's surface for now (see
+      `docs/specs/reagent-map-spec/corrections.md`).
 - [ ] Given the line tool started, then a click on space beside the globe, or on the edge where the
       land faces away, places nothing, shows nothing, and the tool still waits (spec AC9, AC10).
 - [ ] Given one point placed, when the line tool is started again, then the new line has no points

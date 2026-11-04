@@ -8,3 +8,4 @@ What each gate's owner changed in the draft, and why.
 | `confirm-domain` | analyst (Oscar), 2026-11-02 | Hotspots H1–H6 as drafted | No change: all six accepted | — |
 | `answer-questions` | analyst (Oscar), 2026-11-02 | Q3 1 km, Q4 geodesic, Q5 nothing happens, Q6 own + seeded, Q7 3 shop lines, Q8 Aurelis 6,000 km with 8 sites, Q9 edge counts and once per circle, Q11 closer than tolerance | No change: every assumption accepted | — |
 | `confirm-scenarios` | tester (Oscar), 2026-11-02 | 21 scenarios (6 API, 15 UI), routing, the AC11 cross-check, step wording | No change: accepted as drafted | — |
+| After `confirm-ship` (raised at `reagent-map-globe`) | analyst (Oscar), 2026-11-04 | "On the land" did not say whether water counts | Any two points on the near side of the globe, sea included, for now. Only space and the far side refuse a point | The planet image has sea; a land check isn't needed yet |
