@@ -18,7 +18,7 @@ budget:
   max-usd: 25
   max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, docs/features/reagent-map-line-tool/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-line-tool/**]
 ---
 
 # Draw a line on the reagent map

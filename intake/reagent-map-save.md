@@ -18,7 +18,7 @@ budget:
   max-usd: 20
   max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/.env, docs/features/reagent-map-save/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/.env, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-save/**]
 ---
 
 # Save expeditions from the reagent map and turn it on

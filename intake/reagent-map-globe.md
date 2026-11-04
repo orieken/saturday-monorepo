@@ -3,7 +3,7 @@ intake: 1
 id: reagent-map-globe
 type: feature
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-11-03
 requested-by: oscar
@@ -18,7 +18,7 @@ budget:
   max-usd: 30
   max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/public/**, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/vite.config.ts, apps/ye-olde-magic-shop/.env, pnpm-lock.yaml, docs/features/reagent-map-globe/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/public/**, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/vite.config.ts, apps/ye-olde-magic-shop/.env, pnpm-lock.yaml, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, apps/ye-olde-magic-shop/playwright.config.ts, scripts/ui-suite-in-chrome.sh, docs/features/reagent-map-globe/**]
 ---
 
 # Show Aurelis and its reagent sites on a 3D globe
@@ -66,6 +66,11 @@ app behaves exactly as it does today.
       the globe (spec AC1), including Frostcap Hollow near the pole and Tidewrack Shoals on the 180th
       meridian, each once (spec AC2).
 - [ ] Given the view open, then no request leaves the app's and mock API's own origins.
+- [ ] Given the flag, then whether the route exists is decided by a small pure function, tested for
+      `true`, `false` and unset without a browser. `scripts/ui-suite-in-chrome.sh` starts the app with
+      `VITE_FEATURE_REAGENT_MAP=true`, so the pre-ship check exercises the view, while `.env` keeps it
+      off. Its new specs, named `tests/reagent-map-*.spec.ts`, run in the `chrome` project only (real
+      Chrome with software WebGL), and `test:e2e` with bundled Chromium still passes without them.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/reagent-map-globe/` excepted.

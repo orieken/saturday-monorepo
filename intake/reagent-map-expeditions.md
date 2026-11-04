@@ -18,7 +18,7 @@ budget:
   max-usd: 20
   max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, docs/features/reagent-map-expeditions/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-expeditions/**]
 ---
 
 # Draw visible expeditions and fly to a site on the reagent map
