@@ -1,0 +1,138 @@
+---
+feature: "reagent-sites-api"
+bounded_context: "Expedition Planning — Reagent Site catalog (apps/mock-api backend)"
+domain_terms: ["Adventurer", "Reagent Site", "Aurelis"]
+files_touched: ["apps/mock-api/data/reagent-sites.json", "apps/mock-api/server.js", "apps/mock-api/package.json", "apps/mock-api/server.test.js"]
+issue_refs: ["reagent-sites-api"]
+linked_adrs: []
+linked_kis: []
+---
+
+# Feature Analysis: reagent-sites-api
+
+## Summary
+
+Add a new, unauthenticated GET /api/reagent-sites endpoint to apps/mock-api that returns the eight seeded reagent sites of the invented planet Aurelis (id, name, lat, lng), backed by a new static apps/mock-api/data/reagent-sites.json file. This is the first of six slices splitting the reagent-map-spec's D1 work: API only, no UI, no expeditions. It unblocks the later reagent-map-globe/reagent-map-save slices, which will render these sites on the globe once their own orders land.
+
+### Acceptance Criteria
+
+- apps/mock-api/data/reagent-sites.json MUST hold exactly the eight sites in docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites, each with an id, name, lat and lng.
+  - Example: {id: "moonwell-spring", name: "Moonwell Spring", lat: 10, lng: 20}
+  - Example: {id: "ember-crag", name: "Ember Crag", lat: 25, lng: 60}
+  - Example: {id: "frostcap-hollow", name: "Frostcap Hollow", lat: 85, lng: 0}
+  - Example: {id: "ashen-reach", name: "Ashen Reach", lat: -84, lng: 90}
+  - Example: {id: "tidewrack-shoals", name: "Tidewrack Shoals", lat: 0, lng: 180}
+  - Example: {id: "thornveil-glade", name: "Thornveil Glade", lat: -30, lng: -45}
+  - Example: {id: "glimmerdeep-caves", name: "Glimmerdeep Caves", lat: 40, lng: -100}
+  - Example: {id: "saltmarsh-cairn", name: "Saltmarsh Cairn", lat: -15, lng: 130}
+- GET /api/reagent-sites MUST return all eight sites with their positions unchanged, whether or not the request carries a session (spec AC1; features/reagent-map/reagent-sites.feature @AC1 @level-api).
+  - Example: Request with no Authorization header -> 200, body is the 8-site array.
+  - Example: Request with Authorization: Bearer <valid-session-token> -> 200, identical 8-site array.
+  - Example: Request with Authorization: Bearer <garbage-token> -> 200, identical 8-site array (the endpoint does not call requireAuth).
+- apps/mock-api MUST run its tests through Node's built-in node:test, with no new dependency, via a test script in apps/mock-api/package.json.
+- Every new or changed function MUST have cyclomatic complexity below 7, every changed line MUST be covered by a test that can fail, and no file outside scope.paths MUST change, excepting the run's own delivery record under docs/features/reagent-sites-api/.
+
+### Non-Functional Requirements
+
+- **security**: GET /api/reagent-sites MUST NOT make or trigger any request leaving the app's and mock API's own origins — it serves only from the local reagent-sites.json file, with no outbound call, proxy, or external fetch.
+
+## Proposed Fitness Functions
+
+- **Cyclomatic complexity stays below 7 for every function added or changed in apps/mock-api/server.js**
+  - **Verification**: Manual review by code-reviewer — apps/mock-api has no ESLint config today, so the framework-wide complexity rule cannot run as a CI check for this file yet.
+  - **Owner**: code-reviewer
+- **Every changed line is covered by a test that can fail**
+  - **Verification**: node --test apps/mock-api — assertions deep-equal the exact 8-site array (not just HTTP 200), so flipping a lat/lng or dropping a site fails the test (test-repair-contract.md).
+  - **Owner**: qa-engineer
+- **apps/mock-api/data/reagent-sites.json holds exactly the eight seeded sites with unchanged positions**
+  - **Verification**: node:test deep-equal of the data file's name/lat/lng against docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites.
+  - **Owner**: qa-engineer
+- **No file outside scope.paths (apps/mock-api/**, docs/features/reagent-sites-api/**) changes**
+  - **Verification**: git diff --name-only against the base branch, checked by loom's own run gate.
+  - **Owner**: DevOps
+
+## Out of Scope
+
+- Expeditions and the expeditions-api endpoint — a separate order in the same six-way split.
+- Any UI for the reagent map (reagent-map-globe, reagent-map-save, draw-line, fly-to-site, save-expedition slices).
+- Running the E1 (UI) and F1 (API) full scenario suites — the spec package says these are run by hand, not by this order's automated tests.
+- Authentication or session enforcement on GET /api/reagent-sites — it is public by design, per AC1's 'with or without a session' requirement.
+
+## Technical Breakdown
+
+None
+
+### Bounded Context
+
+- **Owning Context**: Expedition Planning — Reagent Site catalog (apps/mock-api backend)
+- **Context Crossings**: features/reagent-map UI slices (reagent-map-globe, reagent-map-save) that will consume this endpoint once their own orders land, expeditions-api — the sibling endpoint for the same bounded context, out of scope here
+
+### Domain Events (Event Storming Lite)
+
+- **Commands**: ListReagentSites
+- **Events Produced**: ReagentMapOpened
+- **Owning Aggregates**: ReagentSite
+- **Read Models / Projections**: ReagentSiteCatalog
+
+### Affected Components
+
+- `apps/mock-api/data/reagent-sites.json` — New seed data file holding the 8 published reagent sites (name/lat/lng from acceptance-criteria.json, id assigned by the developer as a kebab-case slug of name, matching items.json's id convention).
+- `apps/mock-api/server.js` — Add a REAGENT_SITES_PATH constant, a readReagentSites() helper mirroring the existing readItems() pattern, a GET /api/reagent-sites handler with no requireAuth, the new endpoint in the startup console.log list, and export the app (module.exports = app, app.listen guarded by require.main === module) so node:test can import it without binding the port.
+- `apps/mock-api/package.json` — Add a "test": "node --test" script. No new dependency — node:test is built in.
+- `apps/mock-api/server.test.js` — New node:test suite asserting GET /api/reagent-sites' full contract: exactly 8 sites, unchanged positions, identical response with and without an Authorization header.
+
+### Data Model Changes
+
+- Add apps/mock-api/data/reagent-sites.json: a new, purely additive static JSON array of 8 reagent sites (id, name, lat, lng). No existing data file or schema is altered. (**none** phase)
+
+### API Changes
+
+- `GET /api/reagent-sites` — New public endpoint (no requireAuth middleware) returning the full array of 8 seeded reagent sites with id, name, lat, lng; identical response whether or not a session token is present.
+
+### New Dependencies
+
+None
+
+## Task List
+
+None
+
+### Developer Tasks
+
+1. Create apps/mock-api/data/reagent-sites.json with exactly the 8 sites from docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites, each given a kebab-case id slug of its name (e.g. "moonwell-spring"), plus its unchanged name/lat/lng.
+2. In apps/mock-api/server.js, add const REAGENT_SITES_PATH = path.join(__dirname, 'data', 'reagent-sites.json') and function readReagentSites() { return readJSON(REAGENT_SITES_PATH); }, next to the existing readItems()/readUsers()/readOrders() helpers.
+3. Add app.get('/api/reagent-sites', (req, res) => { res.json(readReagentSites()); }) under a new '============ REAGENT SITES ENDPOINTS ============' comment block, placed near the other unauthenticated GET endpoints (/api/items). Do not wrap it in requireAuth.
+4. Add '  - GET  /api/reagent-sites' to the app.listen() startup console.log list, matching the existing convention.
+5. Add module.exports = app at the end of server.js, and wrap the existing app.listen(...) call in if (require.main === module) { ... } so requiring server.js from a test does not bind the port.
+6. Add a "test": "node --test" script to apps/mock-api/package.json. Add no new dependency.
+
+### QA Tasks
+
+1. Write apps/mock-api/server.test.js using node:test + node:assert: import the exported app, start it on an ephemeral port for the test run, and assert GET /api/reagent-sites returns exactly the 8 seeded sites (deep-equal on id/name/lat/lng) both with no Authorization header and with an arbitrary/garbage one.
+2. Add a test asserting apps/mock-api/data/reagent-sites.json's contents deep-equal docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites on name/lat/lng, so a mismatched seed value fails the suite.
+3. Run node --test inside apps/mock-api and confirm it passes with no new dependency installed.
+4. Confirm via git diff that no file outside apps/mock-api/** and docs/features/reagent-sites-api/** changed.
+
+### Tech Writer Tasks
+
+None
+
+### DevOps Tasks
+
+None
+
+## Edge Cases and Risks
+
+- Request to GET /api/reagent-sites carries a valid, expired, or garbage Authorization header.: The handler ignores the header entirely (no requireAuth) and always returns the same 8-site array, per AC1's 'with or without a session' requirement.
+- A site's seeded latitude sits near a pole (Frostcap Hollow, lat 85) or on the antimeridian (Tidewrack Shoals, lng 180).: The endpoint returns the stored lat/lng verbatim with no normalization or clamping — pole/antimeridian display handling belongs to the UI slices (reagent-map-globe), not this API order.
+- apps/mock-api/data/reagent-sites.json is hand-edited later and becomes malformed JSON.: readJSON already catches the parse error, logs it, and returns [] (existing behavior, unchanged) — the new endpoint would then return an empty array rather than throwing; no new error handling is needed since this mirrors every other readJSON-backed endpoint.
+- Two reagent sites are seeded closer than the spec's 1 km same-place tolerance.: Not applicable to this endpoint: it is a straight read-through of the seed data, with no distance computation. The 1 km tolerance governs how the UI and expedition-save slices compare points, not this endpoint's response.
+
+## Definition of Done
+
+- apps/mock-api/data/reagent-sites.json exists with exactly 8 sites, each with id/name/lat/lng matching docs/specs/reagent-map-spec/acceptance-criteria.json's seed.reagentSites.
+- GET /api/reagent-sites returns all 8 sites with unchanged positions, identically with and without a session header.
+- apps/mock-api/package.json has a test script running node:test, with no new dependency added.
+- node --test apps/mock-api passes, with assertions specific enough to fail on a wrong site, a dropped site, or a moved position.
+- Every new/changed function in server.js is reviewed for cyclomatic complexity below 7 (code-reviewer, judgment-only — no ESLint config exists in apps/mock-api).
+- git diff shows no file changed outside apps/mock-api/** and docs/features/reagent-sites-api/**.

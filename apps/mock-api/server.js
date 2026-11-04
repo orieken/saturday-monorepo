@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 8001;
 const ITEMS_PATH = path.join(__dirname, 'data', 'items.json');
 const USERS_PATH = path.join(__dirname, 'data', 'users.json');
 const ORDERS_PATH = path.join(__dirname, 'data', 'orders.json');
+const REAGENT_SITES_PATH = path.join(__dirname, 'data', 'reagent-sites.json');
 
 const app = express();
 app.use(cors());
@@ -41,6 +42,7 @@ function writeJSON(filePath, data) {
 function readItems() { return readJSON(ITEMS_PATH); }
 function readUsers() { return readJSON(USERS_PATH); }
 function readOrders() { return readJSON(ORDERS_PATH); }
+function readReagentSites() { return readJSON(REAGENT_SITES_PATH); }
 function writeUsers(users) { return writeJSON(USERS_PATH, users); }
 function writeOrders(orders) { return writeJSON(ORDERS_PATH, orders); }
 
@@ -76,6 +78,11 @@ app.get('/api/items/:id', (req, res) => {
   const item = items.find(i => i.id === id);
   if (!item) return res.status(404).json({ error: 'Not found' });
   res.json(item);
+});
+
+// ============ REAGENT SITES ENDPOINTS ============
+app.get('/api/reagent-sites', (req, res) => {
+  res.json(readReagentSites());
 });
 
 // ============ AUTH ENDPOINTS ============
@@ -236,18 +243,23 @@ app.post('/api/orders', requireAuth, (req, res) => {
 // Note: mock-api intentionally does NOT serve Cucumber feature/index information.
 // The real test-runner-service (Go) serves Cucumber index data on port 9001.
 
-app.listen(PORT, () => {
-  console.log(`Mock API listening on http://localhost:${PORT}`);
-  console.log('Available endpoints:');
-  console.log('  - POST /api/auth/register');
-  console.log('  - POST /api/auth/login');
-  console.log('  - POST /api/auth/logout');
-  console.log('  - GET  /api/auth/me');
-  console.log('  - GET  /api/users/profile');
-  console.log('  - PUT  /api/users/profile');
-  console.log('  - GET  /api/orders');
-  console.log('  - GET  /api/orders/:id');
-  console.log('  - POST /api/orders');
-  console.log('  - GET  /api/items');
-  console.log('  - GET  /api/items/:id');
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Mock API listening on http://localhost:${PORT}`);
+    console.log('Available endpoints:');
+    console.log('  - POST /api/auth/register');
+    console.log('  - POST /api/auth/login');
+    console.log('  - POST /api/auth/logout');
+    console.log('  - GET  /api/auth/me');
+    console.log('  - GET  /api/users/profile');
+    console.log('  - PUT  /api/users/profile');
+    console.log('  - GET  /api/orders');
+    console.log('  - GET  /api/orders/:id');
+    console.log('  - POST /api/orders');
+    console.log('  - GET  /api/items');
+    console.log('  - GET  /api/items/:id');
+    console.log('  - GET  /api/reagent-sites');
+  });
+}
+
+module.exports = app;
