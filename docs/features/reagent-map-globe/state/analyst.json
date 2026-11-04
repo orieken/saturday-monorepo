@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-globe",
+  "summary": "Add a feature-flagged `/reagent-map` route to the ye-olde-magic-shop Vue app showing Aurelis as an offline 3D Cesium globe, with the eight reagent sites from the existing GET /api/reagent-sites endpoint plotted as entities and listed by name beside the globe. The view implements the saturday-playwright-cesium seam contract (`window.__SATURDAY_CESIUM__`, `saturdayMetadata` on each site entity) so the sibling test package can drive it. The route and its nav link exist only when the new build-time flag VITE_FEATURE_REAGENT_MAP is `true`; `.env` keeps it `false` so the app is otherwise unchanged. This is slice 3 of 6 in the reagent-map-spec D1 split — no expeditions, fly-to, line tool, or save behavior, and no backend changes (reagent-sites-api already shipped the endpoint this view consumes).",
+  "acceptanceCriteria": [
+    {
+      "statement": "The /reagent-map route and its nav link exist only when VITE_FEATURE_REAGENT_MAP is exactly \"true\"; with it unset, empty, or any other value, there is no route and no link, and the app is otherwise unchanged. .env sets the flag to false.",
+      "examples": [
+        "VITE_FEATURE_REAGENT_MAP=true -> route exists, nav link renders",
+        "VITE_FEATURE_REAGENT_MAP=false -> no route, no link",
+        "VITE_FEATURE_REAGENT_MAP unset -> no route, no link"
+      ]
+    },
+    {
+      "statement": "The view runs Cesium with no network dependency: no ion token or ion imagery, baseLayerPicker and geocoder off, one equirectangular image of Aurelis served from the app's own files, Cesium's own static assets served same-origin via CESIUM_BASE_URL, scene mode SCENE3D, and an ellipsoid that is a sphere of radius 6,000 km.",
+      "examples": [
+        "viewer.scene.globe.ellipsoid has radii (6000000, 6000000, 6000000)",
+        "viewer.scene.mode === Cesium.SceneMode.SCENE3D",
+        "viewer.baseLayerPicker and viewer.geocoder are both false/absent"
+      ]
+    },
+    {
+      "statement": "The view sets window.__SATURDAY_CESIUM__ = { viewer, Cesium } and attaches saturdayMetadata { id, name, kind: 'site' } to every reagent site entity, per packages/saturday-playwright-cesium/README.md's seam contract.",
+      "examples": []
+    },
+    {
+      "statement": "Every one of the eight reagent sites is shown within 1 km of its published position and listed by name beside the globe, including Frostcap Hollow near the north pole and Tidewrack Shoals on the 180th meridian, each shown exactly once with no clipping or duplication.",
+      "examples": [
+        "Frostcap Hollow (lat 85, lng 0) appears once, within 1 km of that position",
+        "Tidewrack Shoals (lat 0, lng 180) appears once, within 1 km of that position, not duplicated at the antimeridian wrap"
+      ]
+    },
+    {
+      "statement": "No request made while the reagent map view is open leaves the app's own origin or the mock API's own origin.",
+      "examples": []
+    },
+    {
+      "statement": "A small pure function decides whether the /reagent-map route exists, tested for \"true\", \"false\", and unset without a browser. scripts/ui-suite-in-chrome.sh starts the app with VITE_FEATURE_REAGENT_MAP=true so the pre-ship check exercises the view, while .env keeps the flag false. New specs named tests/reagent-map-*.spec.ts run only in the chrome Playwright project; npm run test:e2e (bundled Chromium) still passes without them.",
+      "examples": []
+    },
+    {
+      "statement": "Every new or changed function has cyclomatic complexity below 7, every changed line is covered by a test that can fail, and no file outside scope.paths changes except this run's own delivery record under docs/features/reagent-map-globe/.",
+      "examples": []
+    }
+  ],
+  "nonFunctionalRequirements": [
+    {
+      "category": "security",
+      "requirement": "GET requests, static asset loads, and Cesium's own asset/worker loads triggered by the /reagent-map view MUST NOT leave the app's own origin or the mock API's own origin — no ion imagery, no CDN, no external geocoder."
+    }
+  ],
+  "proposedFitnessFunctions": [
+    {
+      "property": "Zero off-origin network requests during /reagent-map page load and settle",
+      "verification": "Playwright test on page.on('request') collecting every request hostname and asserting each is the dev server's own origin or the proxied mock API origin — mirrors packages/saturday-playwright-cesium/tests/fixture.spec.ts's existing 'makes no request off its own origin' test.",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "isReagentMapEnabled(value) returns true only for the literal string \"true\", false for \"false\" and for undefined",
+      "verification": "tests/reagent-map-feature-flag.spec.ts using @playwright/test's test/expect with no page fixture, same shape as the existing tests/playwright-config.spec.ts pattern — runs with no browser launched.",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "Files named tests/reagent-map-*.spec.ts run only under the Playwright 'chrome' project; npm run test:e2e (chromium project) passes unaffected by their presence",
+      "verification": "playwright.config.ts's chromium project carries a testIgnore for the reagent-map-*.spec.ts glob; CI runs both npm run test:e2e and npm run test:chrome (or scripts/ui-suite-in-chrome.sh) and checks both exit codes.",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "Every reagent site entity renders within 1 km of its seeded position, including the pole and antimeridian cases, with no duplicate entity",
+      "verification": "tests/reagent-map-globe.spec.ts using @orieken/saturday-playwright-cesium's cesium.getEntities() and distance() geometry helper against apps/mock-api/data/reagent-sites.json's seeded lat/lng.",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "No file outside scope.paths changes, excepting this run's own delivery record under docs/features/reagent-map-globe/",
+      "verification": "git diff --name-only against the base branch, checked by loom's own run gate.",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "Cyclomatic complexity stays below 7 for every function added or changed in apps/ye-olde-magic-shop/src/** and vite.config.ts",
+      "verification": "Manual review by code-reviewer — apps/ye-olde-magic-shop has no ESLint complexity rule configured yet, so this cannot run as an automated CI check for this app.",
+      "owner": "code-reviewer",
+      "judgmentOnly": true
+    }
+  ],
+  "outOfScope": [
+    "Expeditions, fly-to, the line tool, and saving — the next three orders in the six-way split (reagent-map-expeditions, reagent-map-line-tool, reagent-map-save).",
+    "The existing Leaflet-based /locations view — unchanged.",
+    "Backend/API changes — GET /api/reagent-sites already exists from reagent-sites-api; this order only consumes it.",
+    "Running the full E1 (UI) and F1 (API) scenario suites — the spec package says these are run by hand, not by this order's automated tests.",
+    "Any change to apps/ye-olde-magic-shop/index.html, apps/ye-olde-magic-shop/README.md, or any .gitignore file — none are in scope.paths."
+  ],
+  "surfaces": {
+    "ui": true,
+    "runtime": false
+  },
+  "boundedContext": {
+    "owning": "Expedition Planning — Reagent Map UI (apps/ye-olde-magic-shop frontend)",
+    "crossings": [
+      "apps/mock-api — read-only consumer of the existing GET /api/reagent-sites endpoint (reagent-sites-api); no backend change in this order",
+      "packages/saturday-playwright-cesium — Test Automation bounded context; this order implements its published seam contract (window.__SATURDAY_CESIUM__, saturdayMetadata) and reuses its already-reviewed fixture-globe.js Cesium configuration and fixtures/assets/aurelis.jpg texture as reference/source material, read-only (packages/saturday-playwright-cesium/** is not in this order's scope.paths)"
+    ]
+  },
+  "domainEvents": {
+    "commands": ["OpenReagentMap"],
+    "eventsProduced": ["ReagentMapOpened"],
+    "owningAggregates": ["ReagentSite"],
+    "readModels": ["ReagentSiteCatalog"]
+  },
+  "affectedComponents": [
+    {
+      "path": "apps/ye-olde-magic-shop/src/featureFlags.ts",
+      "reason": "New module exporting the pure function isReagentMapEnabled(value: string | undefined): boolean, the small pure predicate the route and nav link both gate on, tested without a browser."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/router/index.ts",
+      "reason": "Conditionally append the { path: '/reagent-map', component: ReagentMapView } route only when isReagentMapEnabled(import.meta.env.VITE_FEATURE_REAGENT_MAP) is true, so the route genuinely does not exist when the flag is off."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/App.vue",
+      "reason": "Add a nav <router-link to=\"/reagent-map\"> (data-testid=\"reagent-map-link\") gated by the same isReagentMapEnabled(...) check, alongside the existing Shop/Locations/Cart links."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/api/reagentSites.ts",
+      "reason": "New API client module: ReagentSite type ({id, name, lat, lng}) and fetchReagentSites(): Promise<ReagentSite[]>, mirroring src/api/items.ts's existing API_BASE/fetch convention against GET /api/reagent-sites."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "New view: builds the no-network Cesium Viewer (ellipsoid/globe/imagery config lifted verbatim from packages/saturday-playwright-cesium/fixtures/assets/fixture-globe.js), fetches reagent sites, adds one tagged point entity per site, renders the site-name list beside the globe, exposes window.__SATURDAY_CESIUM__ on mount and tears it down on unmount (mirroring LocationsView.vue's __SATURDAY_LEAFLET_MAP__ lifecycle pattern)."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/main.ts",
+      "reason": "Set (window as any).CESIUM_BASE_URL = '/cesium/' before mount — inert unless the reagent map route is actually visited, so the app stays unchanged for every other route when the flag is off; keeps Cesium itself out of main.ts's own static imports."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/public/aurelis.jpg",
+      "reason": "New static asset: a copy of the already-reviewed, same-origin equirectangular Aurelis texture at packages/saturday-playwright-cesium/fixtures/assets/aurelis.jpg (1024x512px). Do not regenerate it — copy the existing, reviewed file."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/package.json",
+      "reason": "Add \"cesium\": \"1.146.0\" (exact version, no caret range) to dependencies, matching packages/saturday-playwright-cesium/package.json and the version already resolved in pnpm-lock.yaml — avoids a second resolved Cesium version in the lockfile."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/vite.config.ts",
+      "reason": "Add a small inline dev-server/build plugin that serves node_modules/cesium/Build/Cesium under /cesium/ in dev (configureServer) and copies the same directory into the build's outDir/cesium on build (closeBundle/writeBundle) — no new dependency, and no write into public/ or need for a new .gitignore entry (dist/ is already ignored; .gitignore is not in scope.paths)."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/playwright.config.ts",
+      "reason": "Add a testIgnore for the reagent-map-*.spec.ts glob on the 'chromium' project only, so npm run test:e2e/test:pw stay unaffected; the 'chrome' project picks the new specs up with no change needed on its side."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/.env",
+      "reason": "Add VITE_FEATURE_REAGENT_MAP=false, keeping the flag off for every normal local run."
+    },
+    {
+      "path": "scripts/ui-suite-in-chrome.sh",
+      "reason": "start_app_and_mock_api() must export VITE_FEATURE_REAGENT_MAP=true to the containerized npm run dev process, so the pre-ship chrome-project run exercises the view while every other invocation keeps the flag at .env's false."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/tests/reagent-map-feature-flag.spec.ts",
+      "reason": "New test: isReagentMapEnabled('true')===true, isReagentMapEnabled('false')===false, isReagentMapEnabled(undefined)===false — no page fixture, no browser launched."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts",
+      "reason": "New chrome-project test using @orieken/saturday-playwright-cesium's cesium fixture: asserts the seam contract, all 8 sites within 1 km (including the pole/antimeridian cases), SCENE3D, the 6,000 km ellipsoid, and zero off-origin requests."
+    }
+  ],
+  "dataModelChanges": [],
+  "apiChanges": [],
+  "newDependencies": [
+    "cesium@1.146.0 (apps/ye-olde-magic-shop runtime dependency — exact version, matching packages/saturday-playwright-cesium and the version already present in pnpm-lock.yaml; no new transitive version introduced)"
+  ],
+  "architecturalFlags": [
+    "First VITE_FEATURE_* flag convention in this app. It is a single pure boolean-returning function with no new abstraction layer or cross-cutting mechanism (no flag service, no remote config) — recommend skipping architect for this reason, consistent with CLAUDE.md's guidance to skip architect for features purely additive within an established pattern. Flagging for the router to confirm.",
+    "Static-asset serving for Cesium (CESIUM_BASE_URL) has no existing precedent in this monorepo's apps — this order introduces a small inline Vite plugin in vite.config.ts rather than a new build-tool dependency, specifically because apps/ye-olde-magic-shop's scope.paths excludes .gitignore and index.html, which rules out the two more common approaches (committing generated assets under public/, or a static <script> tag in index.html). Worth a second look from whoever reviews vite.config.ts."
+  ],
+  "retrieval": {
+    "domainTerms": ["Reagent Site", "Aurelis"],
+    "issueRefs": ["reagent-map-globe"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "tasks": {
+    "developer": [
+      "Add \"cesium\": \"1.146.0\" to apps/ye-olde-magic-shop/package.json dependencies (exact version, matching pnpm-lock.yaml's existing resolution from packages/saturday-playwright-cesium); run pnpm install and confirm no second Cesium version appears in pnpm-lock.yaml.",
+      "Copy packages/saturday-playwright-cesium/fixtures/assets/aurelis.jpg into apps/ye-olde-magic-shop/public/aurelis.jpg verbatim — reuse the already-reviewed 1024x512px equirectangular texture, do not regenerate it.",
+      "Create apps/ye-olde-magic-shop/src/featureFlags.ts exporting `export function isReagentMapEnabled(value: string | undefined): boolean { return value === 'true'; }` — single equality check, complexity 1.",
+      "In apps/ye-olde-magic-shop/vite.config.ts, add a small inline plugin object (no new dependency) with a configureServer(server) hook serving node_modules/cesium/Build/Cesium under the /cesium/ URL prefix in dev, and a closeBundle (or writeBundle) hook copying the same directory tree into <outDir>/cesium on build. Keep generated output out of public/ and out of any committed path — dist/ is already in the root .gitignore, and .gitignore itself is outside this order's scope.paths.",
+      "In apps/ye-olde-magic-shop/src/main.ts, set `(window as any).CESIUM_BASE_URL = '/cesium/';` before `app.mount('#app')` — inert for every route except /reagent-map, which imports cesium dynamically.",
+      "Modify apps/ye-olde-magic-shop/src/router/index.ts: import featureFlags and a lazy/dynamic ReagentMapView, and push the { path: '/reagent-map', component: ReagentMapView } route into the routes array only when isReagentMapEnabled(import.meta.env.VITE_FEATURE_REAGENT_MAP) is true, so the route object itself does not exist when the flag is off.",
+      "Modify apps/ye-olde-magic-shop/src/App.vue: add a nav <router-link to=\"/reagent-map\" data-testid=\"reagent-map-link\"> next to the existing Locations link, rendered only when isReagentMapEnabled(import.meta.env.VITE_FEATURE_REAGENT_MAP) is true.",
+      "Create apps/ye-olde-magic-shop/src/api/reagentSites.ts: `export type ReagentSite = { id: string; name: string; lat: number; lng: number }` and `export async function fetchReagentSites(): Promise<ReagentSite[]>` fetching `${API_BASE}/api/reagent-sites`, mirroring src/api/items.ts's existing API_BASE resolution and error-handling shape.",
+      "Create apps/ye-olde-magic-shop/src/views/ReagentMapView.vue. On mount: dynamically `const Cesium = await import('cesium')` and dynamically import 'cesium/Build/Cesium/Widgets/widgets.css'; build an Ellipsoid/Globe sized to AURELIS_RADIUS_METERS = 6_000_000 (all three radii equal); build a SingleTileImageryProvider from '/aurelis.jpg' with Cesium.Rectangle.fromDegrees(-180,-90,180,90); construct the Viewer with that globe and `baseLayer: new Cesium.ImageryLayer(imageryProvider)`, and baseLayerPicker/geocoder/animation/timeline/fullscreenButton/homeButton/sceneModePicker/navigationHelpButton/infoBox/selectionIndicator/skyBox/skyAtmosphere/shouldAnimate all false — the exact option set already proven in packages/saturday-playwright-cesium/fixtures/assets/fixture-globe.js. Explicitly set viewer.scene.mode = Cesium.SceneMode.SCENE3D.",
+      "In the same onMounted: call fetchReagentSites(), add one point entity per site via viewer.entities.add({ position: Cesium.Cartesian3.fromDegrees(site.lng, site.lat, 0, ellipsoid), point: { pixelSize: 10 } }), and set entity.saturdayMetadata = { id: site.id, name: site.name, kind: 'site' }. Render the fetched sites as a plain name list (data-testid=\"reagent-site-list\") in the template beside the globe container. Set window.__SATURDAY_CESIUM__ = { viewer, Cesium } once construction is complete.",
+      "In onBeforeUnmount: call viewer.destroy() and set window.__SATURDAY_CESIUM__ = undefined, mirroring LocationsView.vue's onBeforeUnmount handling of __SATURDAY_LEAFLET_MAP__.",
+      "In apps/ye-olde-magic-shop/playwright.config.ts, add `testIgnore: [/reagent-map-.*\\.spec\\.ts$/]` to the 'chromium' project's config only, so npm run test:e2e / test:pw skip the new reagent-map-*.spec.ts files; leave the 'chrome' project as-is so it collects them.",
+      "Add `VITE_FEATURE_REAGENT_MAP=false` to apps/ye-olde-magic-shop/.env."
+    ],
+    "qa": [
+      "Write apps/ye-olde-magic-shop/tests/reagent-map-feature-flag.spec.ts using @playwright/test's test/expect with no page fixture (same shape as the existing tests/playwright-config.spec.ts), asserting isReagentMapEnabled('true') === true, isReagentMapEnabled('false') === false, and isReagentMapEnabled(undefined) === false.",
+      "Write apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts (chrome project), importing { test } from '@orieken/saturday-playwright-cesium': navigate to /reagent-map, await cesium.waitForSettled(), then cesium.getEntities() and assert exactly 8 entities with kind: 'site', each within 1000m (cesium.globeRadiusMeters() should read 6,000,000) of its seeded lat/lng from apps/mock-api/data/reagent-sites.json, via the package's exported distance() helper.",
+      "In the same or a sibling chrome-project spec, cover AC2 explicitly: cesium.flyTo Frostcap Hollow's (85, 0) and Tidewrack Shoals' (0, 180) positions in turn and assert each still appears exactly once, within 1 km, with no duplicate entity at the antimeridian wrap.",
+      "Assert window.__SATURDAY_CESIUM__ is { viewer, Cesium } (via page.evaluate) and that every site entity carries saturdayMetadata { id, name, kind: 'site' }.",
+      "Assert viewer.scene.mode === Cesium.SceneMode.SCENE3D and viewer.scene.globe.ellipsoid's three radii all equal 6,000,000, via page.evaluate against window.__SATURDAY_CESIUM__.",
+      "Add a zero-off-origin-request assertion for the /reagent-map page load: collect every request via page.on('request'), assert each hostname matches the dev server's own origin or the proxied mock API origin — mirror packages/saturday-playwright-cesium/tests/fixture.spec.ts's existing pattern for this exact check.",
+      "Assert the site-name list (data-testid=\"reagent-site-list\") renders all 8 reagent site names from GET /api/reagent-sites.",
+      "Run npm run test:e2e and confirm it passes unaffected by the new reagent-map-*.spec.ts files; run npm run test:chrome (or scripts/ui-suite-in-chrome.sh) and confirm the new specs run and pass under the chrome project.",
+      "Confirm via git diff --name-only against the base branch that no file outside scope.paths changed, excepting docs/features/reagent-map-globe/**."
+    ],
+    "techWriter": [],
+    "devops": [
+      "Modify scripts/ui-suite-in-chrome.sh's start_app_and_mock_api() to export VITE_FEATURE_REAGENT_MAP=true to the containerized `npm run dev` process (e.g. `docker exec -d -e VITE_FEATURE_REAGENT_MAP=true \"$CONTAINER_NAME\" bash -lc '...'`), so the pre-ship chrome-project run exercises the reagent map view while apps/ye-olde-magic-shop/.env keeps the flag false for every other invocation.",
+      "Confirm CI (or the equivalent pre-ship check) runs both npm run test:e2e (chromium) and npm run test:chrome / scripts/ui-suite-in-chrome.sh (chrome), and that both exit codes gate the build."
+    ]
+  },
+  "edgeCases": [
+    {
+      "case": "VITE_FEATURE_REAGENT_MAP is set to a near-true value such as \"TRUE\", \"1\", or \" true\" (whitespace/case variants).",
+      "handling": "isReagentMapEnabled uses strict equality against the literal string 'true' — any other value, including case or whitespace variants, is treated as off. This is deliberate and exactly what the pure-function unit test must cover for 'false' and 'unset'; no normalization is added."
+    },
+    {
+      "case": "A reagent site's seeded longitude is exactly 180 (Tidewrack Shoals) or latitude is near 90 (Frostcap Hollow, lat 85).",
+      "handling": "Cesium.Cartesian3.fromDegrees handles the antimeridian and near-pole cases natively when given the correct ellipsoid; the fixture-globe.js pattern already proves this renders once, not duplicated — no special-casing is added in the view beyond passing the ellipsoid through."
+    },
+    {
+      "case": "GET /api/reagent-sites is slow, fails, or the mock API is not running.",
+      "handling": "fetchReagentSites() follows items.ts's existing convention: throw on a non-OK response. The view should let the error surface (e.g. an unhandled rejection becomes visible in dev) rather than silently showing an empty globe — no new retry or fallback logic is introduced, consistent with architecture-guardrails.md's prohibition on ad-hoc retry loops; a real CircuitBreaker is out of scope for a single same-origin GET with no stated latency SLA."
+    },
+    {
+      "case": "The flag is true but the Cesium static assets at /cesium/ are missing or stale (e.g. a build that forgot the closeBundle copy step).",
+      "handling": "Cesium's worker bootstrap fails fast with its own console error when CESIUM_BASE_URL assets are absent; this is a build-configuration defect to catch via the QA chrome-project run (cesium.waitForSettled() will reject naming the stuck condition), not a runtime fallback the app needs to handle gracefully."
+    },
+    {
+      "case": "A developer navigates directly to /reagent-map via URL while the flag is off.",
+      "handling": "Because the route object itself is never added to the router when the flag is off (not merely hidden via a guard), vue-router falls through to its normal unmatched-route behavior — identical to typing any other nonexistent path today. No new 404 view is introduced."
+    }
+  ],
+  "definitionOfDone": [
+    "/reagent-map route and its nav link exist if and only if VITE_FEATURE_REAGENT_MAP is the literal string 'true'; apps/ye-olde-magic-shop/.env sets it to false.",
+    "The view's Cesium Viewer uses a 6,000,000m-radius ellipsoid, scene mode SCENE3D, baseLayerPicker/geocoder off, a same-origin equirectangular Aurelis image, and same-origin Cesium static assets served via CESIUM_BASE_URL — with zero network requests leaving the app's or mock API's own origin.",
+    "window.__SATURDAY_CESIUM__ = { viewer, Cesium } is set, and every one of the 8 reagent site entities carries saturdayMetadata { id, name, kind: 'site' }.",
+    "All 8 reagent sites, including Frostcap Hollow and Tidewrack Shoals, are shown exactly once, each within 1 km of its published position, and listed by name beside the globe.",
+    "isReagentMapEnabled is covered by a no-browser unit test for 'true', 'false', and unset.",
+    "tests/reagent-map-*.spec.ts run only under the Playwright 'chrome' project; npm run test:e2e passes unaffected by their presence; scripts/ui-suite-in-chrome.sh starts the container with the flag on and its chrome-project run passes.",
+    "Every new/changed function is reviewed for cyclomatic complexity below 7 (judgment-only — no ESLint complexity rule exists yet in apps/ye-olde-magic-shop).",
+    "git diff shows no file changed outside scope.paths, excepting docs/features/reagent-map-globe/**."
+  ],
+  "openQuestions": []
+}

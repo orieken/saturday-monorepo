@@ -76,6 +76,9 @@ importers:
 
   apps/ye-olde-magic-shop:
     dependencies:
+      cesium:
+        specifier: 1.146.0
+        version: 1.146.0
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
@@ -98,6 +101,9 @@ importers:
       '@orieken/saturday-cucumber':
         specifier: workspace:*
         version: link:../../packages/saturday-cucumber
+      '@orieken/saturday-playwright-cesium':
+        specifier: workspace:*
+        version: link:../../packages/saturday-playwright-cesium
       '@orieken/saturday-playwright-heatmap':
         specifier: workspace:*
         version: link:../../packages/saturday-playwright-heatmap

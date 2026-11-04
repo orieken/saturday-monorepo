@@ -18,6 +18,7 @@
     "index:features:post": "npm --prefix ../../packages/saturday-cucumber-indexer ci && npm --prefix ../../packages/saturday-cucumber-indexer run build && node ../../packages/saturday-cucumber-indexer/dist/index.js --features ./features --suiteId ye-olde-magic-shop --out ./feature-index.json --backend http://localhost:8080"
   },
   "dependencies": {
+    "cesium": "1.146.0",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
     "vue": "^3.5.25",
@@ -27,6 +28,7 @@
     "@cucumber/cucumber": "^11.1.0",
     "@orieken/saturday-core": "workspace:*",
     "@orieken/saturday-cucumber": "workspace:*",
+    "@orieken/saturday-playwright-cesium": "workspace:*",
     "@orieken/saturday-playwright-heatmap": "workspace:*",
     "@orieken/saturday-playwright-k6-exporter": "workspace:*",
     "@orieken/saturday-playwright-leaflet": "workspace:*",

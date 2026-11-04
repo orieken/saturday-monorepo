@@ -55,7 +55,8 @@ build_image() {
 }
 
 start_container() {
-  docker run -d --rm --platform linux/amd64 --name "$CONTAINER_NAME" \
+  # Chrome keeps renderer memory in /dev/shm; Docker's default 64 MB crashes tabs under load.
+  docker run -d --rm --platform linux/amd64 --shm-size=1g --name "$CONTAINER_NAME" \
     -v "$REPO_ROOT:/work" \
     -v "$PNPM_STORE_VOLUME:/home/runner/.pnpm-store" \
     -e "RUNNER_SLOW_MO=${RUNNER_SLOW_MO:-}" \
@@ -89,7 +90,11 @@ install_dependencies() {
 }
 
 start_app_and_mock_api() {
-  docker exec -d "$CONTAINER_NAME" bash -lc '
+  # VITE_FEATURE_REAGENT_MAP=true overrides apps/ye-olde-magic-shop/.env's
+  # 'false' — Vite's loadEnv lets a process.env value win over a matching
+  # .env key — so this pre-ship check exercises the reagent map view while
+  # .env itself keeps the flag off for every other run (AC6).
+  docker exec -d -e VITE_FEATURE_REAGENT_MAP=true "$CONTAINER_NAME" bash -lc '
     cd /work/apps/ye-olde-magic-shop && npm run dev >/tmp/app.log 2>&1
   '
 }
@@ -124,9 +129,10 @@ run_runner_check() {
   fi
 }
 
+# Each Cesium page renders in software under emulation; too many at once starve tile loading.
 run_chrome_suite() {
   docker exec "$CONTAINER_NAME" bash -lc \
-    'cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome'
+    'cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=3'
 }
 
 copy_report() {

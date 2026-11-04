@@ -5,6 +5,8 @@ A Playwright testing fixture for CesiumJS globes, following the same seam-contra
 `Viewer` the way a user does — reading back entities, projecting geographic points to screen
 coordinates, clicking through `page.mouse`, and flying the camera — without depending on pixels.
 
+For the whole picture, including what an app has to change, see [Testing a Cesium globe with Saturday](../../docs/testing-cesium.md).
+
 ## 1. Application Setup (the Seam Contract)
 
 For this package to test your app, it must expose the Cesium `Viewer` instance (and the `Cesium`

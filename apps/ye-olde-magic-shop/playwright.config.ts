@@ -40,6 +40,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      // Cesium needs a real webgl2 context the bundled headless Chromium
+      // can't reliably provide — these specs run under the 'chrome'
+      // project only (see scripts/ui-suite-in-chrome.sh).
+      testIgnore: ['**/reagent-map-*.spec.ts'],
       use: { ...devices['Desktop Chrome'] },
     },
     {

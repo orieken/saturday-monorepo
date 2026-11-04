@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-globe",
+  "structuralDecisions": [
+    {
+      "decision": "Place ReagentMapView.vue under apps/ye-olde-magic-shop/src/views/ with no new package and no new base class. Cesium viewer construction lives entirely inside the view's onMounted/onBeforeUnmount, mirroring LocationsView.vue's __SATURDAY_LEAFLET_MAP__ lifecycle (expose the seam on mount, set it to undefined on unmount). Reversibility: Cheap — one file, deletable without touching any other component.",
+      "rationale": "This is purely additive within the established per-view pattern this app already uses for its other map (Leaflet). No existing abstraction needs to change, and introducing a Cesium-specific base class or composable now would be speculative — there is exactly one caller.",
+      "fitness": {
+        "property": "ReagentMapView sets window.__SATURDAY_CESIUM__ on mount and sets it to undefined on unmount, matching LocationsView's __SATURDAY_LEAFLET_MAP__ lifecycle",
+        "verification": "qa-engineer's tests/reagent-map-globe.spec.ts asserts the seam is defined after page.goto, and code-reviewer checks the onBeforeUnmount handler against LocationsView.vue's pattern by inspection",
+        "owner": "qa-engineer"
+      }
+    },
+    {
+      "decision": "Pin cesium to the exact version 1.146.0 in apps/ye-olde-magic-shop/package.json, matching packages/saturday-playwright-cesium/package.json's already-resolved version in pnpm-lock.yaml. No caret range.",
+      "rationale": "Prevents a second resolved Cesium version appearing in the workspace lockfile, which would bloat the install and risk two versions of Cesium's static asset tree diverging between the app and the test package. Reversibility: Cheap.",
+      "fitness": {
+        "property": "Exactly one resolved cesium version exists across the workspace after pnpm install",
+        "verification": "pnpm why cesium (or grepping pnpm-lock.yaml for cesium@ entries) shows a single resolution — devops-engineer checks this during the install step it already runs",
+        "owner": "devops-engineer"
+      }
+    },
+    {
+      "decision": "Serve Cesium's static Build/Cesium assets under /cesium/ via a small inline Vite plugin added to vite.config.ts (configureServer for dev, closeBundle for the production build), rather than committing generated assets into public/ or adding a new build-tool dependency. This introduces a new pattern for the monorepo — no existing app here serves a third-party package's prebuilt static tree under a custom URL prefix at both dev and build time.",
+      "rationale": "scope.paths for this order excludes .gitignore and index.html, which rules out the two more conventional approaches (a static <script> tag in index.html, or checking generated assets into public/ with a new .gitignore entry). Copying from node_modules/cesium/Build/Cesium at build time, rather than committing a copy, also avoids a second, driftable copy of Cesium's own asset tree in source control. Reversibility: Moderate — contained to one file, but it is the only place in this repo demonstrating the pattern, so a second consumer should extract it rather than re-derive it independently.",
+      "tradeOffs": [
+        "A hand-rolled plugin is more code than a scoped dependency (e.g. vite-plugin-static-copy) would need, and nothing else in this monorepo exercises configureServer/closeBundle together — a future maintainer won't find a second example to generalize from. If a second app needs the same thing, extract this into a tiny shared Vite plugin at that point rather than copying it a third time.",
+        "Vite's dev server copies the mapping at configureServer startup, not per-request — a change to node_modules/cesium's own Build output mid-session without a dev-server restart could go unnoticed. Acceptable here since Cesium's Build output doesn't change within a single working session."
+      ],
+      "fitness": {
+        "property": "node_modules/cesium/Build/Cesium is reachable at /cesium/ in dev, and dist/cesium contains the same tree after npm run build",
+        "verification": "qa-engineer's reagent-map-globe.spec.ts implicitly covers the dev path (Cesium cannot render without it); devops-engineer adds a build-step check (e.g. ls dist/cesium/Widgets) to the CI job that runs npm run build for this app",
+        "owner": "devops-engineer"
+      }
+    },
+    {
+      "decision": "Implement VITE_FEATURE_REAGENT_MAP as a single pure predicate, isReagentMapEnabled(value), with no flag service, no remote config, and no abstraction layer. This is the first VITE_FEATURE_* flag in this app and sets the convention future feature flags in this app should follow.",
+      "rationale": "Matches CLAUDE.md's guidance to skip architecture-level abstraction until a second real use case demonstrates the need. A single equality check is reversible, auditable at a glance, and testable with no browser. Reversibility: Cheap.",
+      "fitness": {
+        "property": "isReagentMapEnabled('true') === true; isReagentMapEnabled('false') === false; isReagentMapEnabled(undefined) === false",
+        "verification": "apps/ye-olde-magic-shop/tests/reagent-map-feature-flag.spec.ts — no page fixture, no browser launched",
+        "owner": "qa-engineer"
+      }
+    },
+    {
+      "decision": "apps/ye-olde-magic-shop consumes packages/saturday-playwright-cesium's published seam contract (window.__SATURDAY_CESIUM__, saturdayMetadata) without taking any build or runtime dependency on that package. It copies the already-reviewed aurelis.jpg texture and replicates the known-good Viewer option set from fixture-globe.js as reference material only.",
+      "rationale": "Keeps the two bounded contexts decoupled: this app's UI and the Test Automation package can each change internally without breaking the other, as long as both honor the documented seam contract. This is the Anti-Corruption boundary already recorded in analysis.md's crossings list. Reversibility: Cheap.",
+      "fitness": {
+        "property": "apps/ye-olde-magic-shop/package.json has no dependency (prod or dev) on @orieken/saturday-playwright-cesium",
+        "verification": "grep for '@orieken/saturday-playwright-cesium' in apps/ye-olde-magic-shop/package.json returns nothing — code-reviewer checks this during review",
+        "owner": "code-reviewer"
+      }
+    },
+    {
+      "decision": "Keep tests/reagent-map-*.spec.ts out of the default 'chromium' Playwright project via testIgnore, running them only under the existing 'chrome' project — reusing the project split playwright.config.ts already defines, rather than inventing a third project or a separate config file.",
+      "rationale": "Cesium needs a real webgl2 context the bundled headless Chromium can't reliably provide, which is the same reason the 'chrome' project already exists in this config. Extending the existing split is simpler than a new config file, and keeps 'npm run test:e2e still passes without them' true by construction rather than by convention. Reversibility: Cheap.",
+      "fitness": {
+        "property": "npm run test:e2e's exit code is unaffected by the presence of tests/reagent-map-*.spec.ts",
+        "verification": "CI runs both npm run test:e2e and scripts/ui-suite-in-chrome.sh (--project=chrome) and checks both exit codes",
+        "owner": "devops-engineer"
+      }
+    }
+  ],
+  "componentPlacement": [
+    {
+      "component": "isReagentMapEnabled",
+      "layer": "Frameworks & Drivers (build-time app config)",
+      "package": "apps/ye-olde-magic-shop/src/featureFlags.ts",
+      "reason": "Pure function with zero dependencies, read by both the router and App.vue — not domain logic, just a build-time gate."
+    },
+    {
+      "component": "ReagentMapView",
+      "layer": "Frameworks & Drivers (Vue UI, per ARCHITECTURE_RULES.md's explicit Vue placement)",
+      "package": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "Same layer and placement convention as the existing LocationsView.vue (Leaflet)."
+    },
+    {
+      "component": "fetchReagentSites / ReagentSite",
+      "layer": "Interface Adapters (API client)",
+      "package": "apps/ye-olde-magic-shop/src/api/reagentSites.ts",
+      "reason": "Mirrors src/api/items.ts's existing adapter convention for talking to the mock API — same API_BASE resolution, same fetch-and-throw error shape."
+    },
+    {
+      "component": "Cesium static-asset Vite plugin",
+      "layer": "Frameworks & Drivers (build tooling)",
+      "package": "apps/ye-olde-magic-shop/vite.config.ts",
+      "reason": "Pure build-time glue, no domain awareness — kept inline rather than a new dependency, per structural decision 3."
+    }
+  ],
+  "boundedContext": {
+    "owning": "Expedition Planning — Reagent Map UI (apps/ye-olde-magic-shop frontend)",
+    "crossings": [
+      "apps/mock-api — read-only consumer of the existing GET /api/reagent-sites endpoint (reagent-sites-api); no backend change in this order",
+      "packages/saturday-playwright-cesium — Test Automation bounded context; this order implements its published seam contract (window.__SATURDAY_CESIUM__, saturdayMetadata) and reuses its already-reviewed fixture-globe.js Cesium configuration and fixtures/assets/aurelis.jpg texture as reference/source material only, with no build or runtime dependency on that package"
+    ]
+  },
+  "stabilityDesign": [
+    {
+      "pattern": "None (fetch-and-fail, no retry or circuit breaker)",
+      "appliesTo": "fetchReagentSites() in apps/ye-olde-magic-shop/src/api/reagentSites.ts",
+      "rationale": "Matches the existing convention in src/api/items.ts, which also has no CircuitBreaker/ExponentialBackoffStrategy — this app has no resilience framework wired into any of its own-origin API calls yet. Introducing one for just this endpoint would be inconsistent with every sibling API client; flagging rather than fixing, since a resilience primitive should apply to all of src/api/* at once, not be bolted onto this slice alone."
+    }
+  ],
+  "layerBoundaryChecks": [
+    {
+      "rule": "ReagentMapView (Vue UI) depends only on src/api/reagentSites.ts (adapter) and the dynamically-imported cesium package (framework) — no reverse dependency from the adapter back into the view",
+      "verdict": "PASS",
+      "notes": "Checked by reading analysis.md's affectedComponents and the existing src/api/items.ts convention directly. mcp__loom__dependencies_of was not available in this session (no loom MCP server registered), so this is a manual import-reading check, not a graph query — flagging per the architect contract's fallback instruction."
+    },
+    {
+      "rule": "apps/ye-olde-magic-shop must not import from packages/saturday-playwright-cesium (a separate, Test Automation bounded context)",
+      "verdict": "PASS",
+      "notes": "Confirmed against analysis.md's developerTasks: the plan copies aurelis.jpg and replicates fixture-globe.js's Viewer option set as reference material, with no import statement. code-reviewer should re-verify this holds against the actual diff once written."
+    }
+  ],
+  "antiPatternChecks": [
+    {
+      "pattern": "God Object",
+      "found": false,
+      "notes": "ReagentMapView owns Cesium construction, site fetching, and list rendering — three related responsibilities in one view, the same shape LocationsView.vue already has (map construction + marker rendering + geolocation). Acceptable at this scope; if a fourth concern arrives in a later slice (fly-to, line tool), extract a composable then."
+    },
+    {
+      "pattern": "Leaky Abstraction",
+      "found": false,
+      "notes": "saturdayMetadata.kind is passed through unchanged — per the seam contract's own documented rule that saturday-playwright-cesium never branches on kind's value, and this app doesn't either."
+    },
+    {
+      "pattern": "Premature Generalization",
+      "found": false,
+      "notes": "No flag service, no plugin framework beyond the single inline Vite plugin this slice needs — correctly deferred per structural decision 4."
+    },
+    {
+      "pattern": "Shotgun Surgery",
+      "found": false,
+      "notes": "Confined to one new view, one new API client module, one new flag module, and small edits to router/index.ts, App.vue, vite.config.ts, main.ts, .env, and playwright.config.ts — consistent with adding a single additive route."
+    }
+  ],
+  "fitnessFunctions": [
+    {
+      "property": "ReagentMapView sets window.__SATURDAY_CESIUM__ on mount and sets it to undefined on unmount, matching LocationsView's lifecycle",
+      "verification": "qa-engineer's tests/reagent-map-globe.spec.ts asserts the seam is defined after page.goto; code-reviewer checks the onBeforeUnmount handler by inspection",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "Exactly one resolved cesium version exists across the workspace after pnpm install",
+      "verification": "pnpm why cesium (or grepping pnpm-lock.yaml) shows a single resolution",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "node_modules/cesium/Build/Cesium is reachable at /cesium/ in dev, and dist/cesium contains the same tree after npm run build",
+      "verification": "reagent-map-globe.spec.ts covers the dev path implicitly; devops-engineer adds a build-step check (ls dist/cesium/Widgets) to CI",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "isReagentMapEnabled('true') === true; isReagentMapEnabled('false') === false; isReagentMapEnabled(undefined) === false",
+      "verification": "apps/ye-olde-magic-shop/tests/reagent-map-feature-flag.spec.ts, no browser launched",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "apps/ye-olde-magic-shop/package.json has no dependency on @orieken/saturday-playwright-cesium",
+      "verification": "grep for '@orieken/saturday-playwright-cesium' in apps/ye-olde-magic-shop/package.json returns nothing",
+      "owner": "code-reviewer"
+    },
+    {
+      "property": "npm run test:e2e's exit code is unaffected by the presence of tests/reagent-map-*.spec.ts",
+      "verification": "CI runs both npm run test:e2e and scripts/ui-suite-in-chrome.sh (--project=chrome) and checks both exit codes",
+      "owner": "devops-engineer"
+    }
+  ],
+  "refactoringOpportunities": [
+    {
+      "operation": "Extract Method",
+      "target": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue's onMounted handler (Cesium viewer construction + site fetch + entity loop)",
+      "reason": "LocationsView.vue's onMounted (not touched by this feature) is one long inline block covering markers, GeoJSON, and layer controls — ReagentMapView should not copy that shape. Keep onMounted calling small named functions (buildViewer(), addSiteEntities()) to satisfy design-principles.md's method-length limit. Flagging LocationsView.vue itself as a Boy Scout opportunity for whoever next touches it; it's outside this order's scope.paths so it is not fixed here."
+    }
+  ],
+  "retrieval": {
+    "domainTerms": ["Reagent Site", "Aurelis"],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "developerHandoffNotes": [
+    "Follow analysis.md's developerTasks list verbatim for file-by-file steps — this document only adds the structural decisions behind decisions 1-6 above; it does not change any task's shape.",
+    "The Cesium static-asset plugin (decision 3) must not write into public/ or any committed path — its dev-time serving and its closeBundle copy are both derived from node_modules/cesium/Build/Cesium at run time, never checked into git.",
+    "Do not add @orieken/saturday-playwright-cesium as a dependency anywhere in apps/ye-olde-magic-shop — copy only the aurelis.jpg asset and the Viewer option values, per decision 5's Anti-Corruption boundary.",
+    "playwright.config.ts's testIgnore for reagent-map-*.spec.ts goes on the 'chromium' project only — leave 'chrome' untouched so it picks the new specs up with no change on its side."
+  ],
+  "openQuestions": [],
+  "rfcPath": ""
+}
