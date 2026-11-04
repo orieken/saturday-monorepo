@@ -9,6 +9,11 @@ const ITEMS_PATH = path.join(__dirname, 'data', 'items.json');
 const USERS_PATH = path.join(__dirname, 'data', 'users.json');
 const ORDERS_PATH = path.join(__dirname, 'data', 'orders.json');
 const REAGENT_SITES_PATH = path.join(__dirname, 'data', 'reagent-sites.json');
+const EXPEDITIONS_PATH = path.join(__dirname, 'data', 'expeditions.json');
+
+// Aurelis is a perfect sphere; distances on it use its own radius, never Earth's.
+const AURELIS_RADIUS_KM = 6000;
+const MIN_EXPEDITION_DISTANCE_KM = 1;
 
 const app = express();
 app.use(cors());
@@ -43,8 +48,10 @@ function readItems() { return readJSON(ITEMS_PATH); }
 function readUsers() { return readJSON(USERS_PATH); }
 function readOrders() { return readJSON(ORDERS_PATH); }
 function readReagentSites() { return readJSON(REAGENT_SITES_PATH); }
+function readExpeditions() { return readJSON(EXPEDITIONS_PATH); }
 function writeUsers(users) { return writeJSON(USERS_PATH, users); }
 function writeOrders(orders) { return writeJSON(ORDERS_PATH, orders); }
+function writeExpeditions(expeditions) { return writeJSON(EXPEDITIONS_PATH, expeditions); }
 
 // Auth middleware
 function requireAuth(req, res, next) {
@@ -56,9 +63,45 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Looks up the session for a request without rejecting it. Unlike requireAuth, a missing or
+// invalid token is not an error here — it just means no personalization. Never call res/next.
+function resolveSessionUserId(req) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token || !sessions.has(token)) {
+    return null;
+  }
+  return sessions.get(token);
+}
+
 // Generate simple session token
 function generateToken() {
   return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Great-circle (haversine) distance in km between two {lat, lng} points on a sphere of the
+// given radius. Pure and side-effect-free so it can be unit-tested independently of the HTTP layer.
+function geodesicDistanceKm(from, to, radiusKm) {
+  const toRadians = (degrees) => (degrees * Math.PI) / 180;
+  const dLat = toRadians(to.lat - from.lat);
+  const dLng = toRadians(to.lng - from.lng);
+  const lat1 = toRadians(from.lat);
+  const lat2 = toRadians(to.lat);
+
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const centralAngle = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return radiusKm * centralAngle;
+}
+
+// Number.isFinite (not typeof) excludes NaN/Infinity — both pass `typeof x === 'number'` but
+// make distanceKm NaN, and NaN < MIN_EXPEDITION_DISTANCE_KM is false, so the zero-length guard
+// would silently accept and persist them (JSON.stringify then writes them to disk as null).
+function isCoordinateInRange(value, limit) {
+  return Number.isFinite(value) && Math.abs(value) <= limit;
+}
+
+function isValidPoint(point) {
+  return !!point && isCoordinateInRange(point.lat, 90) && isCoordinateInRange(point.lng, 180);
 }
 
 // ============ HEALTH CHECK ============
@@ -83,6 +126,44 @@ app.get('/api/items/:id', (req, res) => {
 // ============ REAGENT SITES ENDPOINTS ============
 app.get('/api/reagent-sites', (req, res) => {
   res.json(readReagentSites());
+});
+
+// ============ EXPEDITIONS ENDPOINTS ============
+app.get('/api/expeditions', (req, res) => {
+  const expeditions = readExpeditions();
+  const userId = resolveSessionUserId(req);
+  // userId guard: without it, a no-session request (userId === null) would match any
+  // stored record whose owner is also null/undefined, as if it were the caller's own.
+  const visible = expeditions.filter((e) => e.owner === 'shop' || (userId !== null && e.owner === userId));
+  res.json(visible);
+});
+
+app.post('/api/expeditions', requireAuth, (req, res) => {
+  const { from, to } = req.body;
+
+  if (!isValidPoint(from) || !isValidPoint(to)) {
+    return res.status(400).json({ error: 'from and to are required as { lat, lng }' });
+  }
+
+  const distanceKm = geodesicDistanceKm(from, to, AURELIS_RADIUS_KM);
+  if (distanceKm < MIN_EXPEDITION_DISTANCE_KM) {
+    return res.status(422).json({ error: 'Zero-length line: from and to are the same place' });
+  }
+
+  const expeditions = readExpeditions();
+  const newExpedition = {
+    id: `expedition-${Date.now()}`,
+    owner: req.userId,
+    from,
+    to,
+    savedAt: new Date().toISOString()
+  };
+
+  expeditions.push(newExpedition);
+  writeExpeditions(expeditions);
+
+  console.log({ expeditionId: newExpedition.id, owner: req.userId }, 'Expedition saved');
+  res.json(newExpedition);
 });
 
 // ============ AUTH ENDPOINTS ============
@@ -259,7 +340,13 @@ if (require.main === module) {
     console.log('  - GET  /api/items');
     console.log('  - GET  /api/items/:id');
     console.log('  - GET  /api/reagent-sites');
+    console.log('  - GET  /api/expeditions');
+    console.log('  - POST /api/expeditions');
   });
 }
+
+// Exposed on the app object (not a separate export) so tests can exercise this pure function
+// directly without changing the module's existing `module.exports = app` contract.
+app.geodesicDistanceKm = geodesicDistanceKm;
 
 module.exports = app;
