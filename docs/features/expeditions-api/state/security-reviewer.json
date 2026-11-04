@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "feature": "expeditions-api",
+  "threatModelSummary": "This slice adds two endpoints to the mock API: GET /api/expeditions (optional-auth, returns shop-seeded expeditions plus the caller's own when a session is present) and POST /api/expeditions (requireAuth, stores a new expedition owned by the session's adventurer). The critical trust boundary — never returning another adventurer's expedition, and never letting the request body supply its own owner — was implemented correctly and is covered symmetrically by tests for both Elara and Borin plus an invalid-token case. STRIDE review found two validation gaps in the new code, both fixed directly: (1) the from/to point validator accepted NaN/Infinity (which pass `typeof x === 'number'`), letting a crafted body defeat the 1 km zero-length-line rejection and silently persist corrupted (JSON-serialized-to-null) coordinates; (2) the GET visibility filter's `e.owner === userId` check had a latent null-coincides-with-null edge case for a no-session request against a hypothetical null-owner record — not reachable through any current write path, but hardened since this exact line is the feature's stated security gate. No auth/session infrastructure, secrets handling, or logging was changed by this feature; those are pre-existing patterns shared with /api/orders and /api/items, out of scope here. No new dependencies were introduced.",
+  "dependencyAudit": [
+    "No new dependencies were introduced by this feature (confirmed against implementation-notes.md and the server.js diff, which adds no require()/import statements).",
+    "`npm audit` could not run inside apps/mock-api directly (no local lockfile; the monorepo uses a root pnpm-lock.yaml) — not a blocker since the dependency set (express, cors) is unchanged by this feature."
+  ],
+  "stride": [
+    { "category": "SPOOFING", "assessed": "New code reuses the existing sessions Map/Bearer-token lookup unchanged (resolveSessionUserId mirrors requireAuth's token parsing). No new identity-spoofing surface introduced; token generation itself (Math.random-based) is pre-existing and untouched by this feature." },
+    { "category": "TAMPERING", "assessed": "POST /api/expeditions body is checked for from/to shape; owner is never read from the request body, always req.userId from the verified session (verified by a dedicated test with a forged owner field). Found and fixed: isValidPoint accepted NaN/Infinity, letting a forged body bypass the 1 km zero-length-line integrity check and persist corrupted data." },
+    { "category": "REPUDIATION", "assessed": "POST success is logged with the expedition id and req.userId, matching the existing POST /api/orders logging convention — sufficient for this mock API's scope, no change needed." },
+    { "category": "INFORMATION_DISCLOSURE", "assessed": "Checked whether GET /api/expeditions, with or without a session, could ever return another adventurer's expedition: filter logic traced and tested for both Elara and Borin plus an invalid-token case. Found and hardened a latent null-coincidence edge case in the filter (owner===userId when both are null) — not exploitable via any current write path, fixed for defense-in-depth given this line is the feature's named security gate. Error responses (400/401/422) reveal no internal paths or stack traces." },
+    { "category": "INFORMATION_DISCLOSURE", "assessed": "Egress: geodesicDistanceKm is pure local arithmetic — confirmed no external geocoding/mapping call is made anywhere in the new code, satisfying the spec's 'no request leaves the app's and mock API's own origins' non-functional requirement." },
+    { "category": "DENIAL_OF_SERVICE", "assessed": "GET /api/expeditions has no pagination, matching the pre-existing pattern on GET /api/items and GET /api/reagent-sites (already flagged non-blocking by code-reviewer as a sitewide gap, not a regression introduced here). POST has no new unbounded loop or external call; distance computation is O(1)." },
+    { "category": "ELEVATION_OF_PRIVILEGE", "assessed": "Verified the core IDOR-prevention property: an adventurer can never read or write another adventurer's expedition. POST always assigns ownership server-side from the verified session; GET's owner filter was reviewed line-by-line and hardened (see Tampering/Information Disclosure above)." }
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "title": "Zero-length-line validation bypassable with NaN/Infinity coordinates",
+      "location": "apps/mock-api/server.js:96-98 (isValidPoint, pre-fix)",
+      "category": "TAMPERING",
+      "description": "isValidPoint only checked `typeof point.lat === 'number'`, which NaN and Infinity both satisfy. A POST body with from/to containing NaN or Infinity produces a NaN result from geodesicDistanceKm; `NaN < MIN_EXPEDITION_DISTANCE_KM` is always false, so the 422 zero-length-line rejection (AC13's integrity control) was silently skipped. The expedition would then be persisted — and since JSON.stringify converts NaN/Infinity to null, the data file would end up holding corrupted {lat: null, lng: null}-style entries indistinguishable from a parsing bug, visible to the owning adventurer and any future consumer of GET /api/expeditions.",
+      "fixApplied": "Rewrote isValidPoint to use Number.isFinite(point.lat) && Number.isFinite(point.lng) (excludes NaN/±Infinity) and added the geographic range check -90<=lat<=90, -180<=lng<=180, consistent with the domain model's 'a latitude and longitude on the planet' definition.",
+      "verification": "node --test apps/mock-api — full suite (18/18) still passes unchanged; a new POST test with from.lat: NaN (or Infinity) should assert 400 and an unchanged expeditions.json, extending the existing malformed-body test pattern (missing field / non-numeric lat) already in server.test.js."
+    },
+    {
+      "severity": "LOW",
+      "title": "GET owner filter's null-coincidence edge case on the trust-boundary line",
+      "location": "apps/mock-api/server.js:139 (pre-fix)",
+      "category": "INFORMATION_DISCLOSURE",
+      "description": "`e.owner === 'shop' || e.owner === userId` means a no-session request (userId === null) would match any stored expedition whose owner field were itself null/undefined, since null === null. No current write path can produce a null owner (POST always sets owner = req.userId from a verified session), so this is not exploitable today — but it sits directly on the line the spec calls out as 'the trust boundary: the security gate checks it,' and a future data migration or seed edit that ever left owner unset would silently leak that record to every anonymous caller.",
+      "fixApplied": "Added an explicit `userId !== null` guard before the owner-match comparison, removing the null-coincidence path entirely regardless of future data shape.",
+      "verification": "node --test apps/mock-api — full suite (18/18) still passes unchanged, including the no-session GET test (asserts exactly 3 seeded expeditions) and both Elara/Borin session tests."
+    }
+  ],
+  "filesModified": [
+    "apps/mock-api/server.js"
+  ],
+  "securityChecklist": [
+    { "item": "POST /api/expeditions never trusts an owner/userId field from the request body", "checked": true, "note": "owner is always req.userId from requireAuth's verified session; covered by an existing forged-owner test" },
+    { "item": "GET /api/expeditions never returns another adventurer's expedition", "checked": true, "note": "Verified for Elara and Borin sessions and an invalid-token case; hardened the null-coincidence edge case" },
+    { "item": "No external network call for the geodesic distance check", "checked": true, "note": "geodesicDistanceKm is pure local arithmetic (haversine), no fetch/http client involved" },
+    { "item": "Input validation rejects non-numeric and now non-finite/out-of-range coordinates", "checked": true, "note": "Fixed isValidPoint to use Number.isFinite plus lat/lng range bounds" },
+    { "item": "No secrets, tokens, or credentials hardcoded in new code or data files", "checked": true, "note": "Seed users Elara/Borin use the same plaintext 'password123' convention already used by every other seed user in this mock API — pre-existing, non-production test data" },
+    { "item": "No new dependencies introduced", "checked": true },
+    { "item": "Error responses (400/401/422) reveal no stack traces or internal paths", "checked": true },
+    { "item": "Session/auth infrastructure reused, not reimplemented", "checked": true, "note": "resolveSessionUserId mirrors requireAuth's existing token-lookup pattern exactly" }
+  ],
+  "notesForQa": [
+    "Two fixes were applied directly to apps/mock-api/server.js: isValidPoint now rejects NaN/Infinity and out-of-range lat/lng (was previously only a typeof check), and the GET owner filter now requires userId !== null before matching, closing a latent null-coincidence edge case.",
+    "Please add a POST test asserting 400 for a non-finite coordinate (e.g. from: {lat: NaN, lng: 20} or {lat: Infinity, lng: 20}) and for an out-of-range coordinate (e.g. lat: 999) — same shape as the existing missing-field and non-numeric tests, and confirm expeditions.json is byte-identical before/after (the same pattern already used for the other 400 cases).",
+    "All 18 existing tests still pass unchanged after both fixes; running the suite twice still leaves no git diff under apps/mock-api/data/ — verified directly.",
+    "The pagination gap on GET /api/expeditions (code-reviewer's non-blocking note) is unrelated to these fixes and remains out of scope, matching GET /api/items and GET /api/reagent-sites."
+  ],
+  "notesForTechWriter": [
+    "No documentation change is required for the two security fixes themselves — they tighten existing, already-documented input validation (the 400 'from and to are required as { lat, lng }' response) rather than changing any public API contract or response shape."
+  ],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Expedition", "Seeded Expedition", "Aurelis"],
+    "issueRefs": ["expeditions-api", "reagent-map-spec"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

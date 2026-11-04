@@ -1,0 +1,46 @@
+{"at":"2026-11-04T05:01:33.443009Z","kind":"run.started"}
+{"at":"2026-11-04T05:01:33.443606Z","kind":"stage.started","stage":"context-engineer","sequence":1}
+{"at":"2026-11-04T05:03:57.16585Z","kind":"stage.completed","stage":"context-engineer","sequence":1}
+{"at":"2026-11-04T05:03:57.166324Z","kind":"stage.started","stage":"analyst","sequence":2}
+{"at":"2026-11-04T05:07:29.972635Z","kind":"stage.completed","stage":"analyst","sequence":2}
+{"at":"2026-11-04T05:07:29.973158Z","kind":"stage.started","stage":"router","sequence":3}
+{"at":"2026-11-04T05:07:30.015447Z","kind":"stage.completed","stage":"router","sequence":3}
+{"at":"2026-11-04T05:07:30.015675Z","kind":"stage.skipped","stage":"performance-engineer","sequence":4,"reason":"no performance requirement carries a threshold with a number and a unit"}
+{"at":"2026-11-04T05:07:30.015851Z","kind":"stage.skipped","stage":"accessibility-engineer","sequence":5,"reason":"the analysis declares no UI surface"}
+{"at":"2026-11-04T05:07:30.01604Z","kind":"stage.skipped","stage":"visual-qa-engineer","sequence":6,"reason":"the analysis declares no UI surface, so there is nothing to look at"}
+{"at":"2026-11-04T05:07:30.016223Z","kind":"stage.skipped","stage":"devops-engineer","sequence":7,"reason":"the analysis lists no DevOps tasks"}
+{"at":"2026-11-04T05:07:30.016454Z","kind":"stage.started","stage":"architect","sequence":8}
+{"at":"2026-11-04T05:10:23.761237Z","kind":"stage.completed","stage":"architect","sequence":8}
+{"at":"2026-11-04T05:10:23.761855Z","kind":"stage.started","stage":"data-engineer","sequence":9}
+{"at":"2026-11-04T05:11:40.786382Z","kind":"stage.completed","stage":"data-engineer","sequence":9}
+{"at":"2026-11-04T05:11:40.787095Z","kind":"stage.started","stage":"acceptance-scenarios","sequence":10}
+{"at":"2026-11-04T05:12:41.805821Z","kind":"stage.completed","stage":"acceptance-scenarios","sequence":10}
+{"at":"2026-11-04T05:12:41.828029Z","kind":"gate.waiting","stage":"developer","gate":"confirm-design"}
+{"at":"2026-11-04T05:40:23.286045Z","kind":"gate.approved","gate":"confirm-design","approvalMethod":"flag"}
+{"at":"2026-11-04T05:40:23.286905Z","kind":"run.resumed"}
+{"at":"2026-11-04T05:40:23.335804Z","kind":"stage.started","stage":"developer","sequence":11}
+{"at":"2026-11-04T05:44:21.346852Z","kind":"stage.completed","stage":"developer","sequence":11}
+{"at":"2026-11-04T05:44:21.347584Z","kind":"stage.started","stage":"code-reviewer","sequence":12}
+{"at":"2026-11-04T05:47:47.927627Z","kind":"stage.completed","stage":"code-reviewer","sequence":12}
+{"at":"2026-11-04T05:47:47.928986Z","kind":"loop.iterated","stage":"developer","loop":"review","iteration":2}
+{"at":"2026-11-04T05:47:47.957157Z","kind":"stage.started","stage":"developer","sequence":11}
+{"at":"2026-11-04T05:50:08.276221Z","kind":"stage.completed","stage":"developer","sequence":11}
+{"at":"2026-11-04T05:50:08.276887Z","kind":"stage.started","stage":"code-reviewer","sequence":12}
+{"at":"2026-11-04T05:52:18.383762Z","kind":"stage.completed","stage":"code-reviewer","sequence":12}
+{"at":"2026-11-04T05:52:18.38458Z","kind":"stage.started","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-04T05:55:04.442361Z","kind":"stage.completed","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-04T05:55:04.468714Z","kind":"gate.waiting","stage":"qa-engineer","gate":"confirm-security"}
+{"at":"2026-11-04T05:58:36.021893Z","kind":"gate.approved","gate":"confirm-security","approvalMethod":"flag"}
+{"at":"2026-11-04T05:58:36.022718Z","kind":"run.resumed"}
+{"at":"2026-11-04T05:58:36.087915Z","kind":"stage.started","stage":"qa-engineer","sequence":14}
+{"at":"2026-11-04T06:03:34.674885Z","kind":"stage.completed","stage":"qa-engineer","sequence":14}
+{"at":"2026-11-04T06:03:34.675515Z","kind":"stage.started","stage":"sre-engineer","sequence":15}
+{"at":"2026-11-04T06:06:12.986561Z","kind":"stage.completed","stage":"sre-engineer","sequence":15}
+{"at":"2026-11-04T06:06:12.98754Z","kind":"stage.started","stage":"tech-writer","sequence":16}
+{"at":"2026-11-04T06:07:36.978968Z","kind":"stage.completed","stage":"tech-writer","sequence":16}
+{"at":"2026-11-04T06:07:36.979724Z","kind":"stage.started","stage":"pre-ship-checks","sequence":17}
+{"at":"2026-11-04T06:09:17.905529Z","kind":"stage.completed","stage":"pre-ship-checks","sequence":17}
+{"at":"2026-11-04T06:09:17.943338Z","kind":"gate.waiting","stage":"devops-engineer","gate":"confirm-ship"}
+{"at":"2026-11-04T06:17:51.556953Z","kind":"gate.approved","gate":"confirm-ship","approvalMethod":"flag"}
+{"at":"2026-11-04T06:17:51.558589Z","kind":"run.resumed"}
+{"at":"2026-11-04T06:17:51.646415Z","kind":"run.completed"}

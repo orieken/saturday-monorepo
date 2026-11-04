@@ -1,0 +1,40 @@
+[
+  {
+    "id": "expedition-seed-1",
+    "name": "Spring to Crag",
+    "owner": "shop",
+    "from": { "lat": 10, "lng": 20 },
+    "to": { "lat": 25, "lng": 60 },
+    "savedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "expedition-seed-2",
+    "name": "Glade to Caves",
+    "owner": "shop",
+    "from": { "lat": -30, "lng": -45 },
+    "to": { "lat": 40, "lng": -100 },
+    "savedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "expedition-seed-3",
+    "name": "Cairn to Shoals",
+    "owner": "shop",
+    "from": { "lat": -15, "lng": 130 },
+    "to": { "lat": 0, "lng": 180 },
+    "savedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "expedition-elara-1",
+    "owner": "user-4",
+    "from": { "lat": 10, "lng": 20 },
+    "to": { "lat": 85, "lng": 0 },
+    "savedAt": "2025-01-02T00:00:00.000Z"
+  },
+  {
+    "id": "expedition-borin-1",
+    "owner": "user-5",
+    "from": { "lat": 25, "lng": 60 },
+    "to": { "lat": -15, "lng": 130 },
+    "savedAt": "2025-01-02T00:00:00.000Z"
+  }
+]
