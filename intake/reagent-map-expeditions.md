@@ -12,7 +12,7 @@ trust: internal
 base-branch: main
 finish: pr
 autonomy: inherit
-depends-on: [reagent-map-globe, expeditions-api]
+depends-on: [reagent-map-globe, expeditions-api, reagent-map-visual-baselines]
 budget:
   max-attempts: 2
   max-usd: 20
