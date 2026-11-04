@@ -64,8 +64,10 @@ app behaves exactly as it does today.
 - [ ] Given `POST /api/expeditions` with no session, then it is refused with 401 and nothing is
       stored (spec AC12); with ends less than 1 km apart, it is refused with 422 naming a zero-length
       line and nothing is stored (spec AC13).
-- [ ] Given the tests, then they use Node's built-in `node:test`, as `reagent-sites-api` does
-      (whichever ships first adds the `test` script).
+- [ ] Given the tests, then they use Node's built-in `node:test` through the `test` script
+      `reagent-sites-api` added, and leave the repository unchanged: running the suite twice shows no
+      `git status` change, including to `apps/mock-api/data/`. `POST` writes to a data file, as
+      registering a user does, so the tests must isolate or restore what they write.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/expeditions-api/` excepted.
