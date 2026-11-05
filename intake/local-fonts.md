@@ -3,7 +3,7 @@ intake: 1
 id: local-fonts
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-11-04
 requested-by: oscar
