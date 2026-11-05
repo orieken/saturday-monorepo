@@ -20,16 +20,6 @@ const EXPECTED_RADIUS_METERS = 6_000_000;
 const APP_ORIGIN_HOSTNAME = 'localhost';
 const ALLOWED_PORTS = ['8000', '8001'];
 
-// src/styles.css's @import of Google Fonts predates this feature (git log
-// shows no change to that file in this diff) and loads on every route the
-// app serves, not just /reagent-map. It is a real, pre-existing gap against
-// the site's own "no off-origin request" aspiration, but it is not a defect
-// this feature introduced — fixing it (self-hosting Cinzel/Inter) is a
-// site-wide typography decision outside this feature's scope.paths intent.
-// Named explicitly (not a wildcard) so any *other* off-origin request —
-// e.g. Cesium ion sneaking back in — still fails this test.
-const PRE_EXISTING_OFF_ORIGIN_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
-
 async function collectOffOriginRequests(page: Page): Promise<string[]> {
   const offOrigin: string[] = [];
   page.on('request', (request) => {
@@ -37,7 +27,6 @@ async function collectOffOriginRequests(page: Page): Promise<string[]> {
     // blob:/data: are in-memory, non-network resources — only http(s)
     // requests can actually leave the page's own origin.
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
-    if (PRE_EXISTING_OFF_ORIGIN_HOSTS.includes(url.hostname)) return;
     if (url.hostname !== APP_ORIGIN_HOSTNAME || !ALLOWED_PORTS.includes(url.port)) {
       offOrigin.push(request.url());
     }

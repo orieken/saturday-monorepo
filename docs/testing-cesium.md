@@ -62,9 +62,6 @@ All of this is in `apps/ye-olde-magic-shop`, mostly `src/views/ReagentMapView.vu
 | Cesium loaded as a global `<script>`, not `import` | `cesium@1.146.0` could not be bundled by Rollup for a production build, because of a packaging mismatch with `@cesium/engine` |
 | The Cesium credit hidden | The default logo says "Cesium ion", and this view doesn't use ion |
 
-**Still open:** `src/styles.css` imports Google Fonts on every page, so the no-request test skips
-those two hosts. See "Known gaps".
-
 ### For an invented planet
 
 | Change | Why |
@@ -188,8 +185,6 @@ coordinates and still be hidden, off camera or the wrong colour. Check a screens
 
 ## Known gaps
 
-- **Google Fonts.** The no-request test skips `fonts.googleapis.com` and `fonts.gstatic.com`, because
-  `src/styles.css` imports them on every page. Serve the fonts locally, then remove the exception.
 - **No visual baselines.** The visual QA stage reports itself as unconfigured for this view. Generate
   and compare baselines only in the runner image, and start with the DOM around the globe.
 - **No network blocking in the script.** `scripts/ui-suite-in-chrome.sh` uses Docker's default network.
