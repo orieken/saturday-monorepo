@@ -69,7 +69,7 @@ those two hosts. See "Known gaps".
 
 | Change | Why |
 |---|---|
-| `new Cesium.Ellipsoid(r, r, r)` with `r = 6_000_000`, passed to the `Globe` and to every position | Without it, positions are computed on Earth's ellipsoid |
+| `new Cesium.Ellipsoid(r, r, r)` with `r = 6_000_000`, passed to the `Viewer`, the `Globe` and every position | Without it, positions are computed on Earth's ellipsoid. Without it on the `Viewer`, drag and zoom are too |
 | The radius read from the seam in tests, never hard-coded to Earth's | A helper assuming Earth's radius would be about 6% wrong here, and would fail |
 | A camera set explicitly on load | Otherwise Cesium uses its Earth-sized default view (see "What went wrong") |
 | `scripts/generate-aurelis-image.py` draws land under every site, at 1024×512 | The first image put four sites in the sea, and 2048×1024 made rendering slow enough to time out |
@@ -176,6 +176,7 @@ above.
 | Four of the eight sites were in the sea | Same | A generated image, and a test reading the pixel under each site |
 | A killed developer stage left the suite passing but unreviewed | The stage hit the 30-minute limit | The work was finished by hand, and bigger orders are now split |
 | A stale pnpm store volume failed with a missing rollup binary | Unrelated to the code | Delete the `ui-suite-pnpm-store` volume |
+| A dragged site landed 19 px from the cursor | The globe had Aurelis's ellipsoid, but the scene, and so the camera controller, kept Earth's. No test used a real drag | Pass `ellipsoid` to the `Viewer` too. `reagent-map-pan-zoom.spec.ts` checks that a grabbed site stays within 8 px of the cursor |
 | Tests crashed or timed out at random, with a different test each run | Software rendering under emulation ran short of resources: 64 MB of shared memory, too many pages at once, and a large image | `--shm-size=1g`, `--workers=3`, and a 1024×512 image. 10 of 10 runs passed after that |
 
 **The lesson:** make the fixture as awkward as a real page. Offset the canvas, use a planet that isn't
@@ -188,6 +189,10 @@ coordinates and still be hidden, off camera or the wrong colour. Check a screens
 
 ## Known gaps
 
+- **A wheel at the exact centre of the view stops rendering.** In Cesium 1.146, a zoom with the cursor on
+  the point straight below the camera rotates the camera about a zero-length axis. The camera position
+  becomes `NaN`, and Cesium shows "Rendering has stopped". The default view puts Moonwell Spring at that
+  point, so the pan and zoom tests zoom over Ember Crag. A real mouse can hit that point on a 2× display.
 - **Google Fonts.** The no-request test skips `fonts.googleapis.com` and `fonts.gstatic.com`, because
   `src/styles.css` imports them on every page. Serve the fonts locally, then remove the exception.
 - **No visual baselines.** The visual QA stage reports itself as unconfigured for this view. Generate
