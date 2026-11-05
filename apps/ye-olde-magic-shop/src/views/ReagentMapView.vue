@@ -79,6 +79,10 @@ async function buildViewer() {
   });
 
   const newViewer = new Cesium.Viewer('cesiumContainer', {
+    // The scene's ellipsoid, not only the globe's. Without it the camera
+    // controller grabs and zooms against Earth's ellipsoid, so a dragged
+    // point drifts away from the cursor.
+    ellipsoid,
     globe,
     baseLayerPicker: false,
     geocoder: false,
