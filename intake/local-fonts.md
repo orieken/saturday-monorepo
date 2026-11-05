@@ -18,7 +18,7 @@ budget:
   max-usd: 15
   max-hours: 2
 scope:
-  paths: [apps/ye-olde-magic-shop/src/styles.css, apps/ye-olde-magic-shop/src/main.ts, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts, pnpm-lock.yaml, docs/testing-cesium.md, docs/features/local-fonts/**]
+  paths: [apps/ye-olde-magic-shop/src/styles.css, apps/ye-olde-magic-shop/src/main.ts, apps/ye-olde-magic-shop/package.json, apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts, apps/ye-olde-magic-shop/tests/local-fonts.spec.ts, pnpm-lock.yaml, docs/testing-cesium.md, docs/features/local-fonts/**]
 ---
 
 # Serve the shop's fonts from its own origin
@@ -35,6 +35,16 @@ page. So the app reaches the network on every page, and `tests/reagent-map-globe
 skip two hosts. Fonts loaded over the network can also make screenshots differ between runs, so this
 comes before `reagent-map-visual-baselines`.
 
+## Starting point
+
+An earlier run did this work, and every stage passed. It parked only because the Claude CLI was signed
+out. The changes are on commit `3629f44` (branch `salvage/local-fonts`). Apply them, then verify each
+criterion and record the evidence; do not rewrite them:
+
+```bash
+git diff --binary 83beb6e 3629f44 | git apply --index
+```
+
 ## Acceptance Criteria
 
 - [ ] Given the app, then Cinzel (400, 700) and Inter (400, 600) load from the app's own origin,
@@ -45,7 +55,9 @@ comes before `reagent-map-visual-baselines`.
 - [ ] Given the no-request test with the old `@import` put back, then it fails. Record the failing
       output in the delivery record.
 - [ ] Given a page opened in the runner image, then headings still render in Cinzel and body text in
-      Inter, checked through `document.fonts.check` for each family and weight in a test.
+      Inter, checked in `tests/local-fonts.spec.ts` with `document.fonts.load` and the exact
+      weight. Do not use `document.fonts.check`: it returned true with the fonts removed. Record the
+      test failing with all four imports removed, and with only Inter 600 removed.
 - [ ] Given `docs/testing-cesium.md`, then its Google Fonts entry under "Known gaps" is gone, and it
       still follows `.claude/rules/writing-style.md`.
 - [ ] Given `scripts/ui-suite-in-chrome.sh` and `scripts/ui-suite-in-chrome.sh --ubi9`, then both pass.
