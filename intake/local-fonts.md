@@ -45,6 +45,10 @@ criterion and record the evidence; do not rewrite them:
 git diff --binary 83beb6e 3629f44 | git apply --index
 ```
 
+`docs/testing-cesium.md` changed on `main` after that commit, so its part of the diff will not apply.
+Apply the rest (`git apply --index --exclude=docs/testing-cesium.md`), then remove the Google Fonts
+passages from that file by hand. The second run also parked, on the sign-in, with no work done.
+
 ## Acceptance Criteria
 
 - [ ] Given the app, then Cinzel (400, 700) and Inter (400, 600) load from the app's own origin,
