@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "feature": "local-fonts",
+  "scenarios": [
+    {
+      "criterion": "Cinzel (400, 700) and Inter (400, 600) MUST load from the app's own origin, through @fontsource/cinzel and @fontsource/inter pinned to exact versions, and src/styles.css MUST have no @import from another origin.",
+      "name": "Fonts load from the application's own origin with exact-pinned packages",
+      "given": [
+        "The application serves its own stylesheet and font packages"
+      ],
+      "when": [
+        "The browser loads the page"
+      ],
+      "then": [
+        "Cinzel and Inter font files are requested only from the app's own origin",
+        "src/styles.css contains no @import pointing at another origin",
+        "package.json pins @fontsource/cinzel and @fontsource/inter to exact versions with no ^ or ~"
+      ]
+    },
+    {
+      "criterion": "tests/reagent-map-globe.spec.ts MUST drop PRE_EXISTING_OFF_ORIGIN_HOSTS and the code that skips those hosts, and its no-request test MUST pass with no exception.",
+      "name": "No-request test passes without any off-origin host exception",
+      "given": [
+        "tests/reagent-map-globe.spec.ts no longer defines PRE_EXISTING_OFF_ORIGIN_HOSTS or any host-skipping logic"
+      ],
+      "when": [
+        "The no-request test is run"
+      ],
+      "then": [
+        "The test passes with no exception raised",
+        "No request to any off-origin host is observed or excused"
+      ]
+    },
+    {
+      "criterion": "The no-request test MUST fail when the old cross-origin @import is restored. Record the failing output in the delivery record.",
+      "name": "No-request test fails if the cross-origin font import returns",
+      "given": [
+        "The old cross-origin Google Fonts @import is temporarily restored in styles.css"
+      ],
+      "when": [
+        "The no-request test is run"
+      ],
+      "then": [
+        "The test fails",
+        "The failing output is captured and recorded in the delivery record under docs/features/local-fonts/",
+        "The @import is reverted afterward so the suite returns to green"
+      ]
+    },
+    {
+      "criterion": "A page opened in the runner image MUST still render headings in Cinzel and body text in Inter, checked in tests/local-fonts.spec.ts with document.fonts.load at the exact weight, never document.fonts.check.",
+      "name": "Headings render in Cinzel and body text renders in Inter at the correct weights",
+      "given": [
+        "A page is opened in the runner image"
+      ],
+      "when": [
+        "tests/local-fonts.spec.ts checks the fonts in use via document.fonts.load"
+      ],
+      "then": [
+        "document.fonts.load confirms a Cinzel face loaded at weight 400 and at weight 700",
+        "document.fonts.load confirms an Inter face loaded at weight 400 and at weight 600",
+        "The test never calls document.fonts.check"
+      ]
+    },
+    {
+      "criterion": "A page opened in the runner image MUST still render headings in Cinzel and body text in Inter, checked in tests/local-fonts.spec.ts with document.fonts.load at the exact weight, never document.fonts.check.",
+      "name": "Removing all self-hosted font imports is caught by the font test",
+      "given": [
+        "All four @fontsource imports are temporarily removed from main.ts"
+      ],
+      "when": [
+        "tests/local-fonts.spec.ts is run"
+      ],
+      "then": [
+        "The test fails because document.fonts.load resolves no matching face for each family/weight pair",
+        "The failing output is recorded in the delivery record",
+        "The imports are reverted afterward"
+      ]
+    },
+    {
+      "criterion": "A page opened in the runner image MUST still render headings in Cinzel and body text in Inter, checked in tests/local-fonts.spec.ts with document.fonts.load at the exact weight, never document.fonts.check.",
+      "name": "Removing only the Inter 600 import is caught by weight, not by document.fonts.check",
+      "given": [
+        "Only the @fontsource/inter/600.css import is temporarily removed from main.ts"
+      ],
+      "when": [
+        "tests/local-fonts.spec.ts is run"
+      ],
+      "then": [
+        "The test fails because the resolved Inter FontFace's weight does not match 600",
+        "The failure is detected even though document.fonts.check would have returned true for this case",
+        "The failing output is recorded in the delivery record",
+        "The import is reverted afterward"
+      ]
+    },
+    {
+      "criterion": "docs/testing-cesium.md's Google Fonts entry under \"Known gaps\" MUST be gone, and the file MUST still follow .claude/rules/writing-style.md.",
+      "name": "Documentation no longer lists Google Fonts as a known gap",
+      "given": [
+        "docs/testing-cesium.md previously listed Google Fonts under its \"Known gaps\" section"
+      ],
+      "when": [
+        "The local-fonts feature is delivered"
+      ],
+      "then": [
+        "The Google Fonts entry is removed from \"Known gaps\"",
+        "The rest of docs/testing-cesium.md still follows the Simplified Technical English rules in .claude/rules/writing-style.md"
+      ]
+    },
+    {
+      "criterion": "scripts/ui-suite-in-chrome.sh and scripts/ui-suite-in-chrome.sh --ubi9 MUST both pass.",
+      "name": "The UI suite passes in both the debian and ubi9 runner images",
+      "given": [
+        "The local-fonts change is complete"
+      ],
+      "when": [
+        "scripts/ui-suite-in-chrome.sh is run",
+        "scripts/ui-suite-in-chrome.sh --ubi9 is run"
+      ],
+      "then": [
+        "Both runs pass",
+        "tests/reagent-map-globe.spec.ts's no-request test and tests/local-fonts.spec.ts pass in both runs"
+      ]
+    },
+    {
+      "criterion": "Every new or changed function MUST have cyclomatic complexity below 7, every changed line MUST be covered by a test that can fail, and no file outside scope.paths MUST change (the run's own delivery record under docs/features/local-fonts/ excepted).",
+      "name": "The change stays within complexity, coverage, and file-scope budgets",
+      "given": [
+        "The delivered change set for local-fonts"
+      ],
+      "when": [
+        "Complexity, test coverage, and file scope are checked"
+      ],
+      "then": [
+        "Every new or changed function has cyclomatic complexity below 7",
+        "Every changed line is covered by a test that can fail",
+        "No file outside scope.paths changed, except the delivery record under docs/features/local-fonts/"
+      ]
+    }
+  ]
+}

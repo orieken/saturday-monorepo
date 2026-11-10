@@ -18,6 +18,8 @@
     "index:features:post": "npm --prefix ../../packages/saturday-cucumber-indexer ci && npm --prefix ../../packages/saturday-cucumber-indexer run build && node ../../packages/saturday-cucumber-indexer/dist/index.js --features ./features --suiteId ye-olde-magic-shop --out ./feature-index.json --backend http://localhost:8080"
   },
   "dependencies": {
+    "@fontsource/cinzel": "5.3.0",
+    "@fontsource/inter": "5.3.0",
     "cesium": "1.146.0",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
