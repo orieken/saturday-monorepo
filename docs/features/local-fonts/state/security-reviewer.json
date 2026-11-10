@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "feature": "local-fonts",
+  "threatModelSummary": "This feature replaces a Google Fonts CDN @import in src/styles.css with two self-hosted @fontsource packages (cinzel, inter), and removes the corresponding exception in tests/reagent-map-globe.spec.ts's no-off-origin-request test. There is no authentication, no user-supplied input, no API endpoint, no secret/token handling, and no new persistent data — the change is purely a static-asset sourcing change at build time. The net security effect is positive: it removes a third-party origin (fonts.googleapis.com/fonts.gstatic.com) that previously received a request, with the visitor's IP address and User-Agent, on every page load regardless of user consent, and removes a runtime availability dependency on Google's infrastructure. The two new dependencies are pinned to exact versions (5.3.0, no ^ or ~ range) in package.json, and pnpm-lock.yaml records SRI integrity hashes for both. pnpm audit --prod shows 33 pre-existing vulnerabilities, all attributed to apps/mock-api's express>qs/body-parser chain — none to @fontsource/cinzel or @fontsource/inter. Verified by reading the full diff (package.json, main.ts, styles.css, both spec files, pnpm-lock.yaml, docs/testing-cesium.md) and the developer/code-reviewer artifacts, which independently concluded no security surface. No code changes were needed from this stage.",
+  "dependencyAudit": [
+    "pnpm audit --prod: 33 vulnerabilities (2 low, 15 moderate, 14 high, 2 critical), all pre-existing and scoped to apps/mock-api's express>qs and express>body-parser transitive chain — unrelated to this feature's two new dependencies.",
+    "@fontsource/cinzel@5.3.0 and @fontsource/inter@5.3.0: 0 findings in pnpm audit; pinned to exact version in package.json; integrity hash present in pnpm-lock.yaml (sha512-KEOYT... and sha512-RofMy... respectively)."
+  ],
+  "stride": [
+    { "category": "SPOOFING", "assessed": "No auth, session, or identity surface is touched by this change; not applicable." },
+    { "category": "TAMPERING", "assessed": "Font assets are now bundled from a pinned, integrity-hashed npm package rather than fetched at runtime from an external CDN over which this app has no tamper-detection (no SRI was ever applied to the old <link>/@import). Self-hosting via a locked dependency is a strict improvement — the asset is fixed at build time and covered by the lockfile hash." },
+    { "category": "REPUDIATION", "assessed": "No user actions or audit trail implications; not applicable." },
+    { "category": "INFORMATION_DISCLOSURE", "assessed": "Positive change: removes a cross-origin request to fonts.googleapis.com/fonts.gstatic.com that fired on every route, which previously sent the visitor's IP address, User-Agent, and Referer to Google on every page load with no consent mechanism. Confirmed no new off-origin egress was introduced — reagent-map-globe.spec.ts's no-request assertion now has no exception list and the developer notes QA must capture the authoritative pass in the Docker runner." },
+    { "category": "DENIAL_OF_SERVICE", "assessed": "Positive change: removes a hard runtime dependency on Google Fonts' availability/latency for page render; self-hosted fonts load from the app's own bundle with no external network dependency." },
+    { "category": "ELEVATION_OF_PRIVILEGE", "assessed": "No permission or role boundaries exist in this change; not applicable." }
+  ],
+  "findings": [],
+  "filesModified": [],
+  "securityChecklist": [
+    { "item": "No hardcoded secrets, tokens, or credentials introduced", "checked": true },
+    { "item": "New dependencies pinned to exact versions with lockfile integrity hashes", "checked": true },
+    { "item": "pnpm audit run against new dependencies — zero findings attributable to @fontsource packages", "checked": true },
+    { "item": "No new external network egress introduced; one removed (fonts.googleapis.com, fonts.gstatic.com)", "checked": true },
+    { "item": "No auth, session, input-validation, or trust-boundary-crossing code touched", "checked": true }
+  ],
+  "notesForQa": [
+    "No security-driven test requirements beyond what analysis/code-review already specified. Confirm in the Docker runner that tests/reagent-map-globe.spec.ts's no-off-origin-request assertion passes with zero exceptions (PRE_EXISTING_OFF_ORIGIN_HOSTS removed) — this is also the AC3 evidence the spec asks to record.",
+    "This stage made no code changes; security-report findings are empty by design, per this agent's own rule to say so explicitly when a feature has no auth, no user input, no external calls, and no sensitive data."
+  ],
+  "notesForTechWriter": [],
+  "retrieval": {
+    "domainTerms": [],
+    "issueRefs": ["local-fonts"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

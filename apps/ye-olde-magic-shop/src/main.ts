@@ -4,6 +4,10 @@ import router from './router';
 import App from './App.vue';
 import './styles.css';
 import 'leaflet/dist/leaflet.css';
+import '@fontsource/cinzel/400.css';
+import '@fontsource/cinzel/700.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/600.css';
 
 declare global {
   interface Window {

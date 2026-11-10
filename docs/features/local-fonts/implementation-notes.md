@@ -1,0 +1,78 @@
+---
+feature: "local-fonts"
+bounded_context: ""
+domain_terms: []
+files_touched: ["apps/ye-olde-magic-shop/tests/local-fonts.spec.ts", "apps/ye-olde-magic-shop/package.json", "apps/ye-olde-magic-shop/src/main.ts", "apps/ye-olde-magic-shop/src/styles.css", "apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts", "docs/testing-cesium.md", "pnpm-lock.yaml"]
+issue_refs: ["local-fonts"]
+linked_adrs: []
+linked_kis: []
+---
+
+# Implementation Notes: local-fonts
+
+## Files Created
+
+- apps/ye-olde-magic-shop/tests/local-fonts.spec.ts
+
+## Files Modified
+
+- apps/ye-olde-magic-shop/package.json
+- apps/ye-olde-magic-shop/src/main.ts
+- apps/ye-olde-magic-shop/src/styles.css
+- apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts
+- docs/testing-cesium.md
+- pnpm-lock.yaml
+
+## Interface Design
+
+- No new public interface — tests/local-fonts.spec.ts is a Playwright test, not an exported module
+- FONTS constant array ({family, weight}[]) is the only new identifier, scoped to the test file
+
+## Named Refactoring Log
+
+None
+
+## Self-Review Checklist
+
+- [x] Every public method has an intention-revealing name — Only new identifier is the test's own title string and the FONTS constant; no new functions introduced
+- [x] No function exceeds 30 LOC — Test body is ~14 lines; collectOffOriginRequests lost 2 lines and stayed under its original length
+- [x] Cyclomatic complexity < 7 on all new functions — The test's inline async callbacks have a single conditional each (complexity 2)
+- [x] No primitive obsession — family/weight pairs are plain strings matching the CSS Font Loading API's own signature (document.fonts.load(font string)) — wrapping them would fight the platform API, not the domain
+- [x] No feature envy — N/A — no new classes
+- [x] No magic numbers or strings — Font family/weight pairs are the named FONTS constant, not inlined literals
+- [x] Dependency direction verified — Font CSS imports sit at the existing side-effect-import site in main.ts, same layer as the existing leaflet.css import
+
+## Simple Design Verification
+
+- [x] Passes all tests — tests/local-fonts.spec.ts passes under --project=chromium locally; reagent-map-globe.spec.ts's no-request test requires the Docker runner image's real-Chrome/WebGL2 context (see notesForQa) and could not be executed in this sandbox
+- [x] Reveals intention — Test name states the exact behavior; FONTS constant names the four family/weight pairs being verified; code comment explains why document.fonts.load is used over .check
+- [x] No duplication — Single FONTS array drives all four assertions instead of four repeated blocks
+- [x] Fewest elements — No abstraction added beyond what architecture-notes.md already ruled out (no fonts-loading helper) — direct @fontsource imports at the existing entry-point site
+
+## Key Decisions
+
+- Reused the verified salvage commit (3629f44) via git apply rather than rewriting the implementation: The spec and analysis both direct reuse of already-verified work; the applied diff was byte-for-byte what analysis.md and architecture-notes.md describe
+- Hand-ported the docs/testing-cesium.md change instead of applying that part of the salvage diff: main added a Viewer-ellipsoid table row and a wheel-at-centre-of-view 'Known gaps' entry after the salvage commit; a verbatim apply would have conflicted. Removed only the 'Still open' Google Fonts paragraph and the matching 'Known gaps' bullet, leaving both of main's later additions untouched
+
+## Deviations from Analysis
+
+- QA Tasks #1-2 (run scripts/ui-suite-in-chrome.sh in both images) and QA Task #3 (verify the no-request test fails with the old @import restored): These require Docker and the Saturday runner image's real Chrome + Xvfb WebGL2 context, which this sandbox does not have. I confirmed tests/reagent-map-globe.spec.ts's no-request test and PRE_EXISTING_OFF_ORIGIN_HOSTS removal are correct by inspection and by running it locally (it failed on the Cesium WebGL wait, not on anything font-related — a pre-existing environment limitation, not a regression). QA must run the dockerized suite to get the real pass/fail evidence for AC2, AC3, and the devops fitness function.
+- QA Task #4-5 negative-case evidence for tests/local-fonts.spec.ts (AC4): Not a deviation from scope — I additionally performed these myself as part of 'prove every new test can fail' before handoff: removed all four @fontsource imports (test failed on all four family/weight pairs) and removed only @fontsource/inter/600.css (test failed only on 'Inter 600', confirming document.fonts.load + weight comparison catches what document.fonts.check could not). Both reverted after capturing output; see notesForQa for the recorded failure text. QA should still re-run these in the runner image per its own task list for the official delivery record.
+
+## Dependencies Added
+
+- `@fontsource/cinzel` 5.3.0 — Self-hosts Cinzel (400, 700) so headings no longer load from fonts.googleapis.com
+- `@fontsource/inter` 5.3.0 — Self-hosts Inter (400, 600) so body text no longer loads from fonts.googleapis.com
+
+## Notes for QA
+
+- Local verification (bundled Chromium, no Docker): tests/local-fonts.spec.ts passed as-is.
+- Negative case 1 (AC4): removed all four @fontsource imports from main.ts — test failed with missing = ['Cinzel 400', 'Cinzel 700', 'Inter 400', 'Inter 600']. Reverted.
+- Negative case 2 (AC4): removed only '@fontsource/inter/600.css' from main.ts — test failed with missing = ['Inter 600'] only, confirming the exact-weight comparison (not document.fonts.check) is what catches this. Reverted.
+- AC3's negative case (restoring the Google Fonts @import and confirming the no-request test fails) and the no-request test's normal pass both require tests/reagent-map-globe.spec.ts's 'chrome' Playwright project, which needs a real WebGL2 context only the Saturday runner image provides (per playwright.config.ts's own comment). Running it locally without Docker timed out waiting on window.__SATURDAY_CESIUM__ — an environment limitation, not a font-related failure. Please run scripts/ui-suite-in-chrome.sh (and --ubi9) to get the authoritative pass/fail evidence for AC2, AC3, and AC6, and to capture AC3's required failing-output record.
+- pnpm-lock.yaml diff reviewed and is clean: it adds only @fontsource/cinzel@5.3.0 and @fontsource/inter@5.3.0, nothing else shifted.
+- `pnpm --filter "@orieken/ye-olde-magic-shop^..." -r build` (same build step scripts/ui-suite-in-chrome.sh runs) is required before tests/reagent-map-globe.spec.ts can even resolve its @orieken/saturday-playwright-cesium import locally.
+
+## Notes for DevOps
+
+- No CI pipeline changes needed — scripts/ui-suite-in-chrome.sh and its --ubi9 variant already run the full suite including the no-request test; confirm both exit 0 as the existing fitness function for 'no off-origin request' now has no host exception to rely on.
