@@ -17,6 +17,12 @@ budget:
   max-attempts: 2
   max-usd: 15
   max-hours: 2
+slice:
+  of: reagent-map-spec
+  spec: docs/specs/reagent-map-spec/acceptance-criteria.json
+  digest: sha256:18f9820d26a2013205ab0bec91e32bc6fe3a49166f2eb079342ee71b32604413
+  manifest: docs/specs/reagent-map-spec/package.sha256
+  covers: [AC1:api]
 scope:
   paths: [apps/mock-api/**, docs/features/reagent-sites-api/**]
 ---

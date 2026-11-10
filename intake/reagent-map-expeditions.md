@@ -17,6 +17,12 @@ budget:
   max-attempts: 2
   max-usd: 20
   max-hours: 3
+slice:
+  of: reagent-map-spec
+  spec: docs/specs/reagent-map-spec/acceptance-criteria.json
+  digest: sha256:18f9820d26a2013205ab0bec91e32bc6fe3a49166f2eb079342ee71b32604413
+  manifest: docs/specs/reagent-map-spec/package.sha256
+  covers: [AC3:ui, AC4:ui, AC5]
 scope:
   paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-expeditions/**]
 ---
