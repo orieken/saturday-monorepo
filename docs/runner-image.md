@@ -163,8 +163,14 @@ containers/saturday-runner/lock-packages.sh          # apt.lock (debian)
 containers/saturday-runner/lock-packages.sh --ubi9   # rpm.lock and rpms/ (ubi9)
 docker build --platform linux/amd64 --target debian -t saturday-runner:debian containers/saturday-runner
 docker build --platform linux/amd64 --target ubi9 -t saturday-runner:ubi9 containers/saturday-runner
+scripts/ui-suite-in-chrome.sh --update-baselines && scripts/ui-suite-in-chrome.sh --ubi9 --update-baselines
 scripts/ui-suite-in-chrome.sh && scripts/ui-suite-in-chrome.sh --ubi9
 ```
+
+A new browser renders pages differently, so the screenshot baselines in
+`apps/ye-olde-magic-shop/.playwright-baselines/` move with the locks. Regenerate both images' baselines,
+look at each changed PNG, and commit them in the same PR as the locks. `docs/testing-cesium.md` says how
+the baselines work.
 
 Commit both locks together, with the browser versions `runner-check` printed. Never unpin a package
 to get past a missing version; regenerate. `--ubi9` also re-downloads the EPEL RPMs into `rpms/`

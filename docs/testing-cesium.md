@@ -151,6 +151,26 @@ The script does these steps in order:
 
 Use a clean checkout. An untracked workspace package makes `pnpm install --frozen-lockfile` fail.
 
+### Screenshot baselines
+
+`tests/reagent-map-visual.spec.ts` compares four screenshots with stored baselines: the page header, the
+site list, the error state and the globe at its default view. The globe test allows a 1% pixel difference.
+Each image renders the page differently, so each image has its own baselines under
+`.playwright-baselines/debian/` and `.playwright-baselines/ubi9/`.
+
+The script sets `RUNNER_VARIANT` to pick the directory. With it unset, as on a Mac, the `@visual` tests
+skip and say why. With it set, a missing baseline fails and is not written.
+
+Regenerate an image's baselines only when the page changes on purpose, or after a browser bump:
+
+```bash
+scripts/ui-suite-in-chrome.sh --update-baselines          # debian
+scripts/ui-suite-in-chrome.sh --ubi9 --update-baselines   # ubi9
+```
+
+Look at every changed PNG before you commit it. Without `--update-baselines`, the script never writes a
+baseline.
+
 To run the package's own suite with networking off:
 
 ```bash
@@ -190,8 +210,6 @@ coordinates and still be hidden, off camera or the wrong colour. Check a screens
   the point straight below the camera rotates the camera about a zero-length axis. The camera position
   becomes `NaN`, and Cesium shows "Rendering has stopped". The default view puts Moonwell Spring at that
   point, so the pan and zoom tests zoom over Ember Crag. A real mouse can hit that point on a 2× display.
-- **No visual baselines.** The visual QA stage reports itself as unconfigured for this view. Generate
-  and compare baselines only in the runner image, and start with the DOM around the globe.
 - **No network blocking in the script.** `scripts/ui-suite-in-chrome.sh` uses Docker's default network.
   The app's "no request" check comes from a test that watches requests. The package's own suite does
   run with `--network none`.
