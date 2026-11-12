@@ -20,6 +20,24 @@ export function resolveRunnerVideo(): 'on' | 'off' {
   return process.env.RUNNER_VIDEO === '1' ? 'on' : 'off';
 }
 
+const RUNNER_VARIANTS = ['debian', 'ubi9'] as const;
+type RunnerVariant = (typeof RUNNER_VARIANTS)[number];
+
+// Exported for the same reason as resolveRunnerSlowMo/resolveRunnerVideo
+// above. Baselines render differently per runner image (see
+// docs/runner-image.md), so an unrecognized value must fail loudly here
+// rather than silently fall back to one image's baseline directory.
+export function resolveRunnerVariant(): RunnerVariant | undefined {
+  const value = process.env.RUNNER_VARIANT;
+  if (value === undefined) return undefined;
+  if (!RUNNER_VARIANTS.includes(value as RunnerVariant)) {
+    throw new Error(
+      `Unrecognized RUNNER_VARIANT "${value}" — expected one of: ${RUNNER_VARIANTS.join(', ')}`
+    );
+  }
+  return value as RunnerVariant;
+}
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -29,6 +47,11 @@ export default defineConfig({
   reporter: process.env.ENABLE_OTEL === 'true'
     ? [['list'], ['html'], ['@orieken/saturday-playwright-otel-reporter']]
     : [['list'], ['html']],
+  // Per-image baselines: the same page renders differently on debian vs.
+  // ubi9, so a baseline from one must never be compared against the other.
+  // 'unset' is never reached by an actual screenshot comparison — every
+  // @visual test skips before capturing when RUNNER_VARIANT is unset.
+  snapshotPathTemplate: `.playwright-baselines/${resolveRunnerVariant() ?? 'unset'}/{arg}{ext}`,
   use: {
     baseURL: 'http://localhost:8000',
     trace: 'on-first-retry',

@@ -3,8 +3,11 @@
 # runner image, under Xvfb. One command for the factory's pre-ship check —
 # see docs/runner-image.md and containers/saturday-runner/.
 #
-# Usage: scripts/ui-suite-in-chrome.sh [--ubi9]   (run from the repository root)
-#   --ubi9  run in the image's ubi9 target instead of debian
+# Usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines]   (run from the repository root)
+#   --ubi9               run in the image's ubi9 target instead of debian
+#   --update-baselines   regenerate this image's @visual baselines (passes
+#                        --update-snapshots to Playwright) instead of
+#                        comparing against the committed ones
 set -euo pipefail
 
 EXIT_NO_DOCKER=2
@@ -21,20 +24,25 @@ CONTAINER_NAME="ui-suite-in-chrome-$$"
 PNPM_STORE_VOLUME="ui-suite-pnpm-store"
 APP_HEALTH_TIMEOUT_SECONDS=180
 ARTIFACTS_DIR="$REPO_ROOT/artifacts/ui-suite"
+UPDATE_BASELINES=0
 
 parse_args() {
-  case "${1:-}" in
-    "") ;;
-    --ubi9)
-      VARIANT="ubi9"
-      IMAGE_TAG="saturday-runner:ubi9"
-      PNPM_STORE_VOLUME="ui-suite-pnpm-store-ubi9"
-      ;;
-    *)
-      echo "ui-suite-in-chrome: unknown argument '$1' (usage: scripts/ui-suite-in-chrome.sh [--ubi9])" >&2
-      exit "$EXIT_USAGE"
-      ;;
-  esac
+  for arg in "$@"; do
+    case "$arg" in
+      --ubi9)
+        VARIANT="ubi9"
+        IMAGE_TAG="saturday-runner:ubi9"
+        PNPM_STORE_VOLUME="ui-suite-pnpm-store-ubi9"
+        ;;
+      --update-baselines)
+        UPDATE_BASELINES=1
+        ;;
+      *)
+        echo "ui-suite-in-chrome: unknown argument '$arg' (usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines])" >&2
+        exit "$EXIT_USAGE"
+        ;;
+    esac
+  done
 }
 
 require_docker() {
@@ -61,6 +69,7 @@ start_container() {
     -v "$PNPM_STORE_VOLUME:/home/runner/.pnpm-store" \
     -e "RUNNER_SLOW_MO=${RUNNER_SLOW_MO:-}" \
     -e "RUNNER_VIDEO=${RUNNER_VIDEO:-}" \
+    -e "RUNNER_VARIANT=${VARIANT}" \
     "$IMAGE_TAG" \
     bash -lc 'sleep infinity' >/dev/null
 }
@@ -130,9 +139,13 @@ run_runner_check() {
 }
 
 # Each Cesium page renders in software under emulation; too many at once starve tile loading.
+# update_snapshots_flag is threaded in as a parameter (never read from a
+# global or env var inside this function) so the "never write a baseline
+# without --update-baselines" invariant is checkable at the call site alone.
 run_chrome_suite() {
+  local update_snapshots_flag="$1"
   docker exec "$CONTAINER_NAME" bash -lc \
-    'cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=3'
+    "cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=3 ${update_snapshots_flag}"
 }
 
 copy_report() {
@@ -153,7 +166,11 @@ main() {
   wait_for_app_healthy
   run_runner_check
   local suite_exit=0
-  run_chrome_suite || suite_exit=$?
+  local update_snapshots_flag=""
+  if [[ "$UPDATE_BASELINES" -eq 1 ]]; then
+    update_snapshots_flag="--update-snapshots"
+  fi
+  run_chrome_suite "$update_snapshots_flag" || suite_exit=$?
   copy_report
   exit "$suite_exit"
 }
