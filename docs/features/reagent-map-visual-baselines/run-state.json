@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "reagent-map-visual-baselines",
+  "specPath": ".claude/factory/claims/reagent-map-visual-baselines.md",
+  "specSha256": "d5138e12e37cda72b70f2937ba6d645e315a9675e41f77647a6e454ba712d53d",
+  "provider": "claude",
+  "startedAt": "2026-11-10T18:20:03.137215Z",
+  "startCommit": "30153ad65953f58133ce45a76a14613887803144",
+  "diffLines": {
+    "confirm-design": 4159
+  },
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:30:45.297165Z",
+      "finishedAt": "2026-11-10T18:32:02.121907Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/state/acceptance-scenarios.json",
+      "artifactSha256": "c77ce523ec6083c323bc4c1fc9607e970500ae67f8381c104b1da1e7bc6279ae",
+      "sequence": 9,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-visual-baselines/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 4,
+        "outputTokens": 8940,
+        "cacheReadTokens": 100394,
+        "cacheCreationTokens": 63020,
+        "costUsd": 0.3615668
+      }
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:21:48.592517Z",
+      "finishedAt": "2026-11-10T18:26:40.773854Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/state/analyst.json",
+      "artifactSha256": "d71140ea5901e9681d0bb94351a975f8de08ea88630fe9ff3b3677bae8c467c6",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/reagent-map-visual-baselines/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 40,
+        "outputTokens": 28554,
+        "cacheReadTokens": 2333293,
+        "cacheCreationTokens": 122857,
+        "costUsd": 1.2437065999999999
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:26:40.814233Z",
+      "finishedAt": "2026-11-10T18:29:40.749806Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/state/architect.json",
+      "artifactSha256": "0152a9cb152c97a3571107847b0a16596ef80ff85e64c52646f6682a17201d26",
+      "sequence": 7,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/reagent-map-visual-baselines/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 16962,
+        "cacheReadTokens": 1150298,
+        "cacheCreationTokens": 92096,
+        "costUsd": 0.7681116000000001
+      }
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:20:03.144684Z",
+      "finishedAt": "2026-11-10T18:21:48.592083Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/state/context-engineer.json",
+      "artifactSha256": "da495043821ccc2c47bed2f5d92abf2cb1f1912136c40a606b5f3759b404fb5b",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-visual-baselines/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 36,
+        "outputTokens": 9569,
+        "cacheReadTokens": 1907329,
+        "cacheCreationTokens": 106958,
+        "costUsd": 0.9050598000000001
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-10T18:26:40.81366Z",
+      "sequence": 4,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "FAILED",
+      "startedAt": "2026-11-11T03:02:27.493159Z",
+      "finishedAt": "2026-11-11T03:32:27.541617Z",
+      "gate": "confirm-design",
+      "sequence": 10,
+      "iteration": 1,
+      "usage": {
+        "model": "claude-sonnet-5",
+        "costUsd": 1.3890414
+      },
+      "error": "stage \"developer\" subprocess terminated: context deadline exceeded",
+      "failureClass": "transient"
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-10T18:26:40.813999Z",
+      "sequence": 6,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:29:40.750583Z",
+      "finishedAt": "2026-11-10T18:30:45.296218Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/performance-engineer.md",
+      "artifactSha256": "67a6fc634d2053deca794a8444b7e44c297dc490c372202332cfad587b1c2644",
+      "sequence": 8,
+      "iteration": 1,
+      "agent": "performance-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 16,
+        "outputTokens": 4832,
+        "cacheReadTokens": 637089,
+        "cacheCreationTokens": 74657,
+        "costUsd": 0.4743978
+      }
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-10T18:26:40.774217Z",
+      "finishedAt": "2026-11-10T18:26:40.813388Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-visual-baselines/state/router.json",
+      "artifactSha256": "7b9f926bfaf72eab71b139ecbccefb0f61f5077c0799d0a1ed1051494fc31823",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/reagent-map-visual-baselines/route.md"
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-10T18:26:40.81383Z",
+      "sequence": 5,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-10T21:50:46.809587Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "c77ce523ec6083c323bc4c1fc9607e970500ae67f8381c104b1da1e7bc6279ae",
+        "analyst": "d71140ea5901e9681d0bb94351a975f8de08ea88630fe9ff3b3677bae8c467c6",
+        "architect": "0152a9cb152c97a3571107847b0a16596ef80ff85e64c52646f6682a17201d26",
+        "context-engineer": "da495043821ccc2c47bed2f5d92abf2cb1f1912136c40a606b5f3759b404fb5b",
+        "performance-engineer": "67a6fc634d2053deca794a8444b7e44c297dc490c372202332cfad587b1c2644",
+        "router": "7b9f926bfaf72eab71b139ecbccefb0f61f5077c0799d0a1ed1051494fc31823"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-10T21:50:46.810901Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "7e00a2ecea2b9f2cc9058c697678c758470df4c09a84a49344b613930ead79a2",
+          "at": "2026-11-10T21:50:46.813237Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/analyst.md",
+          "sha256": "8664c5765514e92adfd14621bb56f34fc4a372c0126bf7e3f28424df05217988",
+          "at": "2026-11-10T21:50:46.81124Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/architect.md",
+          "sha256": "bfaedf5e530e98c4b90a8745638cb848f6ab7e5de8fc0c321274c1b35d40e2e6",
+          "at": "2026-11-10T21:50:46.813097Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/context-engineer.md",
+          "sha256": "352673c18101a59836431d0ef93768e529e64b5c23d917bf5e396b0027fd7e99",
+          "at": "2026-11-10T21:50:46.812459Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/performance-engineer.md",
+          "sha256": "67a6fc634d2053deca794a8444b7e44c297dc490c372202332cfad587b1c2644",
+          "at": "2026-11-10T21:50:46.812874Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-visual-baselines/.approved/confirm-design/router.md",
+          "sha256": "b7ae70d4a0894dad0a26e733b6c53670968ea5056fb110ad1b92eedc450e0aad",
+          "at": "2026-11-10T21:50:46.812722Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 120,
+    "outputTokens": 68857,
+    "cacheReadTokens": 6128403,
+    "cacheCreationTokens": 459588,
+    "costUsd": 5.141883999999999
+  },
+  "budget": {
+    "maxUsd": 20,
+    "maxHours": 3
+  },
+  "updatedAt": "2026-11-11T03:32:27.541634Z"
+}

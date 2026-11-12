@@ -101,6 +101,16 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local description="$1" needle="$2" haystack="$3"
+  if [[ "$haystack" != *"$needle"* ]]; then
+    echo "PASS: $description"
+  else
+    echo "FAIL: $description -- output unexpectedly contained: $needle" >&2
+    FAILURES=$((FAILURES + 1))
+  fi
+}
+
 test_no_docker() {
   local stderr exit_code
   stderr="$(PATH="/usr/bin:/bin" bash "$SCRIPT_UNDER_TEST" 2>&1 1>/dev/null)"
@@ -188,6 +198,55 @@ test_unknown_argument() {
   assert_contains "unknown argument: stderr names it" "unknown argument '--bogus'" "$stderr"
 }
 
+test_default_exports_runner_variant_debian() {
+  local log
+  log="$FAKE_BIN_DIR/docker-default-variant.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" >/dev/null 2>&1
+  assert_contains "default: exports RUNNER_VARIANT=debian into the container" "RUNNER_VARIANT=debian" "$(cat "$log")"
+}
+
+test_ubi9_exports_runner_variant_ubi9() {
+  local log
+  log="$FAKE_BIN_DIR/docker-ubi9-variant.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" --ubi9 >/dev/null 2>&1
+  assert_contains "--ubi9: exports RUNNER_VARIANT=ubi9 into the container" "RUNNER_VARIANT=ubi9" "$(cat "$log")"
+}
+
+test_without_update_baselines_never_passes_update_snapshots() {
+  local log
+  log="$FAKE_BIN_DIR/docker-no-update.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" >/dev/null 2>&1
+  assert_not_contains "default: never passes --update-snapshots to playwright" "--update-snapshots" "$(cat "$log")"
+}
+
+test_update_baselines_alone_passes_update_snapshots() {
+  local log
+  log="$FAKE_BIN_DIR/docker-update-alone.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" --update-baselines >/dev/null 2>&1
+  assert_contains "--update-baselines alone: passes --update-snapshots to playwright" "--update-snapshots" "$(cat "$log")"
+  assert_contains "--update-baselines alone: keeps the debian default" "--target debian -t saturday-runner:debian" "$(cat "$log")"
+}
+
+test_update_baselines_composes_with_ubi9() {
+  local log_order_a log_order_b
+  log_order_a="$FAKE_BIN_DIR/docker-update-ubi9-a.log"
+  log_order_b="$FAKE_BIN_DIR/docker-update-ubi9-b.log"
+
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log_order_a" \
+    bash "$SCRIPT_UNDER_TEST" --ubi9 --update-baselines >/dev/null 2>&1
+  assert_contains "--ubi9 --update-baselines: builds the ubi9 target" "--target ubi9 -t saturday-runner:ubi9" "$(cat "$log_order_a")"
+  assert_contains "--ubi9 --update-baselines: passes --update-snapshots" "--update-snapshots" "$(cat "$log_order_a")"
+
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log_order_b" \
+    bash "$SCRIPT_UNDER_TEST" --update-baselines --ubi9 >/dev/null 2>&1
+  assert_contains "--update-baselines --ubi9: builds the ubi9 target" "--target ubi9 -t saturday-runner:ubi9" "$(cat "$log_order_b")"
+  assert_contains "--update-baselines --ubi9: passes --update-snapshots" "--update-snapshots" "$(cat "$log_order_b")"
+}
+
 main() {
   write_fake_docker
   write_fake_sleep
@@ -202,6 +261,11 @@ main() {
   test_ubi9_variant
   test_default_variant_is_debian
   test_unknown_argument
+  test_default_exports_runner_variant_debian
+  test_ubi9_exports_runner_variant_ubi9
+  test_without_update_baselines_never_passes_update_snapshots
+  test_update_baselines_alone_passes_update_snapshots
+  test_update_baselines_composes_with_ubi9
 
   echo ""
   if [[ "$FAILURES" -eq 0 ]]; then

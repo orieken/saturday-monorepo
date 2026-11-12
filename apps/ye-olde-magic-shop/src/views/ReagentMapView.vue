@@ -4,6 +4,14 @@
       <h2 class="text-3xl font-magical text-dnd-parchment">Aurelis Reagent Map</h2>
       <p class="text-gray-400 mt-2">Every known reagent site on Aurelis, shown on a 3D globe.</p>
     </div>
+    <div
+      v-if="mapError"
+      data-testid="reagent-map-error"
+      role="alert"
+      class="mb-4 rounded-lg border-2 border-red-700 bg-red-950 px-4 py-3 text-red-200"
+    >
+      {{ mapError }}
+    </div>
     <div class="flex gap-6">
       <div
         id="cesiumContainer"
@@ -48,6 +56,7 @@ const SITE_MARKER_PIXEL_SIZE = 10;
 const DEFAULT_VIEW = { lat: 10, lng: 20, heightMeters: 12_000_000 };
 
 const sites = ref<ReagentSite[]>([]);
+const mapError = ref<string | null>(null);
 let viewer: CesiumModule.Viewer | null = null;
 
 // Cesium's npm package re-exports its engine package's internals in a way
@@ -139,6 +148,7 @@ onMounted(async () => {
 
   if (sitesResult.status === 'rejected') {
     newViewer.destroy();
+    mapError.value = 'Failed to load reagent sites. Try refreshing the page.';
     throw sitesResult.reason;
   }
 

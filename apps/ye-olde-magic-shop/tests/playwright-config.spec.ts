@@ -7,7 +7,11 @@
  * exercised inside scripts/ui-suite-in-chrome.sh.
  */
 import { test, expect } from '@playwright/test';
-import playwrightConfig, { resolveRunnerSlowMo, resolveRunnerVideo } from '../playwright.config';
+import playwrightConfig, {
+  resolveRunnerSlowMo,
+  resolveRunnerVideo,
+  resolveRunnerVariant,
+} from '../playwright.config';
 
 type ProjectConfig = {
   name?: string;
@@ -96,5 +100,48 @@ test.describe.serial('RUNNER_SLOW_MO / RUNNER_VIDEO resolution (AC1 edge cases)'
     process.env.RUNNER_VIDEO = 'true';
 
     expect(resolveRunnerVideo()).toBe('off');
+  });
+});
+
+test.describe.serial('RUNNER_VARIANT resolution (reagent-map-visual-baselines)', () => {
+  const ORIGINAL_VARIANT = process.env.RUNNER_VARIANT;
+
+  test.afterEach(() => {
+    if (ORIGINAL_VARIANT === undefined) delete process.env.RUNNER_VARIANT;
+    else process.env.RUNNER_VARIANT = ORIGINAL_VARIANT;
+  });
+
+  test('resolves to undefined when RUNNER_VARIANT is unset', () => {
+    delete process.env.RUNNER_VARIANT;
+
+    expect(resolveRunnerVariant()).toBeUndefined();
+  });
+
+  test('resolves to "debian" when RUNNER_VARIANT is "debian"', () => {
+    process.env.RUNNER_VARIANT = 'debian';
+
+    expect(resolveRunnerVariant()).toBe('debian');
+  });
+
+  test('resolves to "ubi9" when RUNNER_VARIANT is "ubi9"', () => {
+    process.env.RUNNER_VARIANT = 'ubi9';
+
+    expect(resolveRunnerVariant()).toBe('ubi9');
+  });
+
+  test('throws naming the value when RUNNER_VARIANT is unrecognized', () => {
+    process.env.RUNNER_VARIANT = 'windows';
+
+    expect(() => resolveRunnerVariant()).toThrow(/windows/);
+  });
+});
+
+test.describe('screenshot baselines (reagent-map-visual-baselines)', () => {
+  test('never writes a missing baseline unless asked to', () => {
+    expect(playwrightConfig.updateSnapshots).toBe('none');
+  });
+
+  test('stores baselines under the runner image the suite runs in', () => {
+    expect(playwrightConfig.snapshotPathTemplate).toMatch(/^\.playwright-baselines\/[a-z0-9]+\/\{arg\}\{ext\}$/);
   });
 });
