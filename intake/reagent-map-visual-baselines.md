@@ -3,7 +3,7 @@ intake: 1
 id: reagent-map-visual-baselines
 type: chore
 plan: deliver-feature
-status: ready
+status: hold
 priority: 2
 created: 2026-11-04
 requested-by: oscar
@@ -22,6 +22,12 @@ scope:
 ---
 
 # Give the reagent map screenshot baselines
+
+## Delivered by hand
+
+Finished by hand in PR #23, merged, after the developer stage ran into the 30-minute stage limit twice.
+On `hold` so the supervisor leaves it parked. Its record is in
+`docs/features/reagent-map-visual-baselines/implementation-notes.md`.
 
 ## Request
 
