@@ -1,0 +1,41 @@
+{"at":"2026-11-12T06:04:35.173979Z","kind":"run.started"}
+{"at":"2026-11-12T06:04:35.174589Z","kind":"stage.started","stage":"context-engineer","sequence":1}
+{"at":"2026-11-12T06:08:43.526538Z","kind":"stage.completed","stage":"context-engineer","sequence":1}
+{"at":"2026-11-12T06:08:43.526784Z","kind":"stage.started","stage":"analyst","sequence":2}
+{"at":"2026-11-12T06:15:12.790457Z","kind":"stage.completed","stage":"analyst","sequence":2}
+{"at":"2026-11-12T06:15:12.790707Z","kind":"stage.started","stage":"router","sequence":3}
+{"at":"2026-11-12T06:15:12.832852Z","kind":"stage.completed","stage":"router","sequence":3}
+{"at":"2026-11-12T06:15:12.833058Z","kind":"stage.skipped","stage":"performance-engineer","sequence":4,"reason":"no performance requirement carries a threshold with a number and a unit"}
+{"at":"2026-11-12T06:15:12.833221Z","kind":"stage.skipped","stage":"data-engineer","sequence":5,"reason":"no data-model change to sequence"}
+{"at":"2026-11-12T06:15:12.83342Z","kind":"stage.skipped","stage":"sre-engineer","sequence":6,"reason":"the analysis declares no served runtime surface, so no availability or latency SLI applies"}
+{"at":"2026-11-12T06:15:12.833604Z","kind":"stage.skipped","stage":"devops-engineer","sequence":7,"reason":"the analysis lists no DevOps tasks"}
+{"at":"2026-11-12T06:15:12.833852Z","kind":"stage.started","stage":"architect","sequence":8}
+{"at":"2026-11-12T06:17:08.026762Z","kind":"stage.completed","stage":"architect","sequence":8}
+{"at":"2026-11-12T06:17:08.027045Z","kind":"stage.started","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-12T06:18:15.629958Z","kind":"stage.completed","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-12T06:18:15.652068Z","kind":"gate.waiting","stage":"developer","gate":"confirm-design"}
+{"at":"2026-11-12T12:52:12.667125Z","kind":"gate.approved","gate":"confirm-design","approvalMethod":"flag"}
+{"at":"2026-11-12T12:52:12.667709Z","kind":"run.resumed"}
+{"at":"2026-11-12T12:52:12.715265Z","kind":"stage.started","stage":"developer","sequence":10}
+{"at":"2026-11-12T13:07:15.451908Z","kind":"stage.completed","stage":"developer","sequence":10}
+{"at":"2026-11-12T13:07:15.452698Z","kind":"stage.started","stage":"code-reviewer","sequence":11}
+{"at":"2026-11-12T13:09:24.28406Z","kind":"stage.completed","stage":"code-reviewer","sequence":11}
+{"at":"2026-11-12T13:09:24.284479Z","kind":"stage.started","stage":"accessibility-engineer","sequence":12}
+{"at":"2026-11-12T13:11:14.687371Z","kind":"stage.completed","stage":"accessibility-engineer","sequence":12}
+{"at":"2026-11-12T13:11:14.687748Z","kind":"stage.started","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-12T13:13:09.996981Z","kind":"stage.completed","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-12T13:13:10.023922Z","kind":"gate.waiting","stage":"qa-engineer","gate":"confirm-security"}
+{"at":"2026-11-14T02:06:58.936817Z","kind":"gate.approved","gate":"confirm-security","approvalMethod":"flag"}
+{"at":"2026-11-14T02:06:58.937871Z","kind":"run.resumed"}
+{"at":"2026-11-14T02:06:59.010933Z","kind":"stage.started","stage":"qa-engineer","sequence":14}
+{"at":"2026-11-14T02:30:18.710646Z","kind":"stage.completed","stage":"qa-engineer","sequence":14}
+{"at":"2026-11-14T02:30:18.711206Z","kind":"stage.started","stage":"visual-qa-engineer","sequence":15}
+{"at":"2026-11-14T02:41:37.308674Z","kind":"stage.completed","stage":"visual-qa-engineer","sequence":15}
+{"at":"2026-11-14T02:41:37.30993Z","kind":"stage.started","stage":"tech-writer","sequence":16}
+{"at":"2026-11-14T02:43:12.994539Z","kind":"stage.completed","stage":"tech-writer","sequence":16}
+{"at":"2026-11-14T02:43:12.995259Z","kind":"stage.started","stage":"pre-ship-checks","sequence":17}
+{"at":"2026-11-14T02:48:14.411833Z","kind":"stage.completed","stage":"pre-ship-checks","sequence":17}
+{"at":"2026-11-14T02:48:14.455579Z","kind":"gate.waiting","stage":"devops-engineer","gate":"confirm-ship"}
+{"at":"2026-11-14T03:30:33.416595Z","kind":"gate.approved","gate":"confirm-ship","approvalMethod":"flag"}
+{"at":"2026-11-14T03:30:33.417712Z","kind":"run.resumed"}
+{"at":"2026-11-14T03:30:33.518381Z","kind":"run.completed"}

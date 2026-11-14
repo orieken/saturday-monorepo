@@ -171,7 +171,10 @@ test.describe('Reagent map pan and zoom', () => {
     await waitForCameraToLeave(page, cesium, afterPan);
 
     const radiusMeters = await cesium.globeRadiusMeters();
-    const entities = await cesium.getEntities();
+    // reagent-map-expeditions now also tags expedition polylines with
+    // saturdayMetadata (kind: 'expedition'), so getEntities() returns both
+    // kinds — filter to this test's own kind before counting.
+    const entities = (await cesium.getEntities()).filter((entity) => entity.metadata.kind === 'site');
     expect(entities).toHaveLength(SEEDED_SITES.length);
     for (const seeded of SEEDED_SITES) {
       const entity = entities.find((candidate) => candidate.metadata.id === seeded.id);

@@ -1,0 +1,80 @@
+---
+feature: "reagent-map-expeditions"
+bounded_context: ""
+domain_terms: ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"]
+files_touched: ["apps/ye-olde-magic-shop/src/api/expeditions.ts", "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue", "apps/ye-olde-magic-shop/tests/reagent-map-resilience.spec.ts", "apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts", "apps/ye-olde-magic-shop/tests/reagent-map-pan-zoom.spec.ts"]
+issue_refs: ["reagent-map-expeditions", "reagent-map-globe"]
+linked_adrs: []
+linked_kis: []
+---
+
+# Implementation Notes: reagent-map-expeditions
+
+## Files Created
+
+- apps/ye-olde-magic-shop/src/api/expeditions.ts
+
+## Files Modified
+
+- apps/ye-olde-magic-shop/src/views/ReagentMapView.vue
+- apps/ye-olde-magic-shop/tests/reagent-map-resilience.spec.ts
+- apps/ye-olde-magic-shop/tests/reagent-map-globe.spec.ts
+- apps/ye-olde-magic-shop/tests/reagent-map-pan-zoom.spec.ts
+
+## Interface Design
+
+- expeditions.ts: export type GeoPoint = { lat: number; lng: number }
+- expeditions.ts: export type Expedition = { id: string; name?: string; owner: string; from: GeoPoint; to: GeoPoint }
+- expeditions.ts: export async function fetchExpeditions(): Promise<Expedition[]>
+- ReagentMapView.vue: function addExpeditionEntities(Cesium, cesiumViewer, cesiumEllipsoid, items: Expedition[]): void — internal, mirrors addSiteEntities()
+- ReagentMapView.vue: function flyToSite(site: ReagentSite): void — internal, bound to each site-list button's @click
+- ReagentMapView.vue template: each <li> now wraps a <button type="button" data-testid="fly-to-site-{id}" aria-label="Fly to {name}">
+
+## Named Refactoring Log
+
+None
+
+## Self-Review Checklist
+
+- [x] Every public method has an intention-revealing name (no process/handle/manage)
+- [x] No function exceeds 30 LOC
+- [x] Cyclomatic complexity < 7 on all new functions — flyToSite: 2 (one guard). addExpeditionEntities: 2 (one loop, no branching). onMounted's extended body: ~4 (two status checks plus one ternary) — same shape as before, one more allSettled branch.
+- [x] No primitive obsession: domain concepts wrapped in value objects, not raw strings/ints — Expedition/GeoPoint types mirror lib/api/ShopApi.ts's existing shape exactly, per architecture-notes.md.
+- [x] No feature envy: methods use their own class's data more than another's
+- [x] No magic numbers or strings: all literals are named constants — FLY_TO_HEIGHT_METERS added alongside the existing AURELIS_RADIUS_METERS/DEFAULT_VIEW constants; the unchanged mapError string is intentionally a literal, not a constant, per architecture-notes.md's note that rewording it breaks reagent-map-error.png's baseline.
+- [x] Dependency direction verified: nothing in inner layers imports from outer layers — No domain/use-case layer exists in this demo app (architecture-notes.md's Layer Boundary Checks already found this NOT_APPLICABLE); expeditions.ts and ReagentMapView.vue are both adapter-level, same as every existing api/*.ts + view pair.
+
+## Simple Design Verification
+
+- [x] Passes all tests — 30/30 reagent-map-*.spec.ts tests pass under --project=chrome (globe, api, a11y, pan-zoom, feature-flag, resilience). reagent-map-visual.spec.ts (@visual baseline) is QA's regeneration task, not re-run here.
+- [x] Reveals intention — addExpeditionEntities/fetchExpeditions/flyToSite names mirror the existing addSiteEntities/fetchReagentSites naming convention; no renames needed.
+- [ ] No duplication — expeditions.ts duplicates the runtime API_BASE/isLocal resolution block (now 4x across reagentSites.ts/orders.ts/items.ts/expeditions.ts) and a trimmed copy of orders.ts's optional-Authorization-header logic. Both are architecture-notes.md's explicitly deferred, out-of-scope refactoring opportunities for this additive order — not addressed here by design.
+- [x] Fewest elements — No composable/store/typed-entity-wrapper introduced, per architecture-notes.md's anti-premature-generalization decisions; Cesium module and ellipsoid promoted to component-scope variables (the minimal change needed for flyToSite to reach them), not a new abstraction.
+
+## Key Decisions
+
+- Extended onMounted's existing Promise.allSettled to a 3-promise array ([buildViewer, fetchReagentSites, fetchExpeditions]) rather than a nested/sequential fetch.: Matches the existing 2-promise pattern exactly; either sites or expeditions failing destroys the viewer and sets the same unchanged mapError text, keeping reagent-map-error.png's baseline untouched per the claim's third AC.
+- Promoted the Cesium module and ellipsoid returned by buildViewer() to component-scope `let` variables (cesium, ellipsoid), alongside the existing `viewer` variable.: flyToSite() needs both at click time, well after onMounted's local destructured scope has exited; this is the same lifetime/pattern the existing `viewer` variable already uses for onBeforeUnmount's destroy() call.
+- fetchExpeditions() omits Content-Type and only attaches Authorization when a token exists, instead of reusing orders.ts's getAuthHeaders() verbatim.: GET /api/expeditions is a bodyless GET that tolerates a missing/invalid token (confirmed in apps/mock-api/server.js's resolveSessionUserId); sending Content-Type on it would be new, uncalled-for behavior no other client in this app exhibits (architecture-notes.md decision 2).
+- Wrapped each site-list item's text in a bare <button type="button"> with only block/w-full/cursor-pointer/text-left utility classes, relying on Tailwind v4's preflight reset for border/padding/margin/font/color inheritance.: Keeps reagent-site-list.png's baseline byte-identical (per the claim's third AC) while making every entry keyboard-operable (Enter/Space) with an aria-label announcing the fly-to action, satisfying the analysis's accessibility NFR. Verified visually unchanged by running the existing a11y and list-content tests, which still pass unmodified.
+
+## Deviations from Analysis
+
+- No file outside scope.paths changes (claim's 4th AC): Two pre-existing specs not in the analyst's Affected Components list — tests/reagent-map-globe.spec.ts and tests/reagent-map-pan-zoom.spec.ts — broke when run: both called cesium.getEntities() with no kind filter and asserted toHaveLength(SEEDED_SITES.length), an assumption that held only because no other saturdayMetadata-tagged entity existed before this order. Both files are covered by scope.paths' own reagent-map-*.spec.ts glob. Per test-repair-contract.md this is a selector/path repair, not an assertion weakening: each now filters to .filter(entity => entity.metadata.kind === 'site') before the same length/content checks that existed before. What each test could catch before (wrong count, wrong id/name/position for a site entity) it still catches identically after; what it no longer incidentally required (zero non-site entities existing at all) was never its stated intent — its own name and per-entity kind==='site' assertion already said so. Evidence is the source diff itself: addExpeditionEntities() in ReagentMapView.vue is what newly populates the entity list with kind:'expedition' items. Verified both suites green after the fix (see notesForQa).
+
+## Dependencies Added
+
+None
+
+## Notes for QA
+
+- Ran the full non-@visual reagent-map-*.spec.ts set locally under --project=chrome (real Chrome via the system install, VITE_FEATURE_REAGENT_MAP=true): all 30 tests pass (globe 9, api 6, a11y 1, pan-zoom 4, feature-flag 7, resilience 3). reagent-map-visual.spec.ts (@visual) was not run — its baseline regeneration in both runner images is this order's QA task 4-6, not developer's.
+- Local run required `pnpm install --filter final-mock-api...` in addition to the ye-olde-magic-shop/saturday-playwright-cesium filter — apps/mock-api's own node_modules (express/cors) were missing in this worktree and are not pulled in by filtering on the shop app alone. Not a code change, just a note for whoever runs the suite fresh.
+- IMPORTANT timing pitfall for fly-to-site.spec.ts: driving flyToSite() through a real UI click (unlike the cesium fixture's own flyTo() helper, which uses duration:0 and completes synchronously inside one page.evaluate) uses Cesium's default animated flyTo duration. Calling cesium.waitForSettled() immediately after the click can race and return before the flight's moveStart event has fired, observing the pre-flight 'already settled' state and returning the camera's un-moved position. Confirmed by instrumenting moveStart/moveEnd listeners: moveStart fires ~100ms after the click, and the flight (to the antipodal-ish Tidewrack Shoals) takes multiple seconds to moveEnd. A short explicit wait (or a wait for moveStart) between the click and waitForSettled() avoids the race — verified working reliably once added.
+- Confirmed end-to-end with an ad-hoc check (not committed): all 3 seeded expeditions render as 2-point geodesic lines tagged kind:'expedition', both ends within tolerance of the seed data, and clicking a far-side site's list button does bring it on-screen once the race above is avoided.
+- mapError's exact text ('Failed to load reagent sites. Try refreshing the page.') is now also set when fetchExpeditions() rejects — unchanged wording, so reagent-map-error.png should need no baseline change; only globe-default-view.png should differ, per the claim's third AC.
+- context-manifest.md's QA Tasks 1-2 (new reagent-map-expeditions.spec.ts and reagent-map-fly-to-site.spec.ts) and 4-6 (full-suite pre-ship check and baseline regeneration in both runner images) are still open — not produced by this developer pass per the analyst's QA/Developer task split and testing-conventions.md's E2E-is-QA's-job rule.
+
+## Notes for DevOps
+
+None
