@@ -16,7 +16,7 @@
       <div
         id="cesiumContainer"
         role="img"
-        aria-label="3D globe of Aurelis with every reagent site marked; the full list of sites is in the adjacent list"
+        aria-label="3D globe of Aurelis with every reagent site marked and every known expedition drawn as a line between its two sites; the full list of sites is in the adjacent list"
         class="h-[600px] w-full rounded-lg border-2 border-dnd-slate shadow-xl"
       ></div>
       <ul
@@ -25,7 +25,15 @@
         class="w-64 shrink-0 text-dnd-parchment"
       >
         <li v-for="site in sites" :key="site.id" class="py-1 border-b border-dnd-slate">
-          {{ site.name }}
+          <button
+            type="button"
+            class="block w-full cursor-pointer text-left"
+            :data-testid="`fly-to-site-${site.id}`"
+            :aria-label="`Fly to ${site.name}`"
+            @click="flyToSite(site)"
+          >
+            {{ site.name }}
+          </button>
         </li>
       </ul>
     </div>
@@ -40,6 +48,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 // matters) — it only gives us real types for the global Cesium exposes.
 import type * as CesiumModule from 'cesium';
 import { fetchReagentSites, type ReagentSite } from '../api/reagentSites';
+import { fetchExpeditions, type Expedition } from '../api/expeditions';
 
 declare global {
   interface Window {
@@ -54,10 +63,14 @@ const SITE_MARKER_PIXEL_SIZE = 10;
 // The spec's default view is centred over Moonwell Spring. Without this, Cesium
 // falls back to its Earth-sized home view, far from the planet's seeded sites.
 const DEFAULT_VIEW = { lat: 10, lng: 20, heightMeters: 12_000_000 };
+const FLY_TO_HEIGHT_METERS = 3_000_000;
 
 const sites = ref<ReagentSite[]>([]);
+const expeditions = ref<Expedition[]>([]);
 const mapError = ref<string | null>(null);
 let viewer: CesiumModule.Viewer | null = null;
+let cesium: typeof CesiumModule | null = null;
+let ellipsoid: CesiumModule.Ellipsoid | null = null;
 
 // Cesium's npm package re-exports its engine package's internals in a way
 // Rollup cannot resolve for a production bundle (an upstream packaging
@@ -137,24 +150,63 @@ function addSiteEntities(
   });
 }
 
+function addExpeditionEntities(
+  Cesium: typeof CesiumModule,
+  cesiumViewer: CesiumModule.Viewer,
+  cesiumEllipsoid: CesiumModule.Ellipsoid,
+  items: Expedition[]
+) {
+  items.forEach((expedition) => {
+    const entity = cesiumViewer.entities.add({
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArray(
+          [expedition.from.lng, expedition.from.lat, expedition.to.lng, expedition.to.lat],
+          cesiumEllipsoid
+        ),
+        arcType: Cesium.ArcType.GEODESIC
+      }
+    });
+    (entity as unknown as { saturdayMetadata: unknown }).saturdayMetadata = {
+      id: expedition.id,
+      name: expedition.name ?? '',
+      kind: 'expedition'
+    };
+  });
+}
+
+function flyToSite(site: ReagentSite) {
+  if (!viewer || !cesium || !ellipsoid) return;
+  viewer.camera.flyTo({
+    destination: cesium.Cartesian3.fromDegrees(site.lng, site.lat, FLY_TO_HEIGHT_METERS, ellipsoid)
+  });
+}
+
 onMounted(async () => {
-  const [viewerResult, sitesResult] = await Promise.allSettled([buildViewer(), fetchReagentSites()]);
+  const [viewerResult, sitesResult, expeditionsResult] = await Promise.allSettled([
+    buildViewer(),
+    fetchReagentSites(),
+    fetchExpeditions()
+  ]);
 
   if (viewerResult.status === 'rejected') {
     throw viewerResult.reason;
   }
 
-  const { Cesium, viewer: newViewer, ellipsoid } = viewerResult.value;
+  const { Cesium, viewer: newViewer, ellipsoid: newEllipsoid } = viewerResult.value;
 
-  if (sitesResult.status === 'rejected') {
+  if (sitesResult.status === 'rejected' || expeditionsResult.status === 'rejected') {
     newViewer.destroy();
     mapError.value = 'Failed to load reagent sites. Try refreshing the page.';
-    throw sitesResult.reason;
+    throw sitesResult.status === 'rejected' ? sitesResult.reason : expeditionsResult.reason;
   }
 
   viewer = newViewer;
+  cesium = Cesium;
+  ellipsoid = newEllipsoid;
   sites.value = sitesResult.value;
+  expeditions.value = expeditionsResult.value;
   addSiteEntities(Cesium, viewer, ellipsoid, sites.value);
+  addExpeditionEntities(Cesium, viewer, ellipsoid, expeditions.value);
 
   window.__SATURDAY_CESIUM__ = { viewer, Cesium };
 });

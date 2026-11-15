@@ -1,0 +1,53 @@
+---
+feature: "reagent-map-expeditions"
+bounded_context: ""
+domain_terms: ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"]
+files_touched: ["apps/ye-olde-magic-shop/tests/reagent-map-expeditions.spec.ts", "apps/ye-olde-magic-shop/tests/reagent-map-fly-to-site.spec.ts", "apps/ye-olde-magic-shop/.playwright-baselines/debian/globe-default-view.png", "apps/ye-olde-magic-shop/.playwright-baselines/ubi9/globe-default-view.png"]
+issue_refs: ["reagent-map-expeditions"]
+linked_adrs: []
+linked_kis: []
+---
+
+# QA Report: reagent-map-expeditions
+
+## Test Files Created
+
+- apps/ye-olde-magic-shop/tests/reagent-map-expeditions.spec.ts
+- apps/ye-olde-magic-shop/tests/reagent-map-fly-to-site.spec.ts
+
+## Test Files Modified
+
+- apps/ye-olde-magic-shop/.playwright-baselines/debian/globe-default-view.png
+- apps/ye-olde-magic-shop/.playwright-baselines/ubi9/globe-default-view.png
+
+## Coverage Summary
+
+- Acceptance criteria covered: 4/4
+- Total new tests: 4
+
+## Test Results
+
+- Passed: 42
+- Failed: 0
+- Skipped: 0
+
+## Accessibility Check
+
+- [A11Y] Fly-to-site buttons: keyboard-focusable, carry aria-label "Fly to {site name}", and activate the flight on Enter — verified by an ad-hoc manual Playwright check (focus + keyboard.press('Enter') + camera position change assertion), not committed as a new spec file since it wasn't in the analyst's QA task list. No violation found.
+- [A11Y] accessibility-engineer's prior fix to the globe's role=img aria-label (now mentions expeditions, closing a WCAG 1.1.1 gap) is present and unchanged by this stage's work.
+- [A11Y] Existing tests/reagent-map-a11y-check.spec.ts (globe role/aria-label, site-list aria-label, nav-link focus) still passes unmodified.
+
+## Bugs Found
+
+None
+
+## Known Gaps
+
+None
+
+## Notes for Tech Writer
+
+- globe-default-view.png baseline change, both images: a new white geodesic line now appears between Moonwell Spring and Ember Crag — this is the 'Spring to Crag' seeded expedition, the only one of the three seeded expeditions whose both endpoints fall within the default view's near-side hemisphere ('Glade to Caves' and 'Cairn to Shoals' each have at least one endpoint off-screen in this particular view). Regenerated via scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines (run directly against the saturday-runner:debian and saturday-runner:ubi9 images, reusing their existing built images); both produced byte-identical PNGs to each other post-change, consistent with the pre-change baselines also having been byte-identical (both runner variants render through the same SwiftShader software GL driver). Confirmed via `git diff --stat` on apps/ye-olde-magic-shop/.playwright-baselines/ that only globe-default-view.png changed in each image — reagent-map-header.png, reagent-site-list.png, and reagent-map-error.png are untouched, and GLOBE_MAX_DIFF_PIXEL_RATIO (1%) was not raised.
+- Flakes diagnosed during the pre-ship full-suite run (not caused by this order, no test code changed to compensate): under docker's --project=chrome run with --workers=3, tests/map.spec.ts's 'should be able to toggle layer visibility' (unrelated Leaflet /locations page, outside this order's scope.paths) and tests/reagent-map-pan-zoom.spec.ts's drag/zoom tests each intermittently failed once across two separate full-suite runs (debian and ubi9). Isolated re-runs of reagent-map-pan-zoom.spec.ts alone with --workers=1 --repeat-each=3 passed 12/12 in both images, confirming resource contention from 3 parallel software-rendered WebGL pages, not a regression from this order's changes. Worth flagging to whoever owns runner-image capacity/worker tuning.
+- No statement/line coverage instrumentation (nyc/istanbul/v8) is wired for this app — its tests are Playwright E2E only. The claim's 4th AC ('every changed line is covered by a test that can fail') was instead verified directly: ReagentMapView.vue was temporarily reverted to its pre-this-order content (via `git show HEAD:...`), and all three new assertions (expedition count/content signed-out, Elara's-own-expedition signed-in, fly-to-site bringing Tidewrack Shoals on screen) failed as expected against it, then the current implementation was restored and the full reagent-map-*.spec.ts suite (34 tests, excluding @visual) re-confirmed green.
+- An incidental environment issue surfaced and was fixed during this stage: running `pnpm install --frozen-lockfile` inside the saturday-runner docker containers (bind-mounted to the host repo) replaced the host's darwin-arm64 rollup optional dependency with linux-only variants, breaking `npm run dev` on the host. Fixed with `CI=true pnpm install` on the host afterward — not a code change, just a note for whoever next runs the docker-based scripts against a bind-mounted checkout.

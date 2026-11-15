@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "reagent-map-expeditions",
+  "specPath": ".claude/factory/claims/reagent-map-expeditions.md",
+  "specSha256": "ae59323737ccd338a3d77227daa612ed3954f232b577b222eec31882dd04c071",
+  "provider": "claude",
+  "startedAt": "2026-11-12T06:04:35.167542Z",
+  "startCommit": "21e435fa66d1e163be51959217642f419345faca",
+  "diffLines": {
+    "confirm-design": 6977,
+    "confirm-security": 6977,
+    "confirm-ship": 6977
+  },
+  "reviewedDigest": "d9f7acc01583b5c0fb82ef8b24427a847c09317b643de7284bb94ff8255b01fd",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T06:17:08.02685Z",
+      "finishedAt": "2026-11-12T06:18:15.629504Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/acceptance-scenarios.json",
+      "artifactSha256": "3dc2bc0657c6ba4ebd93b8f05d12fbe56b089afeb9414d99c387f437124845b7",
+      "sequence": 9,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 8,
+        "outputTokens": 6255,
+        "cacheReadTokens": 265396,
+        "cacheCreationTokens": 67279,
+        "costUsd": 0.3847612
+      }
+    },
+    "accessibility-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T13:09:24.284227Z",
+      "finishedAt": "2026-11-12T13:11:14.68684Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/accessibility-engineer.md",
+      "artifactSha256": "b0f1b6435eed1d4b1687348acbcc7f0e10e0b48ef4a3d31aec9b97a2ea2c8db2",
+      "sequence": 12,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "accessibility-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 34,
+        "outputTokens": 8789,
+        "cacheReadTokens": 1392891,
+        "cacheCreationTokens": 81264,
+        "costUsd": 0.6915922
+      }
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T06:08:43.526624Z",
+      "finishedAt": "2026-11-12T06:15:12.790159Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/analyst.json",
+      "artifactSha256": "c69e2f421be7289ab312303e21ac5da5076ea2e6faf58a1797a75e2ec96e9db1",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 64,
+        "outputTokens": 32740,
+        "cacheReadTokens": 3361838,
+        "cacheCreationTokens": 120896,
+        "costUsd": 1.4834796000000001
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T06:15:12.833673Z",
+      "finishedAt": "2026-11-12T06:17:08.026445Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/architect.json",
+      "artifactSha256": "7ac7828ecfc9ffc315f70f579fd8862029054f85d867d0572a89b3257aa7ad47",
+      "sequence": 8,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 12,
+        "outputTokens": 10847,
+        "cacheReadTokens": 459704,
+        "cacheCreationTokens": 74523,
+        "costUsd": 0.4985268
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T13:07:15.452414Z",
+      "finishedAt": "2026-11-12T13:09:24.283563Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/code-reviewer.json",
+      "artifactSha256": "e6f1673f5f6332e5d00c4f930e4de82705fe0fca3941a79fee18b05b01e679a5",
+      "sequence": 11,
+      "iteration": 1,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 10862,
+        "cacheReadTokens": 1148295,
+        "cacheCreationTokens": 96972,
+        "costUsd": 0.7262149999999999
+      }
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T06:04:35.174286Z",
+      "finishedAt": "2026-11-12T06:08:43.526274Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/context-engineer.json",
+      "artifactSha256": "2c2150ed047c13da8aefacd7f46162d9ca9650aa8ebf710bc24a8da0fac6b3bf",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 44,
+        "outputTokens": 20730,
+        "cacheReadTokens": 2431743,
+        "cacheCreationTokens": 129550,
+        "costUsd": 1.2119366
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-12T06:15:12.833085Z",
+      "sequence": 5,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T12:52:12.714924Z",
+      "finishedAt": "2026-11-12T13:07:15.451544Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/developer.json",
+      "artifactSha256": "37ce3d51f172b2d35d9fcf29bbbefa2420bfd0d9a5477f8a7ba9cd86d84bd4b9",
+      "gate": "confirm-design",
+      "sequence": 10,
+      "iteration": 1,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 156,
+        "outputTokens": 54764,
+        "cacheReadTokens": 12539999,
+        "cacheCreationTokens": 222431,
+        "costUsd": 3.9456758000000005
+      }
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-12T06:15:12.833443Z",
+      "gate": "confirm-ship",
+      "sequence": 7,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-12T06:15:12.832911Z",
+      "sequence": 4,
+      "skipReason": "no performance requirement carries a threshold with a number and a unit",
+      "iteration": 1
+    },
+    "pre-ship-checks": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-14T02:43:12.995012Z",
+      "finishedAt": "2026-11-14T02:48:14.408762Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/pre-ship-checks.md",
+      "artifactSha256": "67a8d4f62d31eed79edf2d8b89bc22d8b3c599514c8bbe102bbefb56cd155300",
+      "sequence": 17,
+      "iteration": 1,
+      "agent": "pre-ship-checks"
+    },
+    "qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-14T02:06:59.010098Z",
+      "finishedAt": "2026-11-14T02:30:18.710046Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/qa-engineer.json",
+      "artifactSha256": "14544e4bae847627d6d423c84125f1e3dad809bb04bc6b9ceba033e81c39f461",
+      "gate": "confirm-security",
+      "sequence": 14,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "stateKind": "qa",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/qa-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 78,
+        "outputTokens": 23797,
+        "cacheReadTokens": 7912176,
+        "cacheCreationTokens": 57727,
+        "costUsd": 4.1939921999999985
+      }
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T06:15:12.790543Z",
+      "finishedAt": "2026-11-12T06:15:12.832617Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/router.json",
+      "artifactSha256": "5cf53aa55c221a6a485cbdc54cd17b4a689cdada4bb97a97d46ab1b4b085492b",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-12T13:11:14.687468Z",
+      "finishedAt": "2026-11-12T13:13:09.996531Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/state/security-reviewer.json",
+      "artifactSha256": "f6f1adb7bff047f1014922fadb4cab1c7939fd1a626e2d077077774df630e593",
+      "sequence": 13,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-expeditions/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 8833,
+        "cacheReadTokens": 1022167,
+        "cacheCreationTokens": 80229,
+        "costUsd": 0.6137274
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-12T06:15:12.833246Z",
+      "sequence": 6,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    },
+    "tech-writer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-14T02:41:37.309392Z",
+      "finishedAt": "2026-11-14T02:43:12.993734Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/tech-writer.md",
+      "artifactSha256": "075184579b8763385ffbccbe89063d2820d4d1fd9330ebc0660103492dd53f49",
+      "sequence": 16,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "tech-writer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 8143,
+        "cacheReadTokens": 1038905,
+        "cacheCreationTokens": 88929,
+        "costUsd": 0.644975
+      }
+    },
+    "visual-qa-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-14T02:30:18.710981Z",
+      "finishedAt": "2026-11-14T02:41:37.306214Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-expeditions/visual-qa-engineer.md",
+      "artifactSha256": "d177e72a1d4a953974652fd8afb5c905ac7be1ae4ebe4eed0c80f05cfb583001",
+      "sequence": 15,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "visual-qa-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 20,
+        "outputTokens": 6686,
+        "cacheReadTokens": 1338782,
+        "cacheCreationTokens": 7450,
+        "costUsd": 2.0901615999999996
+      }
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-12T12:52:12.661174Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "3dc2bc0657c6ba4ebd93b8f05d12fbe56b089afeb9414d99c387f437124845b7",
+        "analyst": "c69e2f421be7289ab312303e21ac5da5076ea2e6faf58a1797a75e2ec96e9db1",
+        "architect": "7ac7828ecfc9ffc315f70f579fd8862029054f85d867d0572a89b3257aa7ad47",
+        "context-engineer": "2c2150ed047c13da8aefacd7f46162d9ca9650aa8ebf710bc24a8da0fac6b3bf",
+        "router": "5cf53aa55c221a6a485cbdc54cd17b4a689cdada4bb97a97d46ab1b4b085492b"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-11-14T02:06:58.933366Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "3dc2bc0657c6ba4ebd93b8f05d12fbe56b089afeb9414d99c387f437124845b7",
+        "accessibility-engineer": "b0f1b6435eed1d4b1687348acbcc7f0e10e0b48ef4a3d31aec9b97a2ea2c8db2",
+        "analyst": "c69e2f421be7289ab312303e21ac5da5076ea2e6faf58a1797a75e2ec96e9db1",
+        "architect": "7ac7828ecfc9ffc315f70f579fd8862029054f85d867d0572a89b3257aa7ad47",
+        "code-reviewer": "e6f1673f5f6332e5d00c4f930e4de82705fe0fca3941a79fee18b05b01e679a5",
+        "context-engineer": "2c2150ed047c13da8aefacd7f46162d9ca9650aa8ebf710bc24a8da0fac6b3bf",
+        "developer": "37ce3d51f172b2d35d9fcf29bbbefa2420bfd0d9a5477f8a7ba9cd86d84bd4b9",
+        "router": "5cf53aa55c221a6a485cbdc54cd17b4a689cdada4bb97a97d46ab1b4b085492b",
+        "security-reviewer": "f6f1adb7bff047f1014922fadb4cab1c7939fd1a626e2d077077774df630e593"
+      }
+    },
+    "confirm-ship": {
+      "approvedAt": "2026-11-14T03:30:33.41158Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "3dc2bc0657c6ba4ebd93b8f05d12fbe56b089afeb9414d99c387f437124845b7",
+        "accessibility-engineer": "b0f1b6435eed1d4b1687348acbcc7f0e10e0b48ef4a3d31aec9b97a2ea2c8db2",
+        "analyst": "c69e2f421be7289ab312303e21ac5da5076ea2e6faf58a1797a75e2ec96e9db1",
+        "architect": "7ac7828ecfc9ffc315f70f579fd8862029054f85d867d0572a89b3257aa7ad47",
+        "code-reviewer": "e6f1673f5f6332e5d00c4f930e4de82705fe0fca3941a79fee18b05b01e679a5",
+        "context-engineer": "2c2150ed047c13da8aefacd7f46162d9ca9650aa8ebf710bc24a8da0fac6b3bf",
+        "developer": "37ce3d51f172b2d35d9fcf29bbbefa2420bfd0d9a5477f8a7ba9cd86d84bd4b9",
+        "pre-ship-checks": "67a8d4f62d31eed79edf2d8b89bc22d8b3c599514c8bbe102bbefb56cd155300",
+        "qa-engineer": "14544e4bae847627d6d423c84125f1e3dad809bb04bc6b9ceba033e81c39f461",
+        "router": "5cf53aa55c221a6a485cbdc54cd17b4a689cdada4bb97a97d46ab1b4b085492b",
+        "security-reviewer": "f6f1adb7bff047f1014922fadb4cab1c7939fd1a626e2d077077774df630e593",
+        "tech-writer": "075184579b8763385ffbccbe89063d2820d4d1fd9330ebc0660103492dd53f49",
+        "visual-qa-engineer": "d177e72a1d4a953974652fd8afb5c905ac7be1ae4ebe4eed0c80f05cfb583001"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-12T12:52:12.662423Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "d6c394ede6bd3476f87c3a210652258150209a341c113cba2f9f976a0997dfac",
+          "at": "2026-11-12T12:52:12.662807Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-design/analyst.md",
+          "sha256": "c3ce8d3840f6e78455427f115af8fc6300bf704ddff3587a6217118a7b5ed3c2",
+          "at": "2026-11-12T12:52:12.666437Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-design/architect.md",
+          "sha256": "fdb00dd5f1207bb98a50c717b637fd3195230aa9f6ea1f7ec429f225eb69c7ce",
+          "at": "2026-11-12T12:52:12.666822Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-design/context-engineer.md",
+          "sha256": "6468a3be7e1210bdcde3e5d24580c6353a337b6c2b0e804af6850e93b4e39916",
+          "at": "2026-11-12T12:52:12.666731Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-design/router.md",
+          "sha256": "21c0b93e1c3604894e2c094b44e4477c0e433d4ad8dbaf315da93ba6e998a9d0",
+          "at": "2026-11-12T12:52:12.666593Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-11-14T02:06:58.934738Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "d6c394ede6bd3476f87c3a210652258150209a341c113cba2f9f976a0997dfac",
+          "at": "2026-11-14T02:06:58.936132Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/accessibility-engineer.md",
+          "sha256": "b0f1b6435eed1d4b1687348acbcc7f0e10e0b48ef4a3d31aec9b97a2ea2c8db2",
+          "at": "2026-11-14T02:06:58.935539Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/analyst.md",
+          "sha256": "c3ce8d3840f6e78455427f115af8fc6300bf704ddff3587a6217118a7b5ed3c2",
+          "at": "2026-11-14T02:06:58.935058Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/architect.md",
+          "sha256": "fdb00dd5f1207bb98a50c717b637fd3195230aa9f6ea1f7ec429f225eb69c7ce",
+          "at": "2026-11-14T02:06:58.93577Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/code-reviewer.md",
+          "sha256": "df26cafc213e9d056b9b218e4749056f2d568a95992bd706ab56c3126a381284",
+          "at": "2026-11-14T02:06:58.935309Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/context-engineer.md",
+          "sha256": "6468a3be7e1210bdcde3e5d24580c6353a337b6c2b0e804af6850e93b4e39916",
+          "at": "2026-11-14T02:06:58.936255Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/developer.md",
+          "sha256": "2a9957e0a8eefc6ddf1d94850465a44a37c012160d741f7bc89c014b2052e046",
+          "at": "2026-11-14T02:06:58.935896Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/router.md",
+          "sha256": "21c0b93e1c3604894e2c094b44e4477c0e433d4ad8dbaf315da93ba6e998a9d0",
+          "at": "2026-11-14T02:06:58.936376Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-security/security-reviewer.md",
+          "sha256": "f9957ef72f413b567b75a365498ba07e3370912ffa2e16eba9bdef8d13abfcf7",
+          "at": "2026-11-14T02:06:58.936512Z"
+        }
+      }
+    },
+    "confirm-ship": {
+      "at": "2026-11-14T03:30:33.412931Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/acceptance-scenarios.md",
+          "sha256": "d6c394ede6bd3476f87c3a210652258150209a341c113cba2f9f976a0997dfac",
+          "at": "2026-11-14T03:30:33.413853Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/accessibility-engineer.md",
+          "sha256": "b0f1b6435eed1d4b1687348acbcc7f0e10e0b48ef4a3d31aec9b97a2ea2c8db2",
+          "at": "2026-11-14T03:30:33.41608Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/analyst.md",
+          "sha256": "c3ce8d3840f6e78455427f115af8fc6300bf704ddff3587a6217118a7b5ed3c2",
+          "at": "2026-11-14T03:30:33.415695Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/architect.md",
+          "sha256": "fdb00dd5f1207bb98a50c717b637fd3195230aa9f6ea1f7ec429f225eb69c7ce",
+          "at": "2026-11-14T03:30:33.414988Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/code-reviewer.md",
+          "sha256": "df26cafc213e9d056b9b218e4749056f2d568a95992bd706ab56c3126a381284",
+          "at": "2026-11-14T03:30:33.414053Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/context-engineer.md",
+          "sha256": "6468a3be7e1210bdcde3e5d24580c6353a337b6c2b0e804af6850e93b4e39916",
+          "at": "2026-11-14T03:30:33.415345Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/developer.md",
+          "sha256": "2a9957e0a8eefc6ddf1d94850465a44a37c012160d741f7bc89c014b2052e046",
+          "at": "2026-11-14T03:30:33.414622Z"
+        },
+        "pre-ship-checks": {
+          "stage": "pre-ship-checks",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/pre-ship-checks.md",
+          "sha256": "67a8d4f62d31eed79edf2d8b89bc22d8b3c599514c8bbe102bbefb56cd155300",
+          "at": "2026-11-14T03:30:33.414341Z"
+        },
+        "qa-engineer": {
+          "stage": "qa-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/qa-engineer.md",
+          "sha256": "4d38e3b9bba7f38ae4e79374a19248f9871ecf969114cf16b06692273351a43d",
+          "at": "2026-11-14T03:30:33.415889Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/router.md",
+          "sha256": "21c0b93e1c3604894e2c094b44e4477c0e433d4ad8dbaf315da93ba6e998a9d0",
+          "at": "2026-11-14T03:30:33.415178Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/security-reviewer.md",
+          "sha256": "f9957ef72f413b567b75a365498ba07e3370912ffa2e16eba9bdef8d13abfcf7",
+          "at": "2026-11-14T03:30:33.413447Z"
+        },
+        "tech-writer": {
+          "stage": "tech-writer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/tech-writer.md",
+          "sha256": "075184579b8763385ffbccbe89063d2820d4d1fd9330ebc0660103492dd53f49",
+          "at": "2026-11-14T03:30:33.414834Z"
+        },
+        "visual-qa-engineer": {
+          "stage": "visual-qa-engineer",
+          "path": ".claude/feature-workspace/reagent-map-expeditions/.approved/confirm-ship/visual-qa-engineer.md",
+          "sha256": "d177e72a1d4a953974652fd8afb5c905ac7be1ae4ebe4eed0c80f05cfb583001",
+          "at": "2026-11-14T03:30:33.41367Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 488,
+    "outputTokens": 192446,
+    "cacheReadTokens": 32911896,
+    "cacheCreationTokens": 1027250,
+    "costUsd": 16.4850434
+  },
+  "budget": {
+    "maxUsd": 20,
+    "maxHours": 3
+  },
+  "updatedAt": "2026-11-14T03:30:33.517996Z"
+}

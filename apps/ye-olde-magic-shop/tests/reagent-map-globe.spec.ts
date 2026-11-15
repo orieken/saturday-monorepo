@@ -120,7 +120,10 @@ test.describe('Reagent map globe (AC2, AC3, AC4)', () => {
     expect(seamShape.hasViewer).toBe(true);
     expect(seamShape.hasCesium).toBe(true);
 
-    const entities = await cesium.getEntities();
+    // reagent-map-expeditions now also tags expedition polylines with
+    // saturdayMetadata (kind: 'expedition'), so getEntities() returns both
+    // kinds — filter to this test's own kind before counting.
+    const entities = (await cesium.getEntities()).filter((entity) => entity.metadata.kind === 'site');
     expect(entities).toHaveLength(SEEDED_SITES.length);
     for (const entity of entities) {
       expect(entity.metadata.kind).toBe('site');
@@ -134,7 +137,9 @@ test.describe('Reagent map globe (AC2, AC3, AC4)', () => {
   }) => {
     await cesium.waitForSettled();
     const radiusMeters = await cesium.globeRadiusMeters();
-    const entities = await cesium.getEntities();
+    // See the filter note in the saturdayMetadata test above: expeditions
+    // now share this same entity list.
+    const entities = (await cesium.getEntities()).filter((entity) => entity.metadata.kind === 'site');
 
     expect(entities).toHaveLength(SEEDED_SITES.length);
 
