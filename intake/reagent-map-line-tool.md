@@ -3,7 +3,7 @@ intake: 1
 id: reagent-map-line-tool
 type: feature
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-11-03
 requested-by: oscar
@@ -24,7 +24,7 @@ slice:
   manifest: docs/specs/reagent-map-spec/package.sha256
   covers: [AC6, AC7, AC8, AC9, AC10, AC14]
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-line-tool/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, apps/ye-olde-magic-shop/.playwright-baselines/**, docs/features/reagent-map-line-tool/**]
 ---
 
 # Draw a line on the reagent map
@@ -70,6 +70,10 @@ app behaves exactly as it does today.
       (spec AC14).
 - [ ] Given the line being drawn, then its points and line carry `saturdayMetadata` (`kind:
       'draft-point'`, `'draft-line'`) so the tests can read them through `getEntities()`.
+- [ ] Given the `@visual` baselines, then only a baseline this order changes on purpose is regenerated,
+      such as the page if a control to start the tool is added. Regenerate it in both images with
+      `scripts/ui-suite-in-chrome.sh --update-baselines` and `--ubi9 --update-baselines`, look at each
+      changed PNG, and say in the delivery record what changed and why. Do not raise a tolerance.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/reagent-map-line-tool/` excepted.
@@ -94,6 +98,9 @@ app behaves exactly as it does today.
 ## Test Approach
 
 Unit tests for each change. The UI and API scenario suites are E1 and F1.
+
+One suite run takes about two minutes in each image, and the developer stage has 30 minutes. While
+developing, run only the reagent map specs. The full suite in both images is the pre-ship check.
 
 ## Open Questions
 
