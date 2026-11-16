@@ -68,6 +68,11 @@ app behaves exactly as it does today.
       not shown and nothing is stored (spec AC15).
 - [ ] Given the change is complete, then `.env` sets `VITE_FEATURE_REAGENT_MAP=true` and the nav link
       is shown, with the flag still able to turn the view off.
+- [ ] Given the mock API writes a saved expedition to `apps/mock-api/data/expeditions.json`, then every
+      test that saves one puts the file back afterwards, and no test sees an expedition another test
+      saved: `reagent-map-expeditions.spec.ts` counts exactly Elara's expeditions while the suite runs
+      three workers. Prove it with the reagent map specs at `--workers=3 --repeat-each=3`, and say how
+      the writers are kept apart from the readers. Do not loosen an existing count to make it pass.
 - [ ] Given the `@visual` baselines, then only a baseline this order changes on purpose is regenerated,
       such as the page header once the nav link shows by default. Regenerate it in both images with
       `scripts/ui-suite-in-chrome.sh --update-baselines` and `--ubi9 --update-baselines`, look at each
