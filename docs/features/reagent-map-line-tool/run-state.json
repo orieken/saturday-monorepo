@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "reagent-map-line-tool",
+  "specPath": ".claude/factory/claims/reagent-map-line-tool.md",
+  "specSha256": "c183e941c28d2826e14c4ef6580024797e2f1c0d656031ce9baba022d93becfc",
+  "provider": "claude",
+  "startedAt": "2026-11-15T19:55:26.502158Z",
+  "startCommit": "68c53fdaf1b262e9577bdb2d1f709dfbcb97f6b7",
+  "diffLines": {
+    "confirm-design": 5355,
+    "confirm-security": 5355
+  },
+  "reviewedDigest": "9de1ebec2459b352149f50cdc0292bd7b3dddad01ed9908a3663377f514477fc",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:07:57.03407Z",
+      "finishedAt": "2026-11-15T20:09:10.466248Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/acceptance-scenarios.json",
+      "artifactSha256": "4b1c2d8eb58cb5e4e392c0aa72c15f8f654d42f25f69c8d8b96c3d7651f86835",
+      "sequence": 9,
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 12,
+        "outputTokens": 7127,
+        "cacheReadTokens": 435215,
+        "cacheCreationTokens": 67752,
+        "costUsd": 0.429345
+      }
+    },
+    "accessibility-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:56:34.879009Z",
+      "finishedAt": "2026-11-15T20:59:12.100356Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/accessibility-engineer.md",
+      "artifactSha256": "259b5db017b348d86f2f9e41ee43075531db03cd6f68d7c70eb7c6d853cfd49e",
+      "sequence": 12,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "accessibility-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 42,
+        "outputTokens": 13185,
+        "cacheReadTokens": 1938435,
+        "cacheCreationTokens": 87593,
+        "costUsd": 0.8699930000000001
+      }
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T19:58:40.046995Z",
+      "finishedAt": "2026-11-15T20:04:19.476435Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/analyst.json",
+      "artifactSha256": "7df6ad654e271a3720c5062ec453a2e2475fc1cbf8c76a90ad2b0fa3d349a86b",
+      "sequence": 2,
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 20,
+        "outputTokens": 32252,
+        "cacheReadTokens": 960747,
+        "cacheCreationTokens": 110317,
+        "costUsd": 0.9559774000000001
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:04:19.536957Z",
+      "finishedAt": "2026-11-15T20:07:57.032759Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/architect.json",
+      "artifactSha256": "982a0c6c0ae25a328e29129765afbadaa277e2553d29134a1dcae02d365e7191",
+      "sequence": 8,
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 19126,
+        "cacheReadTokens": 1141178,
+        "cacheCreationTokens": 96998,
+        "costUsd": 0.8075356
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:54:12.118825Z",
+      "finishedAt": "2026-11-15T20:56:34.878219Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/code-reviewer.json",
+      "artifactSha256": "e0490bef7288ca7dc9553d3d9e4c19e30b1eecc03694910295357ef676292204",
+      "sequence": 11,
+      "iteration": 1,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 16,
+        "outputTokens": 12443,
+        "cacheReadTokens": 710036,
+        "cacheCreationTokens": 96716,
+        "costUsd": 0.6533332
+      }
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T19:55:26.508402Z",
+      "finishedAt": "2026-11-15T19:58:40.045958Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/context-engineer.json",
+      "artifactSha256": "3c89b13af4156165e40ff2c2e572dca29724cba9056d000040aa39abb04869ff",
+      "sequence": 1,
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 34,
+        "outputTokens": 16658,
+        "cacheReadTokens": 1676864,
+        "cacheCreationTokens": 125994,
+        "costUsd": 1.0059968
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-15T20:04:19.536219Z",
+      "sequence": 5,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:46:57.838768Z",
+      "finishedAt": "2026-11-15T20:54:12.117654Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/developer.json",
+      "artifactSha256": "cf419a00f580fb34be61005534f1bcbc95487f1bdfe2e24f3e9b86d090781710",
+      "gate": "confirm-design",
+      "sequence": 10,
+      "iteration": 1,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 82,
+        "outputTokens": 27962,
+        "cacheReadTokens": 5197934,
+        "cacheCreationTokens": 140638,
+        "costUsd": 1.8819227999999997
+      }
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-15T20:04:19.53668Z",
+      "sequence": 7,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-15T20:04:19.536009Z",
+      "sequence": 4,
+      "skipReason": "no performance requirement carries a threshold with a number and a unit",
+      "iteration": 1
+    },
+    "qa-engineer": {
+      "status": "FAILED",
+      "startedAt": "2026-11-15T23:44:31.379634Z",
+      "finishedAt": "2026-11-16T00:17:05.11192Z",
+      "gate": "confirm-security",
+      "sequence": 14,
+      "iteration": 1,
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 92,
+        "outputTokens": 16057,
+        "cacheReadTokens": 6012127,
+        "cacheCreationTokens": 137705,
+        "costUsd": 7.071108800000001
+      },
+      "error": "stage \"qa-engineer\": agent did not return a JSON state document — got: The full suite run finished: 67 passed, 10 failed — all 10 failures carry the same timeout/resource-contention signature (`cesium.waitForSettled() timed out`, `beforeEach` timeout, closed browser context) that a prior delivery in this same app documented as flakiness from running 3 parallel WebGL-heavy Cesium pages, not real regressions. Two of those 10 are in the new `reagent-map-line-tool.spec.ts` (the AC10 and AC14 cases); the other 6 tests in that file passed. I also found and fixed a host-side side effect: the dockerized `pnpm install` had swapped the host's darwin-arm64 rollup binary for Linux variants (a previously documented issue), which I corrected with `CI=true pnpm install`.\n\nI'm now running an isolated single-worker, repeat-3× rerun of just `reagent-map-line-tool.spec.ts` t…(truncated) — the full response is at .claude/feature-workspace/reagent-map-line-tool/state/qa-engineer.rejected.txt",
+      "failureClass": "transient"
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:04:19.47711Z",
+      "finishedAt": "2026-11-15T20:04:19.535417Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/router.json",
+      "artifactSha256": "a3e55d13690f434f0ca649ecaad6d71e07b93d86c0a5694e75a453756d803c1b",
+      "sequence": 3,
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-15T20:59:12.101197Z",
+      "finishedAt": "2026-11-15T21:00:02.566742Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-line-tool/state/security-reviewer.json",
+      "artifactSha256": "849b596d8663309d3fb11d80931e5ded6079a6f7c1a28a681a49a331520916b4",
+      "sequence": 13,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-line-tool/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 12,
+        "outputTokens": 3919,
+        "cacheReadTokens": 454145,
+        "cacheCreationTokens": 75199,
+        "costUsd": 0.4308390000000001
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-15T20:04:19.536398Z",
+      "sequence": 6,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-15T20:46:57.788954Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "4b1c2d8eb58cb5e4e392c0aa72c15f8f654d42f25f69c8d8b96c3d7651f86835",
+        "analyst": "7df6ad654e271a3720c5062ec453a2e2475fc1cbf8c76a90ad2b0fa3d349a86b",
+        "architect": "982a0c6c0ae25a328e29129765afbadaa277e2553d29134a1dcae02d365e7191",
+        "context-engineer": "3c89b13af4156165e40ff2c2e572dca29724cba9056d000040aa39abb04869ff",
+        "router": "a3e55d13690f434f0ca649ecaad6d71e07b93d86c0a5694e75a453756d803c1b"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-11-15T21:06:05.534931Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "4b1c2d8eb58cb5e4e392c0aa72c15f8f654d42f25f69c8d8b96c3d7651f86835",
+        "accessibility-engineer": "259b5db017b348d86f2f9e41ee43075531db03cd6f68d7c70eb7c6d853cfd49e",
+        "analyst": "7df6ad654e271a3720c5062ec453a2e2475fc1cbf8c76a90ad2b0fa3d349a86b",
+        "architect": "982a0c6c0ae25a328e29129765afbadaa277e2553d29134a1dcae02d365e7191",
+        "code-reviewer": "e0490bef7288ca7dc9553d3d9e4c19e30b1eecc03694910295357ef676292204",
+        "context-engineer": "3c89b13af4156165e40ff2c2e572dca29724cba9056d000040aa39abb04869ff",
+        "developer": "cf419a00f580fb34be61005534f1bcbc95487f1bdfe2e24f3e9b86d090781710",
+        "router": "a3e55d13690f434f0ca649ecaad6d71e07b93d86c0a5694e75a453756d803c1b",
+        "security-reviewer": "849b596d8663309d3fb11d80931e5ded6079a6f7c1a28a681a49a331520916b4"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-15T20:46:57.790114Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "47b302d3b466a392a0a03509153aaf7400f836da3effe9a15beaebbf3f71d7ef",
+          "at": "2026-11-15T20:46:57.790775Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-design/analyst.md",
+          "sha256": "c2d97ce25f3661106e98d7cbd26979b66e8db7007d88347035683605e9cf72d9",
+          "at": "2026-11-15T20:46:57.790316Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-design/architect.md",
+          "sha256": "7c389e9d74c5c0f5ddfe37a0df4b8c590ebb098ee1dce48b7dfa57b5b2983ec9",
+          "at": "2026-11-15T20:46:57.79043Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-design/context-engineer.md",
+          "sha256": "92c4be60ecbd53768728732f9b18efed54a5968f63d561eb30dbd9413b24cb5a",
+          "at": "2026-11-15T20:46:57.790638Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-design/router.md",
+          "sha256": "53a94e03e31d9a378d74e2ac0b5a1b218002514bc7cf4ba0b0e961e5e4bde41a",
+          "at": "2026-11-15T20:46:57.790532Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-11-15T21:06:05.536238Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "47b302d3b466a392a0a03509153aaf7400f836da3effe9a15beaebbf3f71d7ef",
+          "at": "2026-11-15T21:06:05.536514Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/accessibility-engineer.md",
+          "sha256": "259b5db017b348d86f2f9e41ee43075531db03cd6f68d7c70eb7c6d853cfd49e",
+          "at": "2026-11-15T21:06:05.537262Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/analyst.md",
+          "sha256": "c2d97ce25f3661106e98d7cbd26979b66e8db7007d88347035683605e9cf72d9",
+          "at": "2026-11-15T21:06:05.537675Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/architect.md",
+          "sha256": "7c389e9d74c5c0f5ddfe37a0df4b8c590ebb098ee1dce48b7dfa57b5b2983ec9",
+          "at": "2026-11-15T21:06:05.536889Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/code-reviewer.md",
+          "sha256": "da9b0dd4a494873bb94bad45d6664e5662981c9928b477b231eb5ea0ef5cf18d",
+          "at": "2026-11-15T21:06:05.537459Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/context-engineer.md",
+          "sha256": "92c4be60ecbd53768728732f9b18efed54a5968f63d561eb30dbd9413b24cb5a",
+          "at": "2026-11-15T21:06:05.537018Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/developer.md",
+          "sha256": "a974ca4e58668934e420c07ee0b0a4b64f9a8b88c70701f70f50fcea4e6a94ef",
+          "at": "2026-11-15T21:06:05.537553Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/router.md",
+          "sha256": "53a94e03e31d9a378d74e2ac0b5a1b218002514bc7cf4ba0b0e961e5e4bde41a",
+          "at": "2026-11-15T21:06:05.537364Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-line-tool/.approved/confirm-security/security-reviewer.md",
+          "sha256": "4fcc4b9fdff70a5a55fe64f08800137a54cc2dd016227caa5b7b4afeccfdc65a",
+          "at": "2026-11-15T21:06:05.537145Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 334,
+    "outputTokens": 148729,
+    "cacheReadTokens": 18526681,
+    "cacheCreationTokens": 938912,
+    "costUsd": 14.1060516
+  },
+  "budget": {
+    "maxUsd": 25,
+    "maxHours": 3
+  },
+  "updatedAt": "2026-11-16T00:17:05.111927Z"
+}
