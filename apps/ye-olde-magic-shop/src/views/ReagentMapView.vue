@@ -12,6 +12,26 @@
     >
       {{ mapError }}
     </div>
+    <div class="mb-4">
+      <button
+        type="button"
+        data-testid="start-line-tool"
+        aria-label="Draw a new expedition"
+        class="rounded-lg border-2 border-dnd-slate px-4 py-2 text-dnd-parchment"
+        @click="startLine"
+      >
+        Draw a new expedition
+      </button>
+      <p
+        v-if="toolStarted"
+        data-testid="line-tool-status"
+        role="status"
+        aria-live="polite"
+        class="mt-2 text-sm text-gray-400"
+      >
+        {{ lineToolStatus }}
+      </p>
+    </div>
     <div class="flex gap-6">
       <div
         id="cesiumContainer"
@@ -41,14 +61,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 // Type-only: erased at compile time, so this never becomes a runtime import
 // of the 'cesium' module (see loadCesiumGlobal's comment for why that
 // matters) — it only gives us real types for the global Cesium exposes.
 import type * as CesiumModule from 'cesium';
 import { fetchReagentSites, type ReagentSite } from '../api/reagentSites';
-import { fetchExpeditions, type Expedition } from '../api/expeditions';
+import { fetchExpeditions, type Expedition, type GeoPoint } from '../api/expeditions';
 
 declare global {
   interface Window {
@@ -57,6 +77,12 @@ declare global {
   }
 }
 
+type SaturdayMetadata = {
+  id: string;
+  name: string;
+  kind: 'site' | 'expedition' | 'draft-point' | 'draft-line';
+};
+
 const AURELIS_RADIUS_METERS = 6_000_000;
 const CESIUM_SCRIPT_URL = '/cesium/Cesium.js';
 const SITE_MARKER_PIXEL_SIZE = 10;
@@ -64,13 +90,23 @@ const SITE_MARKER_PIXEL_SIZE = 10;
 // falls back to its Earth-sized home view, far from the planet's seeded sites.
 const DEFAULT_VIEW = { lat: 10, lng: 20, heightMeters: 12_000_000 };
 const FLY_TO_HEIGHT_METERS = 3_000_000;
+const MAX_LINE_POINTS = 2;
 
 const sites = ref<ReagentSite[]>([]);
 const expeditions = ref<Expedition[]>([]);
 const mapError = ref<string | null>(null);
+const toolStarted = ref(false);
+const draftPoints = ref<GeoPoint[]>([]);
+const lineToolStatus = computed(() => {
+  if (!toolStarted.value) return '';
+  if (draftPoints.value.length === 0) return 'Line tool active. Click the globe to place the first point.';
+  if (draftPoints.value.length === 1) return 'First point placed. Click the globe to place the second point.';
+  return 'Line complete. Click "Draw a new expedition" to start a new line.';
+});
 let viewer: CesiumModule.Viewer | null = null;
 let cesium: typeof CesiumModule | null = null;
 let ellipsoid: CesiumModule.Ellipsoid | null = null;
+let draftEntities: CesiumModule.Entity[] = [];
 
 // Cesium's npm package re-exports its engine package's internals in a way
 // Rollup cannot resolve for a production bundle (an upstream packaging
@@ -131,6 +167,10 @@ async function buildViewer() {
   return { Cesium, viewer: newViewer, ellipsoid };
 }
 
+function tagEntity(entity: CesiumModule.Entity, metadata: SaturdayMetadata): void {
+  (entity as unknown as { saturdayMetadata: SaturdayMetadata }).saturdayMetadata = metadata;
+}
+
 function addSiteEntities(
   Cesium: typeof CesiumModule,
   cesiumViewer: CesiumModule.Viewer,
@@ -142,11 +182,7 @@ function addSiteEntities(
       position: Cesium.Cartesian3.fromDegrees(site.lng, site.lat, 0, ellipsoid),
       point: { pixelSize: SITE_MARKER_PIXEL_SIZE }
     });
-    (entity as unknown as { saturdayMetadata: unknown }).saturdayMetadata = {
-      id: site.id,
-      name: site.name,
-      kind: 'site'
-    };
+    tagEntity(entity, { id: site.id, name: site.name, kind: 'site' });
   });
 }
 
@@ -166,11 +202,7 @@ function addExpeditionEntities(
         arcType: Cesium.ArcType.GEODESIC
       }
     });
-    (entity as unknown as { saturdayMetadata: unknown }).saturdayMetadata = {
-      id: expedition.id,
-      name: expedition.name ?? '',
-      kind: 'expedition'
-    };
+    tagEntity(entity, { id: expedition.id, name: expedition.name ?? '', kind: 'expedition' });
   });
 }
 
@@ -179,6 +211,69 @@ function flyToSite(site: ReagentSite) {
   viewer.camera.flyTo({
     destination: cesium.Cartesian3.fromDegrees(site.lng, site.lat, FLY_TO_HEIGHT_METERS, ellipsoid)
   });
+}
+
+function clearDraftEntities(): void {
+  if (!viewer) return;
+  draftEntities.forEach((entity) => viewer!.entities.remove(entity));
+  draftEntities = [];
+}
+
+function startLine(): void {
+  clearDraftEntities();
+  draftPoints.value = [];
+  toolStarted.value = true;
+}
+
+function addDraftPointEntity(point: GeoPoint): CesiumModule.Entity {
+  const entity = viewer!.entities.add({
+    position: cesium!.Cartesian3.fromDegrees(point.lng, point.lat, 0, ellipsoid!),
+    point: { pixelSize: SITE_MARKER_PIXEL_SIZE }
+  });
+  tagEntity(entity, { id: '', name: '', kind: 'draft-point' });
+  return entity;
+}
+
+function addDraftLineEntity(points: GeoPoint[]): CesiumModule.Entity {
+  const [from, to] = points;
+  const entity = viewer!.entities.add({
+    polyline: {
+      positions: cesium!.Cartesian3.fromDegreesArray([from.lng, from.lat, to.lng, to.lat], ellipsoid!),
+      arcType: cesium!.ArcType.GEODESIC
+    }
+  });
+  tagEntity(entity, { id: '', name: '', kind: 'draft-line' });
+  return entity;
+}
+
+function placePoint(point: GeoPoint): void {
+  draftPoints.value = [...draftPoints.value, point];
+  draftEntities.push(addDraftPointEntity(point));
+  if (draftPoints.value.length === MAX_LINE_POINTS) {
+    draftEntities.push(addDraftLineEntity(draftPoints.value));
+  }
+}
+
+function pickLandPoint(position: CesiumModule.Cartesian2): GeoPoint | null {
+  if (!viewer || !cesium || !ellipsoid) return null;
+  // pickEllipsoid returns the ray's first hit on the surface, which is always on
+  // the side facing the camera. A click beside the globe, or past its edge,
+  // hits nothing and returns undefined.
+  const cartesian = viewer.camera.pickEllipsoid(position, ellipsoid);
+  if (!cartesian) return null;
+
+  const cartographic = cesium.Cartographic.fromCartesian(cartesian, ellipsoid);
+  return {
+    lat: cesium.Math.toDegrees(cartographic.latitude),
+    lng: cesium.Math.toDegrees(cartographic.longitude)
+  };
+}
+
+function handleMapClick(click: CesiumModule.ScreenSpaceEventHandler.PositionedEvent): void {
+  if (!toolStarted.value || draftPoints.value.length >= MAX_LINE_POINTS) return;
+
+  const point = pickLandPoint(click.position);
+  if (point) placePoint(point);
 }
 
 onMounted(async () => {
@@ -207,6 +302,7 @@ onMounted(async () => {
   expeditions.value = expeditionsResult.value;
   addSiteEntities(Cesium, viewer, ellipsoid, sites.value);
   addExpeditionEntities(Cesium, viewer, ellipsoid, expeditions.value);
+  viewer.screenSpaceEventHandler.setInputAction(handleMapClick, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
   window.__SATURDAY_CESIUM__ = { viewer, Cesium };
 });

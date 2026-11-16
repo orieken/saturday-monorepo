@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-line-tool",
+  "structuralDecisions": [
+    {
+      "decision": "Keep all new line-tool code (toolStarted/draftPoints state, the LEFT_CLICK handler, pickLandPoint, addDraftPointEntity, addDraftLineEntity, clearDraftEntities, and the SaturdayMetadata type) inside ReagentMapView.vue. No new file, module, composable, or package is created.",
+      "rationale": "Extends the exact pattern reagent-map-expeditions already established in this file (addSiteEntities/addExpeditionEntities/flyToSite as plain functions over module-scope viewer/cesium/ellipsoid). This app has no Vitest/unit-test runner — only Playwright and Cucumber — so extracting pickLandPoint into a separately-testable module would buy no real testability without adding new test infrastructure, which this order does not request. Analyst flagged uncertainty about where click-to-geo-point logic should live; resolving that now: it lives beside the other per-entity helpers.",
+      "tradeOffs": [
+        "pickLandPoint's two rejection paths (AC9/AC10) are only exercised through Playwright + real WebGL, not fast unit tests",
+        "ReagentMapView.vue grows from ~220 lines to roughly 320-350 — still well short of anything requiring a split, but a third interactive tool should trigger re-evaluation (see Refactoring Opportunities)"
+      ],
+      "fitness": {
+        "property": "No new src/ file or module is introduced for line-tool logic outside ReagentMapView.vue and its spec file",
+        "verification": "code-reviewer checks the diff's file list for this feature; any new file requires a stated reason before approval",
+        "owner": "code-reviewer"
+      }
+    },
+    {
+      "decision": "Introduce one shared type, SaturdayMetadata = { id: string; name: string; kind: 'site' | 'expedition' | 'draft-point' | 'draft-line' }, in ReagentMapView.vue and use it at all four tagging call sites (addSiteEntities, addExpeditionEntities, addDraftPointEntity, addDraftLineEntity) in place of the existing `(entity as unknown as { saturdayMetadata: unknown })` cast's untyped literal.",
+      "rationale": "architecture-guardrails.md #4 forbids raw `any`; the existing cast already correctly routes through `unknown`, but the `kind` string literals are not checked against each other today. reagent-map-expeditions already accepted duplicating this cast once (its architecture-notes.md deferred the extraction as 'not justified by this order alone'); this order adds a third and fourth call site with two more kind values, which is the point design-principles.md's 'No Duplication' rule intends to catch.",
+      "tradeOffs": [
+        "One more type to extend the day a fifth entity kind (e.g. a future polygon tool) arrives",
+        "Still routes through a cast at the assignment point, since Cesium's own Entity type has no saturdayMetadata field — this narrows what can be assigned, it doesn't remove the cast"
+      ],
+      "fitness": {
+        "property": "Every saturdayMetadata assignment in ReagentMapView.vue is typed via the shared SaturdayMetadata type, not an inline object literal",
+        "verification": "code-reviewer confirms by diff review — no ESLint config exists anywhere in this repo yet, so this is manual judgment, not an automated gate",
+        "owner": "code-reviewer",
+        "judgmentOnly": true
+      }
+    },
+    {
+      "decision": "Resolve a screen click to a geographic point with a single pickLandPoint(position) function using Cesium's native camera.pickEllipsoid followed by `new EllipsoidalOccluder(ellipsoid, camera.positionWC).isPointVisible(...)`, written as two independent guard clauses (off-globe, far-side) returning GeoPoint | null. No Strategy class, no Adapter, no custom geometry math.",
+      "rationale": "ARCHITECTURE_RULES.md's guard-clause convention and Simple Design Rule #4 (fewest elements) apply directly: AC9 and AC10 are two sequential, independent rejection checks, not branches of one conditional on a type code, so Decompose Conditional / Replace Conditional with Polymorphism don't apply here. Using Cesium's own occluder avoids reinventing visibility math.",
+      "judgmentOnly": true
+    },
+    {
+      "decision": "Draft state (toolStarted, draftPoints, draftEntities) stays as component-local Vue refs/plain arrays in ReagentMapView.vue. It is not promoted to a Pinia store.",
+      "rationale": "Identical lifecycle to the existing sites/expeditions/viewer state: ephemeral, scoped to one view instance, with exactly one consumer. The spec explicitly defers persistence to reagent-map-save; promoting to a store now would be premature generalization (design-principles.md Anti-Pattern Radar) for a requirement this order doesn't have.",
+      "tradeOffs": [
+        "reagent-map-save will need to re-decide this once a Save action needs to read the draft from a different place in the tree — this decision doesn't block that, it just doesn't do it preemptively"
+      ],
+      "judgmentOnly": true
+    },
+    {
+      "decision": "Import GeoPoint from ../api/expeditions.ts in ReagentMapView.vue rather than declaring a second { lat, lng } type for draft points.",
+      "rationale": "design-principles.md's No Duplication rule, and it keeps the draft-point shape identical to Expedition.from/to — the same shape reagent-map-save's SaveExpedition call will need next, so no translation layer is required between the draft and the eventual save payload; both live in the same bounded context (Expedition Planning).",
+      "fitness": {
+        "property": "No second GeoPoint-shaped type literal is declared in ReagentMapView.vue",
+        "verification": "code-reviewer greps the diff for a second `{ lat: number; lng: number }`-shaped declaration",
+        "owner": "code-reviewer"
+      }
+    },
+    {
+      "decision": "Register the LEFT_CLICK handler exactly once, via viewer.screenSpaceEventHandler.setInputAction(...), inside onMounted's happy path alongside the rest of viewer setup. startLine() never registers or re-registers a handler. No new teardown code is added to onBeforeUnmount.",
+      "rationale": "Cesium's ScreenSpaceEventHandler is itself Observer/PubSub (ARCHITECTURE_RULES.md section III); using it directly avoids a custom event system. The Viewer owns and destroys its own ScreenSpaceEventHandler when viewer.destroy() runs, so the existing onBeforeUnmount cleanup already covers it — no new resource to release.",
+      "fitness": {
+        "property": "Exactly one setInputAction(..., LEFT_CLICK) call exists in ReagentMapView.vue, registered in onMounted; no second registration appears in startLine() or elsewhere",
+        "verification": "code-reviewer confirms by diff review",
+        "owner": "code-reviewer"
+      }
+    }
+  ],
+  "componentPlacement": [
+    {
+      "component": "toolStarted/draftPoints refs, draftEntities array, startLine(), clearDraftEntities(), handleMapClick(), pickLandPoint(), placePoint(), addDraftPointEntity(), addDraftLineEntity(), SaturdayMetadata type",
+      "layer": "Frameworks & Drivers (Vue UI layer, ARCHITECTURE_RULES.md section I.4) — not Entities/UseCases, since draft points/lines are not validated against business rules or persisted in this order",
+      "package": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "Extends the file's existing per-entity helper pattern (addSiteEntities, addExpeditionEntities, flyToSite); same layer, same file, same calling convention."
+    },
+    {
+      "component": "New start-line button",
+      "layer": "Frameworks & Drivers (Vue template)",
+      "package": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "Must sit outside <header>, #cesiumContainer, reagent-site-list and reagent-map-error so none of reagent-map-visual.spec.ts's four captured regions change, per analyst's developerTasks."
+    },
+    {
+      "component": "reagent-map-line-tool.spec.ts",
+      "layer": "Test (E2E/UI, Saturday/Playwright conventions)",
+      "package": "apps/ye-olde-magic-shop/tests/reagent-map-line-tool.spec.ts",
+      "reason": "Follows the house style of reagent-map-fly-to-site.spec.ts and reagent-map-expeditions.spec.ts; must compute raw screen-pixel click targets itself since @orieken/saturday-playwright-cesium's clickAt() throws on toScreen() === null and can't express AC9/AC10."
+    }
+  ],
+  "boundedContext": {
+    "owning": "Expedition Planning (Ye Olde Magic Shop demo app) — DOMAIN_DICTIONARY.md section 7",
+    "crossings": []
+  },
+  "layerBoundaryChecks": [
+    {
+      "rule": "Domain/UseCases layers must not import Adapters or Frameworks (ARCHITECTURE_RULES.md section I)",
+      "verdict": "NOT_APPLICABLE",
+      "notes": "This app has no separate domain/use-case layer for this slice — ReagentMapView.vue and api/expeditions.ts are both adapter/framework-level already. Confirmed by reading both files directly; mcp__loom__dependencies_of/dependents_of were not invoked for this two-file change, consistent with the fallback the architect prompt describes for a change this small."
+    },
+    {
+      "rule": "New code imports only from the Interface Adapters layer it already depends on (api/expeditions.ts), introducing no new cross-package dependency",
+      "verdict": "PASS",
+      "notes": "The only new import is the type-only GeoPoint from the already-imported ../api/expeditions.ts module; no new package dependency is added."
+    }
+  ],
+  "antiPatternChecks": [
+    {
+      "pattern": "Premature generalization",
+      "found": false,
+      "notes": "Explicitly rejected extracting pickLandPoint/draft state into a new module or store ahead of a second consumer — see structural decisions 1 and 4."
+    },
+    {
+      "pattern": "God object",
+      "found": false,
+      "notes": "ReagentMapView.vue grows by roughly 9 small functions and 3 refs but keeps one responsibility (render the Aurelis map and its controls). Flagging as a watch-item for the next feature touching this file — see Refactoring Opportunities."
+    },
+    {
+      "pattern": "Shotgun surgery",
+      "found": false,
+      "notes": "Single file touched (plus its new spec); no other view, store, or API client changes."
+    },
+    {
+      "pattern": "Leaky abstraction",
+      "found": false,
+      "notes": "pickLandPoint's GeoPoint | null return hides Cesium's Cartesian3/Cartographic types from callers; no caller outside this file needs to know Cesium's picking internals."
+    },
+    {
+      "pattern": "Anemic domain model",
+      "found": false,
+      "notes": "Not applicable — no domain entity is introduced; draft-point/draft-line are UI-level saturdayMetadata tags, same status as the existing 'site'/'expedition' tags."
+    }
+  ],
+  "fitnessFunctions": [
+    {
+      "property": "No new src/ file or module is introduced for line-tool logic outside ReagentMapView.vue and its spec file",
+      "verification": "code-reviewer checks the diff's file list for this feature; any new file requires a stated reason before approval",
+      "owner": "code-reviewer"
+    },
+    {
+      "property": "Every saturdayMetadata assignment in ReagentMapView.vue is typed via the shared SaturdayMetadata type, not an inline object literal",
+      "verification": "code-reviewer confirms by diff review — no ESLint config exists anywhere in this repo yet, so this is manual judgment, not an automated gate",
+      "owner": "code-reviewer",
+      "judgmentOnly": true
+    },
+    {
+      "property": "No second GeoPoint-shaped type literal is declared in ReagentMapView.vue",
+      "verification": "code-reviewer greps the diff for a second `{ lat: number; lng: number }`-shaped declaration",
+      "owner": "code-reviewer"
+    },
+    {
+      "property": "Exactly one setInputAction(..., LEFT_CLICK) call exists in ReagentMapView.vue, registered in onMounted; no second registration appears in startLine() or elsewhere",
+      "verification": "code-reviewer confirms by diff review",
+      "owner": "code-reviewer"
+    }
+  ],
+  "refactoringOpportunities": [
+    {
+      "operation": "Extract Function/Module (deferred)",
+      "target": "pickLandPoint() and the draft-entity helpers in ReagentMapView.vue",
+      "reason": "If a second interactive drawing tool (beyond the line tool and the eventual save flow) is added later and needs the same click-to-geo-point logic, extract it into its own module then — not before. Flag for whichever order introduces that second consumer."
+    }
+  ],
+  "retrieval": {
+    "domainTerms": ["Expedition", "Reagent Site", "Aurelis"],
+    "issueRefs": ["reagent-map-line-tool"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "developerHandoffNotes": [
+    "Do not create any new file or module for this feature besides the Playwright spec — all state, the click handler, pickLandPoint, and the draft-entity helpers belong in ReagentMapView.vue beside addSiteEntities/addExpeditionEntities/flyToSite.",
+    "Add the SaturdayMetadata type ({ id, name, kind: 'site'|'expedition'|'draft-point'|'draft-line' }) and use it at all four saturdayMetadata assignment sites, replacing the existing untyped `unknown` cast literal — this touches addSiteEntities and addExpeditionEntities too, not just the two new functions.",
+    "Register the LEFT_CLICK handler exactly once in onMounted's happy path, after the existing viewer/sites/expeditions setup succeeds. Do not add any new cleanup in onBeforeUnmount — viewer.destroy() already tears down its own ScreenSpaceEventHandler.",
+    "Import GeoPoint from ../api/expeditions.ts; do not redeclare it.",
+    "Keep pickLandPoint, placePoint, addDraftPointEntity, and addDraftLineEntity as small guard-clause functions (ARCHITECTURE_RULES.md's 30-LOC ceiling, design-principles.md's 5-10 line Sandi Metz guidance) — do not combine them into one larger handleMapClick body.",
+    "Confirm the new button's placement never falls inside <header>, #cesiumContainer, reagent-site-list, or reagent-map-error — re-check against reagent-map-visual.spec.ts's four locators before assuming zero baseline diff, per analyst's architecturalFlags."
+  ],
+  "openQuestions": [
+    "No ESLint config exists anywhere in this repo today (confirmed by search), so the complexity and no-raw-any fitness functions analyst proposed, and the SaturdayMetadata typing fitness above, rely on code-reviewer's manual judgment rather than a CI gate. This is a pre-existing gap, not something this order should fix — flagging for devops-engineer/human awareness only."
+  ]
+}

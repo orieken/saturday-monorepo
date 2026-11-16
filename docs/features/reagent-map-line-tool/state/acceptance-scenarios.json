@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-line-tool",
+  "scenarios": [
+    {
+      "criterion": "The line tool MUST join two points placed on the land with a completed geodesic line that is ready to save.",
+      "name": "Placing two points on the land completes a line ready to save",
+      "given": ["The adventurer has started the line tool on the reagent map"],
+      "when": [
+        "The adventurer places a point at Moonwell Spring",
+        "The adventurer places a point at Ember Crag"
+      ],
+      "then": [
+        "A completed line joins Moonwell Spring and Ember Crag",
+        "The completed line is ready to be saved"
+      ]
+    },
+    {
+      "criterion": "After only one point is placed, the line tool MUST NOT show a completed line and that line MUST NOT be saveable.",
+      "name": "Placing only one point shows no completed line",
+      "given": ["The adventurer has started the line tool"],
+      "when": ["The adventurer places a point at Moonwell Spring"],
+      "then": [
+        "No completed line is shown",
+        "There is nothing to save"
+      ]
+    },
+    {
+      "criterion": "A completed line MUST follow the shortest path over Aurelis's surface between its two points, not a straight line on a flat projection.",
+      "name": "The completed line follows the shortest path over Aurelis's surface",
+      "given": ["The adventurer has started the line tool"],
+      "when": [
+        "The adventurer places a point at Thornveil Glade",
+        "The adventurer places a point at Glimmerdeep Caves"
+      ],
+      "then": [
+        "The line between Thornveil Glade and Glimmerdeep Caves follows the shortest path over Aurelis's curved surface, not a straight line on a flat map"
+      ]
+    },
+    {
+      "criterion": "The line tool MUST place a point anywhere on the near side of the globe, sea included, since 'the land' means the planet's surface for now.",
+      "name": "A point can be placed anywhere on the visible surface, including the sea",
+      "given": ["The adventurer has started the line tool"],
+      "when": ["The adventurer places a point over open sea on the visible side of Aurelis"],
+      "then": ["The point is placed there"]
+    },
+    {
+      "criterion": "A click on space beside the globe MUST place no point, show nothing, and leave the line tool waiting for its first point.",
+      "name": "Clicking beside the globe places nothing",
+      "given": ["The adventurer has started the line tool"],
+      "when": ["The adventurer clicks on space beside the globe"],
+      "then": [
+        "No point is placed",
+        "The line tool still waits for its first point"
+      ]
+    },
+    {
+      "criterion": "A click on the globe's edge, where the surface faces away from the camera, MUST place no point.",
+      "name": "Clicking the globe's far edge places nothing",
+      "given": ["The adventurer has started the line tool"],
+      "when": ["The adventurer clicks on the globe's edge, where the surface faces away from them"],
+      "then": [
+        "No point is placed",
+        "The line tool still waits for its first point"
+      ]
+    },
+    {
+      "criterion": "Starting the line tool again MUST discard any points from the line already in progress, so the new line has no points.",
+      "name": "Starting the line tool again discards the point already placed",
+      "given": ["The adventurer has started the line tool and placed one point"],
+      "when": ["The adventurer starts the line tool again"],
+      "then": [
+        "The new line has no points",
+        "The previously placed point is discarded"
+      ]
+    },
+    {
+      "criterion": "Every point and line the tool draws MUST carry saturdayMetadata with kind 'draft-point' or 'draft-line' so tests can read them through getEntities().",
+      "name": "Placed points and completed lines are marked as drafts, not yet saved",
+      "given": ["The adventurer has started the line tool"],
+      "when": [
+        "The adventurer places a point at Moonwell Spring",
+        "The adventurer places a point at Ember Crag"
+      ],
+      "then": [
+        "Each placed point and the completed line are identifiable as drafts, distinct from any saved expedition"
+      ]
+    }
+  ],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"],
+    "issueRefs": ["reagent-map-line-tool", "AC6", "AC7", "AC8", "AC9", "AC10", "AC14"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}
