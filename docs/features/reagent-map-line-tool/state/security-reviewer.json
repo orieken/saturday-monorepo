@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-line-tool",
+  "threatModelSummary": "This feature adds a two-click line-drawing tool to the existing Cesium globe view: a button arms the tool, a LEFT_CLICK handler resolves screen coordinates to a geographic point via pickEllipsoid + EllipsoidalOccluder visibility check, and up to two points are rendered as draft entities tagged with empty id/name placeholders. The diff touches exactly one file (ReagentMapView.vue), adds no new dependency, no new network call, no new persisted or transmitted data, and no auth/session/permission logic. Saving the drawn line is explicitly out of scope (reagent-map-save), so there is no trust boundary crossing in this change beyond the existing read-only fetchReagentSites/fetchExpeditions calls, which are unmodified. All STRIDE categories were assessed and none produced an actionable finding; this is a genuine no-security-surface feature, not an unreviewed one.",
+  "dependencyAudit": [
+    "No package.json or lockfile changes in this diff (git diff --stat confirms only ReagentMapView.vue changed) — no new dependency introduced, so no CVE/audit scan was needed for this stage."
+  ],
+  "stride": [
+    { "category": "SPOOFING", "assessed": "No auth, session, or identity logic touched. The existing Authorization header in fetchExpeditions (unchanged in this diff) is unaffected by the line tool." },
+    { "category": "TAMPERING", "assessed": "Draft points/line exist only as component-local Vue refs and Cesium entities; nothing is sent to an API, written to storage, or shared between users. There is no data for an attacker to tamper with because none crosses a boundary yet (saving is out of scope for this order)." },
+    { "category": "REPUDIATION", "assessed": "Ephemeral client-side UI state with no persistence or audit requirement in the spec; not applicable until reagent-map-save introduces a mutation to audit." },
+    { "category": "INFORMATION_DISCLOSURE", "assessed": "Checked both read and egress direction. Read: draft entities are tagged via tagEntity() with id:'' and name:'' — no site/user data is attached to drafts, so nothing sensitive is newly exposed via getEntities(). Egress: no new fetch/XHR/image/script URL is constructed from user click coordinates or any other input; pickLandPoint only calls Cesium math/geometry APIs (pickEllipsoid, EllipsoidalOccluder, Cartographic.fromCartesian) which stay in-process. No new outbound destination exists for data to leave through." },
+    { "category": "DENIAL_OF_SERVICE", "assessed": "handleMapClick is bounded by the toolStarted flag and draftPoints.length >= MAX_LINE_POINTS (2) guard, so repeated clicks after two points are placed are no-ops — no unbounded entity accumulation. No loop over user-controlled collections, no new network call to exhaust, no missing timeout introduced (the file's existing fetches already have timeouts, unchanged here)." },
+    { "category": "ELEVATION_OF_PRIVILEGE", "assessed": "No role, permission, or server-side authorization logic exists in this diff to elevate past. The tool draws locally for whoever is already viewing the page; it grants no new capability against the API." }
+  ],
+  "findings": [],
+  "filesModified": [],
+  "securityChecklist": [
+    { "item": "No hardcoded secrets, API keys, or tokens introduced", "checked": true },
+    { "item": "No new network request destination added (NFR: no request leaves app/mock-api origins)", "checked": true },
+    { "item": "No PII or sensitive data added to entity metadata, logs, or telemetry", "checked": true, "note": "Draft entities carry id:'' and name:'' — empty placeholders, not real data" },
+    { "item": "No new dependency requiring a CVE scan", "checked": true },
+    { "item": "Input from clicks (screen coordinates) only flows through Cesium's own geometry APIs, never into a DOM sink, template string, or request", "checked": true },
+    { "item": "DoS: click handling is bounded by MAX_LINE_POINTS guard", "checked": true },
+    { "item": "No auth/session/authorization code touched", "checked": true, "note": "N/A for this feature" }
+  ],
+  "notesForQa": [
+    "No security-driven test requirements beyond the functional acceptance criteria — there are no new auth paths, API calls, or data boundaries to add negative security test cases for.",
+    "Worth confirming at the functional level (already covered by AC9/AC10) that a click off the globe or on the far side truly places nothing — this is also the DoS/robustness boundary, not just a UX one."
+  ],
+  "notesForTechWriter": [],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Reagent Site", "Expedition", "Aurelis"],
+    "issueRefs": ["reagent-map-line-tool"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}
