@@ -3,7 +3,7 @@ intake: 1
 id: reagent-map-save
 type: feature
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-11-03
 requested-by: oscar
@@ -24,7 +24,7 @@ slice:
   manifest: docs/specs/reagent-map-spec/package.sha256
   covers: [AC11:ui, AC12:ui, AC13:ui, AC15]
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/.env, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, docs/features/reagent-map-save/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/.env, apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts, apps/ye-olde-magic-shop/.playwright-baselines/**, docs/features/reagent-map-save/**]
 ---
 
 # Save expeditions from the reagent map and turn it on
@@ -68,6 +68,10 @@ app behaves exactly as it does today.
       not shown and nothing is stored (spec AC15).
 - [ ] Given the change is complete, then `.env` sets `VITE_FEATURE_REAGENT_MAP=true` and the nav link
       is shown, with the flag still able to turn the view off.
+- [ ] Given the `@visual` baselines, then only a baseline this order changes on purpose is regenerated,
+      such as the page header once the nav link shows by default. Regenerate it in both images with
+      `scripts/ui-suite-in-chrome.sh --update-baselines` and `--ubi9 --update-baselines`, look at each
+      changed PNG, and say in the delivery record what changed and why. Do not raise a tolerance.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
       below 7, every changed line is covered by a test that can fail, and no file outside
       `scope.paths` changes, the run's own delivery record under `docs/features/reagent-map-save/` excepted.
@@ -92,6 +96,14 @@ app behaves exactly as it does today.
 ## Test Approach
 
 Unit tests for each change. The UI and API scenario suites are E1 and F1.
+
+One suite run takes about two minutes in each image, and a stage has 30 minutes. While developing,
+run only the reagent map specs. Run the full suite one image at a time, never two at once: three
+Cesium pages per run already share one machine, and two runs together make tests time out. Wait for
+a run to finish before ending the stage. The line tool's QA stage parked twice by doing both.
+
+`tests/reagent-map-pan-zoom.spec.ts` flakes under load. Its drag misses by 312 px when it does. That is
+known and not this order's to fix: re-run it alone with `--workers=1` before treating it as a regression.
 
 ## Open Questions
 
