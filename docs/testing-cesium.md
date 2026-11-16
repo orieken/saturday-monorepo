@@ -144,7 +144,7 @@ The script does these steps in order:
 | 2 | Docker is not installed |
 | 3 | The image build failed |
 | 4 | The app did not become healthy in 180 seconds |
-| 5 | `runner-check` failed |
+| 5 | `runner-check` failed: no WebGL, or the X pointer is not parked |
 | 6 | The dependency install or workspace build failed |
 | 64 | The script got an unknown argument |
 | Other | Playwright's own exit code |
@@ -195,6 +195,7 @@ above.
 | A stale pnpm store volume failed with a missing rollup binary | Unrelated to the code | Delete the `ui-suite-pnpm-store` volume |
 | A dragged site landed 19 px from the cursor | The globe had Aurelis's ellipsoid, but the scene, and so the camera controller, kept Earth's. No test used a real drag | Pass `ellipsoid` to the `Viewer` too. `reagent-map-pan-zoom.spec.ts` checks that a grabbed site stays within 8 px of the cursor |
 | Tests crashed or timed out at random, with a different test each run | Software rendering under emulation ran short of resources: 64 MB of shared memory, too many pages at once, and a large image | `--shm-size=1g`, `--workers=3`, and a 1024×512 image. 10 of 10 runs passed after that |
+| A drag sometimes missed by exactly 312 px, and the camera spun to the pole | All three workers' browser windows share one virtual display, with its real pointer at the screen's centre. When another worker's window opened under it, X sent our page a mouse move to that point in the middle of the drag. Cesium started the drag there, beside the globe, and switched to its trackball rotation | The entrypoint parks the pointer in the screen's corner, and `runner-check` fails if it is not there. The pan and zoom specs then passed 104 of 104 times under load in each image, against 7 to 14 failures before |
 
 **The lesson:** make the fixture as awkward as a real page. Offset the canvas, use a planet that isn't
 Earth-sized, and look at a screenshot at least once.

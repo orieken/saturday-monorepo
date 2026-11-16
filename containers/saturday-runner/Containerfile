@@ -89,8 +89,8 @@ RUN set -eux; \
     npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
     rm -rf /tmp/versions.lock
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh x-pointer.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/x-pointer.py
 
 # --- Non-root ---------------------------------------------------------------
 # The base image already ships a uid/gid 1000 "node" user; rename it rather
@@ -193,8 +193,8 @@ RUN set -eux; \
     npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
     rm -rf /tmp/versions.lock
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh x-pointer.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/x-pointer.py
 
 # --- Non-root ---------------------------------------------------------------
 RUN useradd -u 1000 -U -m -d /home/runner runner && \
