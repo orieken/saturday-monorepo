@@ -247,6 +247,47 @@ test_update_baselines_composes_with_ubi9() {
   assert_contains "--update-baselines --ubi9: passes --update-snapshots" "--update-snapshots" "$(cat "$log_order_b")"
 }
 
+test_default_publishes_no_viewer() {
+  local log
+  log="$FAKE_BIN_DIR/docker-default-watch.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" >/dev/null 2>&1
+  assert_not_contains "default: publishes no viewer port" "-p 127.0.0.1:6080:6080" "$(cat "$log")"
+  assert_not_contains "default: starts no viewer" "RUNNER_VIEWER=1" "$(cat "$log")"
+  assert_contains "default: runs three workers" "--workers=3" "$(cat "$log")"
+}
+
+test_watch_publishes_a_view_only_viewer() {
+  local log stdout
+  log="$FAKE_BIN_DIR/docker-watch.log"
+  stdout="$(PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" --watch 2>/dev/null)"
+  assert_contains "--watch: publishes noVNC on the host's loopback only" "-p 127.0.0.1:6080:6080" "$(cat "$log")"
+  assert_contains "--watch: starts the viewer" "RUNNER_VIEWER=1" "$(cat "$log")"
+  assert_contains "--watch: binds noVNC inside the container for the published port" "RUNNER_VIEWER_BIND=0.0.0.0" "$(cat "$log")"
+  assert_contains "--watch: the viewer is view-only" "RUNNER_VIEWER_VIEW_ONLY=1" "$(cat "$log")"
+  assert_contains "--watch: slows each step down" "RUNNER_SLOW_MO=500" "$(cat "$log")"
+  assert_contains "--watch: runs one test at a time" "--workers=1" "$(cat "$log")"
+  assert_contains "--watch: prints where to watch" "watch the tests at http://127.0.0.1:6080/vnc.html" "$stdout"
+}
+
+test_watch_keeps_an_explicit_slow_mo() {
+  local log
+  log="$FAKE_BIN_DIR/docker-watch-slowmo.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" RUNNER_SLOW_MO=0 \
+    bash "$SCRIPT_UNDER_TEST" --watch >/dev/null 2>&1
+  assert_contains "--watch with RUNNER_SLOW_MO=0: keeps 0" "RUNNER_SLOW_MO=0 " "$(cat "$log")"
+}
+
+test_watch_composes_with_ubi9() {
+  local log
+  log="$FAKE_BIN_DIR/docker-watch-ubi9.log"
+  PATH="$FAKE_BIN_DIR:/usr/bin:/bin" FAKE_DOCKER_LOG="$log" \
+    bash "$SCRIPT_UNDER_TEST" --ubi9 --watch >/dev/null 2>&1
+  assert_contains "--ubi9 --watch: builds the ubi9 target" "--target ubi9 -t saturday-runner:ubi9" "$(cat "$log")"
+  assert_contains "--ubi9 --watch: publishes the viewer" "-p 127.0.0.1:6080:6080" "$(cat "$log")"
+}
+
 main() {
   write_fake_docker
   write_fake_sleep
@@ -266,6 +307,10 @@ main() {
   test_without_update_baselines_never_passes_update_snapshots
   test_update_baselines_alone_passes_update_snapshots
   test_update_baselines_composes_with_ubi9
+  test_default_publishes_no_viewer
+  test_watch_publishes_a_view_only_viewer
+  test_watch_keeps_an_explicit_slow_mo
+  test_watch_composes_with_ubi9
 
   echo ""
   if [[ "$FAILURES" -eq 0 ]]; then
