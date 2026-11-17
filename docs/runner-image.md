@@ -93,7 +93,10 @@ saturday-runner:ubi9       the same set on UBI9, from UBI, Stream and EPEL
   checkout or the factory's worktree mounted at `/work`, with a pnpm store volume. One image serves
   every order without a rebuild, and nothing from the repo ends up in a layer.
 - **`RUNNER_VIEWER=1`** starts VNC and noVNC; off by default, so CI and the factory run with no
-  listening ports.
+  listening ports. noVNC listens on `RUNNER_VIEWER_BIND`, `127.0.0.1` by default.
+  `RUNNER_VIEWER_VIEW_ONLY=1` starts x11vnc with `-viewonly`, so the viewer sends no mouse or keys
+  into the display. `scripts/ui-suite-in-chrome.sh --watch` sets all three, binds noVNC to
+  `0.0.0.0` inside the container, and publishes it on the host's `127.0.0.1:6080` only.
 
 **Dropped**
 
