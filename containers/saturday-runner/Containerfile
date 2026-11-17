@@ -78,7 +78,10 @@ RUN ln -s /opt/runner-check/index.js /usr/local/bin/runner-check && \
 # ffmpeg — the version Playwright itself expects. Taken from versions.lock
 # (generated from the repository's own pnpm-lock.yaml), not a literal
 # hardcoded here, and checked against runner-check's own playwright-core pin
-# so the two can never silently drift apart.
+# so the two can never silently drift apart. Installed to a fixed path, not
+# the build user's ~/.cache: the build runs as root and the tests as runner,
+# so ~/.cache would point at two different directories.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 RUN set -eux; \
     . /tmp/versions.lock; \
     RUNNER_CHECK_PLAYWRIGHT="$(node -p "require('/opt/runner-check/package.json').dependencies['playwright-core']")"; \
@@ -87,6 +90,7 @@ RUN set -eux; \
       exit 1; \
     fi; \
     npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
+    chmod -R a+rX /opt/ms-playwright; \
     rm -rf /tmp/versions.lock
 
 COPY entrypoint.sh x-pointer.py /usr/local/bin/
@@ -183,6 +187,8 @@ COPY --from=builder /build/runner-check /opt/runner-check
 RUN ln -s /opt/runner-check/index.js /usr/local/bin/runner-check && \
     chmod +x /opt/runner-check/index.js
 
+# ffmpeg at a fixed path for the same reason as the debian target.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 RUN set -eux; \
     . /tmp/versions.lock; \
     RUNNER_CHECK_PLAYWRIGHT="$(node -p "require('/opt/runner-check/package.json').dependencies['playwright-core']")"; \
@@ -191,6 +197,7 @@ RUN set -eux; \
       exit 1; \
     fi; \
     npx --yes "playwright@${PLAYWRIGHT_VERSION}" install ffmpeg; \
+    chmod -R a+rX /opt/ms-playwright; \
     rm -rf /tmp/versions.lock
 
 COPY entrypoint.sh x-pointer.py /usr/local/bin/

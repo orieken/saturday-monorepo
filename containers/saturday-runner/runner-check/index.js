@@ -2,8 +2,9 @@
 // Baked-in WebGL smoke test for the Saturday runner image.
 // Launches Chrome and Edge headed, verifies a webgl2 context in each, and
 // writes the renderer strings, browser versions, and installed packages to
-// /work/evidence/webgl.txt. Exits non-zero if either context is null, or if
-// the display's X pointer is not parked in its corner (see x-pointer.py).
+// /work/evidence/webgl.txt. Exits non-zero if either context is null, if
+// the display's X pointer is not parked in its corner (see x-pointer.py), or
+// if Playwright's ffmpeg, which records videos, is missing.
 'use strict';
 
 const fs = require('fs');
@@ -54,13 +55,23 @@ function listInstalledPackages() {
   return output.trim().split('\n').sort().join('\n');
 }
 
+// The Containerfile installs ffmpeg under PLAYWRIGHT_BROWSERS_PATH. Without it,
+// every page fails to open once RUNNER_VIDEO=1 turns recording on.
+function findFfmpeg() {
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH || '';
+  const dirs = fs.existsSync(root) ? fs.readdirSync(root).filter((name) => name.startsWith('ffmpeg-')) : [];
+  const found = dirs.map((dir) => path.join(root, dir, 'ffmpeg-linux')).find((file) => fs.existsSync(file));
+  return found || null;
+}
+
 function readPointer() {
   return execFileSync('/usr/local/bin/x-pointer.py', ['where'], { encoding: 'utf8' }).trim();
 }
 
-function formatEvidence(results, packages, pointer) {
+function formatEvidence(results, packages, pointer, ffmpeg) {
   const lines = [`# runner-check evidence — ${new Date().toISOString()}`, ''];
-  lines.push(`X pointer: ${pointer} (expected ${PARKED_POINTER})`, '');
+  lines.push(`X pointer: ${pointer} (expected ${PARKED_POINTER})`);
+  lines.push(`ffmpeg: ${ffmpeg || 'MISSING'}`, '');
   for (const result of results) {
     lines.push(`${result.label}:`);
     lines.push(`  version: ${result.version}`);
@@ -85,7 +96,8 @@ async function main() {
   const results = await runChecks();
   const packages = listInstalledPackages();
   const pointer = readPointer();
-  const evidence = formatEvidence(results, packages, pointer);
+  const ffmpeg = findFfmpeg();
+  const evidence = formatEvidence(results, packages, pointer, ffmpeg);
 
   fs.mkdirSync(path.dirname(EVIDENCE_PATH), { recursive: true });
   fs.writeFileSync(EVIDENCE_PATH, evidence);
@@ -97,7 +109,10 @@ async function main() {
   if (pointer !== PARKED_POINTER) {
     console.error(`runner-check: X pointer is at ${pointer}, not parked at ${PARKED_POINTER}`);
   }
-  if (failed.length > 0 || pointer !== PARKED_POINTER) {
+  if (!ffmpeg) {
+    console.error(`runner-check: no ffmpeg under PLAYWRIGHT_BROWSERS_PATH (${process.env.PLAYWRIGHT_BROWSERS_PATH || 'unset'}); videos cannot be recorded`);
+  }
+  if (failed.length > 0 || pointer !== PARKED_POINTER || !ffmpeg) {
     process.exitCode = 1;
     return;
   }
@@ -105,6 +120,7 @@ async function main() {
     console.log(`runner-check: ${result.label} ${result.version} — ${result.renderer}`);
   }
   console.log(`runner-check: X pointer parked at ${pointer}`);
+  console.log(`runner-check: ffmpeg at ${ffmpeg}`);
 }
 
 main().catch((err) => {
