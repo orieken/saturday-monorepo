@@ -156,7 +156,7 @@ The script does these steps in order:
 | 2 | Docker is not installed |
 | 3 | The image build failed |
 | 4 | The app did not become healthy in 180 seconds |
-| 5 | `runner-check` failed: no WebGL, or the X pointer is not parked |
+| 5 | `runner-check` failed: no WebGL, the X pointer not parked, or no ffmpeg for videos |
 | 6 | The dependency install or workspace build failed |
 | 64 | The script got an unknown argument |
 | Other | Playwright's own exit code |

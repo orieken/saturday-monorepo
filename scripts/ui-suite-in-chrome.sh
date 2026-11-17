@@ -163,7 +163,7 @@ wait_for_app_healthy() {
 
 run_runner_check() {
   if ! docker exec "$CONTAINER_NAME" runner-check; then
-    echo "ui-suite-in-chrome: runner-check failed — no WebGL, or the X pointer is not parked; see its output above" >&2
+    echo "ui-suite-in-chrome: runner-check failed — no WebGL, the X pointer not parked, or no ffmpeg; see its output above" >&2
     exit "$EXIT_RUNNER_CHECK_FAILED"
   fi
 }
