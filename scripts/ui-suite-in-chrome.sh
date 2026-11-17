@@ -3,11 +3,14 @@
 # runner image, under Xvfb. One command for the factory's pre-ship check —
 # see docs/runner-image.md and containers/saturday-runner/.
 #
-# Usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines]   (run from the repository root)
+# Usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines] [--watch]   (run from the repository root)
 #   --ubi9               run in the image's ubi9 target instead of debian
 #   --update-baselines   regenerate this image's @visual baselines (passes
 #                        --update-snapshots=all to Playwright) instead of
 #                        comparing against the committed ones
+#   --watch              show the headed browser in your own browser through
+#                        noVNC on 127.0.0.1:6080 (view-only), one test at a
+#                        time and slowed down
 set -euo pipefail
 
 EXIT_NO_DOCKER=2
@@ -25,6 +28,9 @@ PNPM_STORE_VOLUME="ui-suite-pnpm-store"
 APP_HEALTH_TIMEOUT_SECONDS=180
 ARTIFACTS_DIR="$REPO_ROOT/artifacts/ui-suite"
 UPDATE_BASELINES=0
+WATCH=0
+WATCH_PORT=6080
+WATCH_SLOW_MO_MS=500
 
 parse_args() {
   for arg in "$@"; do
@@ -37,8 +43,11 @@ parse_args() {
       --update-baselines)
         UPDATE_BASELINES=1
         ;;
+      --watch)
+        WATCH=1
+        ;;
       *)
-        echo "ui-suite-in-chrome: unknown argument '$arg' (usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines])" >&2
+        echo "ui-suite-in-chrome: unknown argument '$arg' (usage: scripts/ui-suite-in-chrome.sh [--ubi9] [--update-baselines] [--watch])" >&2
         exit "$EXIT_USAGE"
         ;;
     esac
@@ -62,12 +71,33 @@ build_image() {
   fi
 }
 
+# The viewer options --watch adds to `docker run`: noVNC published on the
+# host's loopback only, and view-only, so no stray input reaches a test.
+# Plain array, no mapfile: macOS ships bash 3.2.
+WATCH_OPTIONS=()
+set_watch_options() {
+  if [[ "$WATCH" -eq 1 ]]; then
+    WATCH_OPTIONS=(-p "127.0.0.1:${WATCH_PORT}:6080" -e RUNNER_VIEWER=1 -e RUNNER_VIEWER_BIND=0.0.0.0 -e RUNNER_VIEWER_VIEW_ONLY=1)
+  fi
+}
+
+# Slow each step down while watching, unless RUNNER_SLOW_MO says otherwise.
+slow_mo() {
+  if [[ -n "${RUNNER_SLOW_MO:-}" || "$WATCH" -ne 1 ]]; then
+    printf '%s' "${RUNNER_SLOW_MO:-}"
+  else
+    printf '%s' "$WATCH_SLOW_MO_MS"
+  fi
+}
+
 start_container() {
+  set_watch_options
   # Chrome keeps renderer memory in /dev/shm; Docker's default 64 MB crashes tabs under load.
   docker run -d --rm --platform linux/amd64 --shm-size=1g --name "$CONTAINER_NAME" \
     -v "$REPO_ROOT:/work" \
     -v "$PNPM_STORE_VOLUME:/home/runner/.pnpm-store" \
-    -e "RUNNER_SLOW_MO=${RUNNER_SLOW_MO:-}" \
+    ${WATCH_OPTIONS[@]+"${WATCH_OPTIONS[@]}"} \
+    -e "RUNNER_SLOW_MO=$(slow_mo)" \
     -e "RUNNER_VIDEO=${RUNNER_VIDEO:-}" \
     -e "RUNNER_VARIANT=${VARIANT}" \
     "$IMAGE_TAG" \
@@ -144,8 +174,19 @@ run_runner_check() {
 # without --update-baselines" invariant is checkable at the call site alone.
 run_chrome_suite() {
   local update_snapshots_flag="$1"
+  local workers=3
+  if [[ "$WATCH" -eq 1 ]]; then
+    workers=1
+  fi
   docker exec "$CONTAINER_NAME" bash -lc \
-    "cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=3 ${update_snapshots_flag}"
+    "cd /work/apps/ye-olde-magic-shop && npx playwright test --project=chrome --workers=${workers} ${update_snapshots_flag}"
+}
+
+print_viewer() {
+  local password
+  password="$(docker exec "$CONTAINER_NAME" cat /home/runner/.vnc/password.txt)"
+  echo "ui-suite-in-chrome: watch the tests at http://127.0.0.1:${WATCH_PORT}/vnc.html?autoconnect=1&view_only=1"
+  echo "ui-suite-in-chrome: VNC password: ${password}"
 }
 
 copy_report() {
@@ -165,6 +206,9 @@ main() {
   start_app_and_mock_api
   wait_for_app_healthy
   run_runner_check
+  if [[ "$WATCH" -eq 1 ]]; then
+    print_viewer
+  fi
   local suite_exit=0
   local update_snapshots_flag=""
   if [[ "$UPDATE_BASELINES" -eq 1 ]]; then

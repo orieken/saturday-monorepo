@@ -130,6 +130,18 @@ scripts/ui-suite-in-chrome.sh          # debian
 scripts/ui-suite-in-chrome.sh --ubi9   # ubi9
 ```
 
+To watch the tests run, add `--watch`:
+
+```bash
+scripts/ui-suite-in-chrome.sh --watch
+```
+
+The browser already runs headed in the container, on a virtual display. `--watch` shows that
+display in your own browser. After `runner-check`, the script prints a link on
+`http://127.0.0.1:6080` and a password for this run. It runs one test at a time with a 500 ms pause
+on each step; set `RUNNER_SLOW_MO` to change the pause. The viewer is view-only: a mouse moving over
+it would reach the display and land in a test's drag.
+
 The script does these steps in order:
 
 1. Builds the image.

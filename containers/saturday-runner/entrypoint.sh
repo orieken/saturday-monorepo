@@ -34,21 +34,34 @@ park_pointer() {
   /usr/local/bin/x-pointer.py park >/dev/null
 }
 
+# x11vnc keeps the password encoded in passwd; password.txt keeps it readable
+# for the person watching (scripts/ui-suite-in-chrome.sh --watch prints it).
 generate_vnc_password_file() {
   local file="$HOME/.vnc/passwd"
   mkdir -p "$(dirname "$file")"
   local password
   password="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
   x11vnc -storepasswd "$password" "$file" >/dev/null 2>&1
+  (umask 077 && printf '%s\n' "$password" > "$HOME/.vnc/password.txt")
   printf '%s' "$file"
 }
 
+# RUNNER_VIEWER_BIND: where noVNC listens inside the container. 127.0.0.1 by
+# default; --watch sets 0.0.0.0 so `docker run -p 127.0.0.1:6080:6080` can
+# reach it, still from the host's loopback only.
+# RUNNER_VIEWER_VIEW_ONLY=1: the viewer sends no mouse or keys to the display,
+# which would land in a running test like any other stray input.
 start_viewer() {
   local passwd_file
   passwd_file="$(generate_vnc_password_file)"
-  x11vnc -display "$DISPLAY_NUM" -rfbport 5900 -localhost -rfbauth "$passwd_file" -forever -shared -quiet &
-  websockify --web=/usr/share/novnc 127.0.0.1:6080 localhost:5900 &
-  echo "entrypoint: RUNNER_VIEWER=1 — VNC password stored at $passwd_file (noVNC at http://127.0.0.1:6080)"
+  local bind="${RUNNER_VIEWER_BIND:-127.0.0.1}"
+  local view_only=()
+  if [ "${RUNNER_VIEWER_VIEW_ONLY:-}" = "1" ]; then
+    view_only=(-viewonly)
+  fi
+  x11vnc -display "$DISPLAY_NUM" -rfbport 5900 -localhost -rfbauth "$passwd_file" -forever -shared -quiet "${view_only[@]}" &
+  websockify --web=/usr/share/novnc "$bind:6080" localhost:5900 &
+  echo "entrypoint: RUNNER_VIEWER=1 — VNC password stored at $passwd_file (noVNC on $bind:6080)"
 }
 
 main() {
