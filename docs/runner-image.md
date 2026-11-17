@@ -65,8 +65,13 @@ saturday-runner:ubi9       the same set on UBI9, from UBI, Stream and EPEL
 - `playwright install ffmpeg`.
 - Evidence files: installed packages, browser versions, and a new one: the WebGL renderer.
 - The viewer: random password, `-localhost`, noVNC on 6080, published on 127.0.0.1 only.
-- An entrypoint script that starts the display, waits for `xdpyinfo`, starts openbox, and ends in
-  `exec "$@"`, so the test command's exit code is the container's. No supervisord.
+- An entrypoint script that starts the display, waits for `xdpyinfo`, starts openbox, parks the
+  X pointer, and ends in `exec "$@"`, so the test command's exit code is the container's. No
+  supervisord.
+- `x-pointer.py` parks the display's X pointer in the bottom-right corner. Xvfb starts it at the
+  screen's centre, under the browser windows. When one test worker opens or closes a window there,
+  X sends the pointer's position to another worker's page as a mouse move, in the middle of a drag.
+  `runner-check` fails if the pointer is not parked.
 
 **Kept from Saturday**
 

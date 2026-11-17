@@ -27,6 +27,13 @@ start_window_manager() {
   openbox &
 }
 
+# Xvfb puts the pointer at the screen's centre, under the browser windows. A
+# window opening or closing under it sends that position to the page below as
+# a mouse move, in the middle of a test's drag. Park it in a corner instead.
+park_pointer() {
+  /usr/local/bin/x-pointer.py park >/dev/null
+}
+
 generate_vnc_password_file() {
   local file="$HOME/.vnc/passwd"
   mkdir -p "$(dirname "$file")"
@@ -48,6 +55,7 @@ main() {
   start_xvfb
   wait_for_display
   start_window_manager
+  park_pointer
   if [ "${RUNNER_VIEWER:-}" = "1" ]; then
     start_viewer
   fi

@@ -2,7 +2,8 @@
 // Baked-in WebGL smoke test for the Saturday runner image.
 // Launches Chrome and Edge headed, verifies a webgl2 context in each, and
 // writes the renderer strings, browser versions, and installed packages to
-// /work/evidence/webgl.txt. Exits non-zero if either context is null.
+// /work/evidence/webgl.txt. Exits non-zero if either context is null, or if
+// the display's X pointer is not parked in its corner (see x-pointer.py).
 'use strict';
 
 const fs = require('fs');
@@ -16,6 +17,10 @@ const EVIDENCE_PATH = process.env.RUNNER_CHECK_EVIDENCE || '/work/evidence/webgl
 // a container with no real GPU — without these, webgl2 context creation
 // returns null even headed (contrary to new-headless's documented
 // --enable-unsafe-swiftshader need, the same gap shows up here).
+// entrypoint.sh parks the pointer at the bottom-right of Xvfb's 1920x1080
+// screen. Left at the centre, it sends stray mouse moves into tests' drags.
+const PARKED_POINTER = '1919,1079';
+
 const SOFTWARE_GL_ARGS = ['--use-gl=angle', '--use-angle=swiftshader'];
 
 const BROWSERS = [
@@ -49,8 +54,13 @@ function listInstalledPackages() {
   return output.trim().split('\n').sort().join('\n');
 }
 
-function formatEvidence(results, packages) {
+function readPointer() {
+  return execFileSync('/usr/local/bin/x-pointer.py', ['where'], { encoding: 'utf8' }).trim();
+}
+
+function formatEvidence(results, packages, pointer) {
   const lines = [`# runner-check evidence — ${new Date().toISOString()}`, ''];
+  lines.push(`X pointer: ${pointer} (expected ${PARKED_POINTER})`, '');
   for (const result of results) {
     lines.push(`${result.label}:`);
     lines.push(`  version: ${result.version}`);
@@ -74,22 +84,27 @@ async function runChecks() {
 async function main() {
   const results = await runChecks();
   const packages = listInstalledPackages();
-  const evidence = formatEvidence(results, packages);
+  const pointer = readPointer();
+  const evidence = formatEvidence(results, packages, pointer);
 
   fs.mkdirSync(path.dirname(EVIDENCE_PATH), { recursive: true });
   fs.writeFileSync(EVIDENCE_PATH, evidence);
 
   const failed = results.filter((result) => result.renderer === null);
-  if (failed.length > 0) {
-    for (const result of failed) {
-      console.error(`runner-check: ${result.label} has no webgl2 context`);
-    }
+  for (const result of failed) {
+    console.error(`runner-check: ${result.label} has no webgl2 context`);
+  }
+  if (pointer !== PARKED_POINTER) {
+    console.error(`runner-check: X pointer is at ${pointer}, not parked at ${PARKED_POINTER}`);
+  }
+  if (failed.length > 0 || pointer !== PARKED_POINTER) {
     process.exitCode = 1;
     return;
   }
   for (const result of results) {
     console.log(`runner-check: ${result.label} ${result.version} — ${result.renderer}`);
   }
+  console.log(`runner-check: X pointer parked at ${pointer}`);
 }
 
 main().catch((err) => {
