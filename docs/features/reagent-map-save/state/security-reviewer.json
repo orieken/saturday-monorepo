@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-save",
+  "threatModelSummary": "Small, additive diff: a new saveExpedition() adapter function in expeditions.ts and a save handler in ReagentMapView.vue, plus flipping VITE_FEATURE_REAGENT_MAP on. No new dependencies, no new server endpoint (POST /api/expeditions and its requireAuth/ownership/zero-length checks already existed, unchanged, in apps/mock-api/server.js from the prior reagent-map-expeditions feature). The client-side authStore.isAuthenticated check in saveLine() is UX convenience only; the server's requireAuth middleware remains the actual trust boundary, deriving ownership from req.userId (the session token) and never from the request body, which the POST body (JSON.stringify({ from, to })) confirms — no owner/adventurer identifier is sent by the client. The server's own error text (including the AC13 zero-length message) is surfaced verbatim via a thin Error wrapper, which is a correct leaky-abstraction avoidance, not a disclosure of anything the server didn't already decide to say. No auth/session/token logic was added or changed; no secrets, headers, or PII appear in any new code. Net new attack surface is minimal and no Critical or High findings were found.",
+  "dependencyAudit": [
+    "No package.json, package-lock.json, or pnpm-lock.yaml changed in this diff (confirmed via git diff) — no new dependencies introduced, so no new CVE surface to audit for this stage."
+  ],
+  "stride": [
+    {"category": "SPOOFING", "assessed": "saveExpedition() reuses getAuthHeaders() (same localStorage 'dnd_auth_token' key authStore.ts also reads/writes), attaching Authorization: Bearer <token> exactly as fetchExpeditions() already does. The server's requireAuth middleware (unchanged) is the actual identity check; the client's authStore.isAuthenticated gate in saveLine() is a UX shortcut only and cannot be used to impersonate another adventurer since the server never trusts a client-supplied identity."},
+    {"category": "TAMPERING", "assessed": "POST body is JSON.stringify({ from, to }) only — no owner/id field a client could tamper with to claim another adventurer's identity. Server-side isValidPoint()/geodesicDistanceKm() validation (unchanged) still bounds and checks the two points before persisting; this diff adds no new server-side input handling."},
+    {"category": "REPUDIATION", "assessed": "No new logging was added by this diff. The server's existing console.log({expeditionId, owner}, 'Expedition saved') (unchanged) already records who saved what; not a regression introduced here."},
+    {"category": "INFORMATION_DISCLOSURE", "assessed": "saveMessage renders err.message via Vue text interpolation ({{ saveMessage }}), which auto-escapes, so even a maximally adversarial server error string cannot execute as HTML — no XSS path. Error text surfaced (401 'Unauthorized', 422 zero-length message, generic timeout/network fallback) contains no stack traces, internal paths, or PII. One pre-existing non-blocking edge (noted below) is a parsing error leaking only 'this wasn't JSON', not data."},
+    {"category": "INFORMATION_DISCLOSURE", "assessed": "Egress check: saveExpedition() targets the same API_BASE resolution fetchExpeditions() already uses (build-time VITE_API_BASE, else localhost:8001/mock-api:8001) — no new outbound destination, satisfying the spec's NFR that no request leaves the app's and mock API's own origins."},
+    {"category": "DENIAL_OF_SERVICE", "assessed": "saveExpedition() sets the same REQUEST_TIMEOUT_MS=5000ms AbortController timeout as fetchExpeditions() — no unbounded wait. isSaving guards against a double-click producing two in-flight POSTs from the UI. Server-side rate limiting/idempotency for POST /api/expeditions is unchanged and remains a client-side-only prevention, already accepted as a judgment-only trade-off in architecture-notes.md; noted below as pre-existing, not a new gap."},
+    {"category": "ELEVATION_OF_PRIVILEGE", "assessed": "Ownership (req.userId) is still derived entirely server-side from the session token; the GET /api/expeditions filter (owner === 'shop' || owner === userId, unchanged) and the POST handler's newExpedition.owner = req.userId (unchanged) mean this diff introduces no path for an adventurer to read or write another adventurer's expedition."}
+  ],
+  "findings": [
+    {
+      "severity": "LOW",
+      "title": "Double-submit and save-volume limits are enforced client-side only",
+      "location": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue:132,275 (isSaving); apps/mock-api/server.js:141 (POST /api/expeditions, unchanged)",
+      "category": "DENIAL_OF_SERVICE",
+      "description": "isSaving prevents a double-click from the UI producing two in-flight POSTs, but a caller bypassing the UI (devtools, curl, a buggy retry loop) with a valid token can still issue unlimited POST /api/expeditions requests — there is no server-side rate limit or idempotency key. Blast radius is limited to the caller's own stored expeditions (ownership is still server-derived, so this cannot affect other adventurers' data), and the endpoint itself is unchanged by this diff — architecture-notes.md already accepted the client-side-only guard as a judgment-only trade-off. Flagged for awareness; no fix applied since server.js is out of this stage's changed files and the trade-off was already reviewed.",
+      "verification": "Not applicable — tracked as existing tech debt, not a regression from this diff."
+    },
+    {
+      "severity": "INFO",
+      "title": "Non-JSON error body would surface a raw parse error instead of a friendly message",
+      "location": "apps/ye-olde-magic-shop/src/api/expeditions.ts:52",
+      "category": "INFORMATION_DISCLOSURE",
+      "description": "On a non-ok response, `await res.json()` can throw if the server ever returns a non-JSON error body (e.g. an HTML 500 page from an intermediary). That SyntaxError's message (e.g. 'Unexpected token < in JSON at position 0') would then be shown to the adventurer via saveMessage instead of a friendly fallback. This discloses only that parsing failed, not any data, path, or secret — already identified by code-reviewer as non-blocking because apps/mock-api/server.js's documented contract always returns a JSON error body for non-ok /api/expeditions responses today. No fix applied; confirming the prior call was correct from a security lens as well.",
+      "verification": "Not applicable — no exploitable disclosure; documented for awareness only."
+    }
+  ],
+  "filesModified": [],
+  "securityChecklist": [
+    {"item": "No hardcoded secrets, API keys, or tokens in the diff", "checked": true},
+    {"item": "No new dependencies introduced (verified via git diff on lockfiles)", "checked": true},
+    {"item": "Server derives ownership from the session token only, never from client-supplied request body fields", "checked": true, "note": "Unchanged server.js behavior; POST body carries only { from, to }"},
+    {"item": "Auth enforcement happens server-side (requireAuth), not only in client UI logic", "checked": true, "note": "ReagentMapView.vue's isAuthenticated check is UX convenience only"},
+    {"item": "Every new network call has an explicit timeout (architecture-guardrails.md #5)", "checked": true, "note": "saveExpedition() uses the existing REQUEST_TIMEOUT_MS=5000ms AbortController pattern"},
+    {"item": "Error text shown to the user is rendered via auto-escaping template interpolation, not v-html", "checked": true},
+    {"item": "No PII, tokens, or secrets appear in any new log statement", "checked": true, "note": "No new logging added by this diff"},
+    {"item": "No new outbound destination introduced (egress stays within app/mock-api origins)", "checked": true}
+  ],
+  "notesForQa": [
+    "Verify the AC12 signed-out path shows 'Sign in to save this expedition.' and triggers zero POST /api/expeditions calls (page.route interception), per implementation-notes.md.",
+    "Also worth a quick manual/exploratory check (not required to block): simulate a mid-session token expiry (clear the server-side session but leave authStore hydrated) and confirm the resulting 401 surfaces the server's 'Unauthorized' text in save-line-message without crashing the view — this is a UX edge, not a security gap, since the server still correctly rejects the write.",
+    "No new dependencies and no auth/session code changed, so no additional security-specific test scenarios are required beyond what analysis.md's QA Tasks already scope (the expeditions.json cross-test lock and reagent-map-save.spec.ts)."
+  ],
+  "notesForTechWriter": [
+    "No new environment secrets were introduced — .env's only change is flipping the existing VITE_FEATURE_REAGENT_MAP build-time flag to true; nothing new to document in secrets/config handling.",
+    "Saving an expedition requires sign-in, enforced server-side via the existing Bearer-token session check; this is worth one line in any user-facing or API doc update QA/tech-writer produce for this feature."
+  ],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"],
+    "issueRefs": ["reagent-map-save"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

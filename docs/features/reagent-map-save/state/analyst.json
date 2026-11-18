@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-save",
+  "summary": "Lets a signed-in adventurer save the line tool's completed draft (two points placed on the land) through the mock API's existing POST /api/expeditions, show it as a normal expedition the moment it saves and again on every later visit, and refuse the save with a visible message when nobody is signed in or the two points are the same place within 1 km — then turns the reagent map on by default by flipping VITE_FEATURE_REAGENT_MAP to true in .env (currently false), while the flag can still turn it off. Purely additive within the ReagentMapView/expeditions.ts pattern reagent-map-line-tool and reagent-map-expeditions already established (AbortController/REQUEST_TIMEOUT_MS fetch shape, saturdayMetadata entity tagging, draftPoints/draftEntities state) — no new package, base class, or layer boundary. apps/mock-api/server.js already implements POST /api/expeditions's full contract (requireAuth, isValidPoint, geodesicDistanceKm zero-length rejection at MIN_EXPEDITION_DISTANCE_KM=1, per-adventurer ownership via req.userId) and is out of scope. The order also adds a new cross-cutting test-isolation requirement (reagent-map specs must not corrupt each other's view of apps/mock-api/data/expeditions.json under --workers=3 --repeat-each=3) whose concrete mechanism is not yet decided — see architecturalFlags.",
+  "acceptanceCriteria": [
+    {
+      "statement": "Elara, signed in, MUST see her saved expedition drawn again after reopening the reagent map, and the shop MUST hold it with both ends within 1 km of where she placed them (spec AC11, rule R6).",
+      "examples": [
+        "Elara draws Moonwell Spring to Ember Crag, clicks save, reloads /reagent-map: the expedition is drawn, and a direct GET /api/expeditions with her token includes it with both ends within 1 km of the drawn points."
+      ]
+    },
+    {
+      "statement": "When no adventurer is signed in and a completed line is on the map, saving it MUST ask the adventurer to sign in and MUST NOT send a POST or store anything (spec AC12, rule R7).",
+      "examples": [
+        "Signed out, clicking save on a completed line shows a sign-in message; no POST /api/expeditions is observed via route interception; a follow-up GET /api/expeditions is unchanged."
+      ]
+    },
+    {
+      "statement": "When both points of a completed line are less than 1 km apart, saving it MUST show the server's own zero-length message and MUST NOT store anything (spec AC13, rule R7).",
+      "examples": [
+        "Elara places both points on the same spot and saves: the message 'Zero-length line: from and to are the same place' (the 422 body's own text, never a client-recomputed one) is shown, and GET /api/expeditions afterward has no new entry."
+      ]
+    },
+    {
+      "statement": "An unsaved line MUST NOT be shown, and nothing MUST be stored, after the adventurer leaves the reagent map and opens it again (spec AC15, rule R8).",
+      "examples": [
+        "Elara places one or two points, never clicks save, navigates away and back to /reagent-map: no draft point or draft line entity remains, and GET /api/expeditions is unchanged."
+      ]
+    },
+    {
+      "statement": "Once this order ships, apps/ye-olde-magic-shop/.env MUST set VITE_FEATURE_REAGENT_MAP=true so the nav link and route show by default, and setting the variable to false MUST still hide both."
+    },
+    {
+      "statement": "Every test that saves an expedition MUST restore apps/mock-api/data/expeditions.json afterward, and no test MUST see an expedition another test saved, proven by running the reagent map specs at --workers=3 --repeat-each=3 with reagent-map-expeditions.spec.ts still counting exactly Elara's expeditions. No existing count assertion MUST be loosened to make this pass."
+    },
+    {
+      "statement": "Only a @visual baseline this order changes on purpose MUST be regenerated, in both runner images, via scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines; every changed PNG MUST be viewed by eye and the delivery record MUST state what changed and why; no tolerance MUST be raised."
+    },
+    {
+      "statement": "Every new or changed function MUST keep cyclomatic complexity below 7, every changed line MUST be covered by a test proven able to fail, and no file outside scope.paths MUST change except this order's own delivery record under docs/features/reagent-map-save/."
+    }
+  ],
+  "nonFunctionalRequirements": [
+    {
+      "category": "security",
+      "requirement": "The save request MUST NOT leave the app's own origin or the mock API's own origin, matching every other client call in ReagentMapView/expeditions.ts."
+    },
+    {
+      "category": "security",
+      "requirement": "The client MUST NOT send an owner or adventurer identifier in the save request body; apps/mock-api/server.js derives ownership from req.userId (session token) alone, so one adventurer's expedition can never be attributed to another."
+    },
+    {
+      "category": "performance",
+      "requirement": "saveExpedition() MUST set an explicit AbortController timeout, matching fetchExpeditions()'s existing REQUEST_TIMEOUT_MS budget, rather than waiting on the network indefinitely.",
+      "threshold": {
+        "metric": "request timeout",
+        "value": 5000,
+        "unit": "ms"
+      }
+    },
+    {
+      "category": "accessibility",
+      "requirement": "The save control and the sign-in/zero-length message MUST be reachable by keyboard and announced to a screen reader, matching the existing start-line-tool button (aria-label) and reagent-map-error (role=\"alert\") conventions."
+    }
+  ],
+  "proposedFitnessFunctions": [
+    {
+      "property": "Every new or changed function in this order keeps cyclomatic complexity below 7",
+      "verification": "ESLint complexity rule capped at 6 per typescript-conventions.md, run in CI lint",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "No POST to /api/expeditions occurs when authStore.isAuthenticated is false",
+      "verification": "Playwright spec (reagent-map-save.spec.ts) intercepts network requests via page.route and asserts zero POST /api/expeditions when save is clicked signed out",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "A successful saveLine() call issues exactly one network request (no refetch via GET after the POST)",
+      "verification": "Playwright spec counts requests to /api/expeditions during the save flow and asserts count === 1",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "A double-click on the save control cannot produce two POSTs against the non-idempotent POST /api/expeditions",
+      "verification": "Playwright spec rapid-clicks save-line-tool and asserts exactly one POST is observed and exactly one expedition is stored",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "Every changed line is covered by a test proven able to fail",
+      "verification": "No coverage tool is wired for this Playwright-only app (no vitest/istanbul layer under apps/ye-olde-magic-shop/src). qa-engineer demonstrates each new assertion fails against the pre-change view, per test-repair-contract.md, and records this in qa-report.md.",
+      "owner": "qa-engineer",
+      "judgmentOnly": true
+    },
+    {
+      "property": "No test sees an expedition another test saved when the reagent map specs run at --workers=3 --repeat-each=3",
+      "verification": "Mechanism not yet decided — see architecturalFlags. Once decided, verified by running apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts at --workers=3 --repeat-each=3 and confirming reagent-map-expeditions.spec.ts's exact-count assertions still pass.",
+      "owner": "architect",
+      "judgmentOnly": true
+    },
+    {
+      "property": "Only a @visual baseline this order intentionally changes is regenerated; every other baseline stays byte-identical",
+      "verification": "scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines regenerate the PNGs; each diff is viewed by eye and the reason (or 'unchanged') is stated in the delivery record",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "No file outside scope.paths changes, except this order's own delivery record",
+      "verification": "loom's own scope guard against the claim's scope.paths glob — not a new CI check this order adds",
+      "owner": "devops-engineer"
+    }
+  ],
+  "outOfScope": [
+    "Naming, editing, or deleting an expedition.",
+    "Circles and later waves of the reagent map.",
+    "The full E1 (UI) and F1 (API) scenario suites with injected-fault judges (including apps/ye-olde-magic-shop/tests/reagent-map-api.spec.ts's own @AC11-@AC13 tests) — run by hand from the spec package, not by this pipeline.",
+    "Any change to apps/mock-api/server.js — requireAuth, isValidPoint, geodesicDistanceKm zero-length rejection, and per-adventurer ownership already exist and must not be re-implemented client-side.",
+    "Any change to apps/ye-olde-magic-shop/playwright.config.ts — it lies outside scope.paths, so the cross-file test-isolation mechanism must be achieved inside the in-scope spec files themselves."
+  ],
+  "surfaces": {
+    "ui": true,
+    "runtime": false
+  },
+  "boundedContext": {
+    "owning": "Expedition Planning (Ye Olde Magic Shop demo app) — DOMAIN_DICTIONARY.md section 7",
+    "crossings": [
+      "apps/mock-api POST /api/expeditions — pre-existing endpoint from a prior order; this feature only calls it as a client, no backend change"
+    ]
+  },
+  "domainEvents": {
+    "commands": ["SaveExpedition"],
+    "eventsProduced": ["ExpeditionSaved", "ExpeditionRejected"],
+    "owningAggregates": ["Expedition"],
+    "readModels": ["VisibleExpeditions (existing GET /api/expeditions read model; now also returns an adventurer's own expedition the moment they save it)"]
+  },
+  "affectedComponents": [
+    {
+      "path": "apps/ye-olde-magic-shop/src/api/expeditions.ts",
+      "reason": "Add saveExpedition(from, to): Promise<Expedition> — POST to the existing endpoint, same API_BASE/AbortController/REQUEST_TIMEOUT_MS=5000/getAuthHeaders shape as fetchExpeditions(), surfacing the server's own error message verbatim on a non-ok response."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "Add a save control for a completed draft line, gated on authStore.isAuthenticated before any network call (AC12), an isSaving in-flight guard against double-click (performance-engineer finding), a message region for the sign-in/zero-length/failure text, and promotion of a successful save's response into a normal expedition entity while clearing draft state."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/.env",
+      "reason": "Flip VITE_FEATURE_REAGENT_MAP from false (current value, confirmed) to true; isReagentMapEnabled()'s existing behavior for 'false' is unchanged, so the flag still turns the view off."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/tests/reagent-map-save.spec.ts",
+      "reason": "New Playwright UI spec for save-expedition.feature's AC11/AC12/AC13/AC15 scenarios, reusing signInAs() from reagent-map-expeditions.spec.ts and the getEntities()/draft-* convention from reagent-map-line-tool.spec.ts; must also implement whatever cross-file isolation mechanism is decided (see architecturalFlags)."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/.playwright-baselines/debian/reagent-map-header.png",
+      "reason": "Regenerate and view per the claim's own AC. Likely unchanged: reagent-map-visual.spec.ts only runs inside scripts/ui-suite-in-chrome.sh, which already overrides VITE_FEATURE_REAGENT_MAP=true for every capture regardless of .env's own default."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/.playwright-baselines/ubi9/reagent-map-header.png",
+      "reason": "Same regeneration and same expected-unchanged reasoning, ubi9 runner image."
+    },
+    {
+      "path": "docs/features/reagent-map-save/",
+      "reason": "Delivery record stating what changed in each baseline (or that nothing changed and why), confirming the flag flip, and stating the chosen test-isolation mechanism."
+    }
+  ],
+  "dataModelChanges": [],
+  "apiChanges": [],
+  "newDependencies": [],
+  "architecturalFlags": [
+    "Unresolved: the cross-file Playwright worker-isolation mechanism required by the claim's new AC (no test sees an expedition another test saved, proven at --workers=3 --repeat-each=3) is not decided. reagent-map-save.spec.ts (new, writes), reagent-map-api.spec.ts (existing, writes, but only test.describe.configure({mode:'serial'}) within its own file), and reagent-map-expeditions.spec.ts (existing, asserts exact entity counts) can run in different workers concurrently against the same shared apps/mock-api/data/expeditions.json, and apps/ye-olde-magic-shop/playwright.config.ts (fullyParallel: true, single shared webServer) is outside this order's scope.paths, so project dependencies or a parallelism change there are not available. Needs an architect decision on an in-scope mechanism (e.g. a cross-file file-lock/mutex fixture used by every expeditions.json-writing spec) that is also reconciled against architecture-guardrails.md #5's ban on custom retry-with-sleep loops before developer/qa-engineer implement it.",
+    "Carried forward from performance-engineer's prior (now stale) gate: canSaveLine only guards point count, not an in-flight request, so a double-click on save-line-tool within the 5s timeout window can send two POSTs against the non-idempotent POST /api/expeditions. Required before developer sign-off: an isSaving ref set at the top of saveLine() and cleared in a finally, mirrored onto the save button's :disabled binding alongside the existing !canSaveLine check — a one-line addition to the handler, not a new control. Included in Developer Tasks below."
+  ],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"],
+    "issueRefs": ["reagent-map-save", "reagent-map-line-tool"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "tasks": {
+    "developer": [
+      "In apps/ye-olde-magic-shop/src/api/expeditions.ts, add export async function saveExpedition(from: GeoPoint, to: GeoPoint): Promise<Expedition>: POST to `${API_BASE}/api/expeditions` with headers { 'Content-Type': 'application/json', ...getAuthHeaders() }, body JSON.stringify({ from, to }), and the same AbortController/REQUEST_TIMEOUT_MS=5000ms timeout as fetchExpeditions().",
+      "In saveExpedition(), on a non-ok response, parse the JSON body and throw new Error(body.error ?? 'Failed to save expedition.') so the server's own message (e.g. the 422 zero-length text) reaches the caller verbatim; on ok, return the parsed Expedition.",
+      "In ReagentMapView.vue, import saveExpedition alongside fetchExpeditions, and useAuthStore from '../stores/authStore'; call const authStore = useAuthStore() (App.vue already calls authStore.hydrate() before this view mounts, so isAuthenticated is ready to read).",
+      "Add const canSaveLine = computed(() => draftPoints.value.length === MAX_LINE_POINTS), const saveMessage = ref<string | null>(null), and const isSaving = ref(false) (the double-click guard carried forward from performance-engineer's finding).",
+      "Add async function saveLine(): Promise<void>: return early if !canSaveLine.value or isSaving.value; if !authStore.isAuthenticated, set saveMessage to a sign-in prompt and return without calling saveExpedition (AC12 — no network call when signed out); otherwise set isSaving.value = true and call saveExpedition(draftPoints.value[0], draftPoints.value[1]) in a try/catch/finally that clears isSaving.value.",
+      "On saveLine()'s success path: clear saveMessage, call clearDraftEntities(), reset draftPoints to [] and toolStarted to false, append the returned expedition to expeditions.value, and call addExpeditionEntities(cesium!, viewer!, ellipsoid!, [returned expedition]) so it is drawn exactly like any other expedition (AC11) — no refetch of the whole list.",
+      "On saveLine()'s catch path: set saveMessage to `err instanceof Error ? err.message : 'Failed to save expedition.'` and leave the draft line and its entities untouched so the adventurer can retry without redrawing.",
+      "Add a save button beside start-line-tool, outside all four @visual-captured regions (header, reagent-site-list, reagent-map-error, #cesiumContainer): data-testid=\"save-line-tool\", aria-label=\"Save this expedition\", v-if=\"toolStarted\", :disabled=\"!canSaveLine || isSaving\", @click=\"saveLine\".",
+      "Add a message element next to line-tool-status: <p v-if=\"saveMessage\" data-testid=\"save-line-message\" role=\"alert\">{{ saveMessage }}</p>.",
+      "In apps/ye-olde-magic-shop/.env, change VITE_FEATURE_REAGENT_MAP=false to VITE_FEATURE_REAGENT_MAP=true."
+    ],
+    "qa": [
+      "Write apps/ye-olde-magic-shop/tests/reagent-map-save.spec.ts covering: Elara signed in saves a completed line and, after a reload, sees it drawn and confirms via a direct GET /api/expeditions (with her token) that the API holds it within 1 km of where she placed it (AC11); signed out, clicking save on a completed line shows the sign-in message and a follow-up GET /api/expeditions shows no new entry, with no POST observed via page.route interception (AC12); both points placed under 1 km apart, save is attempted, the server's own zero-length message is shown and no new expedition appears via GET (AC13); a line left unsaved (one or two points) survives a navigate-away-and-back and shows no draft entities and no new GET /api/expeditions entry (AC15); rapid double-clicking save produces exactly one POST and one stored expedition.",
+      "Reuse signInAs() from reagent-map-expeditions.spec.ts for Elara's token and the draft-point/draft-line getEntities() convention from reagent-map-line-tool.spec.ts for placing the two points before saving.",
+      "Implement whatever cross-file isolation mechanism the architect decides for keeping expeditions.json writers apart from readers, and apply it to both reagent-map-save.spec.ts and the existing reagent-map-api.spec.ts; do not loosen reagent-map-expeditions.spec.ts's exact-count assertions to make this pass.",
+      "Prove isolation by running the reagent map specs at --workers=3 --repeat-each=3 and recording the result (and the mechanism used) in qa-report.md.",
+      "For every new assertion, confirm it fails against the pre-change view (or cite why the behavior is new) per test-repair-contract.md, and record this in qa-report.md.",
+      "While developing, run only the reagent-map specs under --project=chrome; before ship, run the full suite via scripts/ui-suite-in-chrome.sh in one runner image at a time (never both at once) and wait for each run to finish, per the claim's own Test Approach note.",
+      "If reagent-map-pan-zoom.spec.ts flakes, re-run it alone with --workers=1 before treating it as a regression — known, not this order's to fix.",
+      "Regenerate the four existing @visual baselines in both runner images with scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines; view every PNG; record in the delivery record whether each changed and why, without raising any tolerance. Expect no change, but the regeneration-and-review step itself is still required."
+    ],
+    "techWriter": [
+      "Write docs/features/reagent-map-save/ per CLAUDE.md's Delivery Summary Format: confirm the .env flag flip, state the outcome of each of the four baseline reviews (changed or unchanged, and why), state the chosen test-isolation mechanism, and summarize the save/sign-in/zero-length behavior for AC11-AC13 and AC15."
+    ],
+    "devops": []
+  },
+  "edgeCases": [
+    {
+      "case": "Save is attempted with fewer than two draft points.",
+      "handling": "The save button is hidden until toolStarted and disabled until canSaveLine (draftPoints.length === MAX_LINE_POINTS); saveLine() also returns early on the same guard."
+    },
+    {
+      "case": "No adventurer signed in, completed line on the map.",
+      "handling": "authStore.isAuthenticated is checked before any network call; a sign-in message is shown and saveExpedition() is never invoked, so no POST reaches the server (AC12)."
+    },
+    {
+      "case": "Both points less than 1 km apart.",
+      "handling": "The POST is sent (the client does not duplicate the server's geodesicDistanceKm logic); the server's 422 response body.error is displayed verbatim, never a client-recomputed message (AC13)."
+    },
+    {
+      "case": "Save request times out or the network fails.",
+      "handling": "saveExpedition()'s 5s AbortController timeout rejects; saveLine()'s catch path shows a generic failure message and leaves the draft line and its entities intact for a retry."
+    },
+    {
+      "case": "Adventurer double-clicks the save control before the first request resolves.",
+      "handling": "isSaving guards the handler and the button's :disabled binding, so only one POST is sent per completed line (performance-engineer finding, carried into developer tasks)."
+    },
+    {
+      "case": "Adventurer leaves the reagent map with an unsaved line and reopens it.",
+      "handling": "Draft state (draftPoints, draftEntities) lives only in ReagentMapView's own refs/module-scope variables; onBeforeUnmount destroys the viewer and the component unmounts on route change, so nothing persists (AC15)."
+    },
+    {
+      "case": "Save succeeds.",
+      "handling": "Draft entities are cleared, the tool is reset to not-started, and the server's returned expedition is appended to expeditions.value and drawn via addExpeditionEntities — no refetch of the full list."
+    },
+    {
+      "case": "Multiple reagent-map spec files run concurrently against the shared apps/mock-api/data/expeditions.json under --workers=3.",
+      "handling": "Unresolved — see architecturalFlags; must be settled before qa-engineer implements reagent-map-save.spec.ts."
+    }
+  ],
+  "definitionOfDone": [
+    "Elara, signed in, can draw a line, save it, and see it again after reopening the reagent map, cross-checked against the live mock API (AC11).",
+    "Signed out, attempting to save a completed line shows a sign-in prompt and stores nothing (AC12).",
+    "Two points under 1 km apart cannot be saved; the adventurer sees the server's zero-length message and nothing is stored (AC13).",
+    "An unsaved line disappears, and nothing is stored, after leaving and reopening the map (AC15).",
+    "A double-click on save produces exactly one stored expedition.",
+    ".env sets VITE_FEATURE_REAGENT_MAP=true; the nav link and route show by default; setting the variable to false still hides both.",
+    "The four existing @visual baselines are regenerated in both runner images and reviewed by eye; the delivery record states the outcome and why for each; no tolerance raised.",
+    "The reagent map specs pass at --workers=3 --repeat-each=3 with no cross-test data leakage, and the isolation mechanism used is recorded.",
+    "Every new or changed function keeps cyclomatic complexity below 7; every changed line is covered by a test proven able to fail; no file outside scope.paths changed except this order's own delivery record.",
+    "code-reviewer has approved the implementation."
+  ],
+  "openQuestions": [
+    "What in-scope mechanism (inside apps/ye-olde-magic-shop/tests/reagent-map-*.spec.ts files only, since playwright.config.ts is outside scope.paths) keeps the expeditions.json-writing specs from interleaving with the count-asserting specs under a single --workers=3 --repeat-each=3 run? This was not resolved by the prior (now stale) architect pass and needs a decision before developer/qa-engineer implement reagent-map-save.spec.ts — see architecturalFlags."
+  ]
+}
