@@ -1,0 +1,77 @@
+---
+feature: "reagent-map-save"
+bounded_context: ""
+domain_terms: ["Adventurer", "Expedition", "Seeded Expedition", "Reagent Site", "Aurelis"]
+files_touched: ["apps/ye-olde-magic-shop/.env", "apps/ye-olde-magic-shop/src/api/expeditions.ts", "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue"]
+issue_refs: ["reagent-map-save"]
+linked_adrs: []
+linked_kis: []
+---
+
+# Implementation Notes: reagent-map-save
+
+## Files Created
+
+None
+
+## Files Modified
+
+- apps/ye-olde-magic-shop/.env
+- apps/ye-olde-magic-shop/src/api/expeditions.ts
+- apps/ye-olde-magic-shop/src/views/ReagentMapView.vue
+
+## Interface Design
+
+- saveExpedition(from: GeoPoint, to: GeoPoint): Promise<Expedition> — apps/ye-olde-magic-shop/src/api/expeditions.ts, same API_BASE/AbortController/REQUEST_TIMEOUT_MS/getAuthHeaders shape as fetchExpeditions(); throws new Error(body.error ?? 'Failed to save expedition.') on a non-ok response so the server's own message (e.g. the zero-length text) reaches the caller verbatim.
+- ReagentMapView.vue view-local additions (not exported): canSaveLine (ComputedRef<boolean>), saveMessage (Ref<string | null>), isSaving (Ref<boolean>), saveLine(): Promise<void>, promoteSavedExpedition(saved: Expedition): void.
+- Template: data-testid="save-line-tool" button (aria-label="Save this expedition", v-if="toolStarted", :disabled="!canSaveLine || isSaving") and data-testid="save-line-message" (role="alert") paragraph.
+
+## Named Refactoring Log
+
+- **Extract Function** on `ReagentMapView.vue — promoteSavedExpedition(saved) extracted out of saveLine()'s success path` — Keeps saveLine() short and its cyclomatic complexity low, and matches the file's existing style of small named helpers (addExpeditionEntities, clearDraftEntities) rather than inlining the clear-draft/append/draw sequence.
+
+## Self-Review Checklist
+
+- [x] Every public method has an intention-revealing name (no process/handle/manage)
+- [x] No function exceeds 30 LOC — Longest new function (saveLine, saveExpedition) is ~16 lines.
+- [x] Cyclomatic complexity < 7 on all new functions — saveLine ~4-5, promoteSavedExpedition 1, saveExpedition 2.
+- [x] No primitive obsession: domain concepts wrapped in value objects, not raw strings/ints — Reuses the existing GeoPoint/Expedition types; no new raw primitive stands in for a domain concept.
+- [x] No feature envy — saveExpedition lives in the adapter module it belongs to; ReagentMapView only calls it, mirroring fetchExpeditions().
+- [x] No magic numbers or strings — Reuses REQUEST_TIMEOUT_MS and MAX_LINE_POINTS; no new numeric constant introduced.
+- [x] Dependency direction verified: nothing in inner layers imports from outer layers — View (Frameworks & Drivers) still never calls fetch directly — saveExpedition is the only new fetch call and it lives in the adapter layer, per architecture-notes.md's layer check.
+
+## Simple Design Verification
+
+- [x] Passes the tests — No unit-test layer exists under apps/ye-olde-magic-shop/src (Playwright-only app, confirmed in context-manifest.md/performance-engineer.md); I made no test-file changes to fail. pnpm install succeeded and I compared tsc output against the unmodified tree to confirm no new TypeScript errors were introduced by this change (the pre-existing .vue-module-resolution noise is unrelated and present without my diff too). Full Playwright verification is qa-engineer's stage.
+- [x] Reveals intention — canSaveLine, saveMessage, isSaving, saveLine, promoteSavedExpedition all name exactly what they do.
+- [x] No duplication — saveExpedition reuses fetchExpeditions()'s AbortController/timeout/getAuthHeaders shape instead of duplicating a new fetch pattern.
+- [x] Fewest elements — No abstraction added beyond the two new functions and four refs/computeds analysis.md's developer tasks called for.
+
+## Key Decisions
+
+- saveExpedition() throws the server's response body.error verbatim (falling back to a generic message only when absent) rather than recomputing or wrapping it.: AC13 requires the adventurer to see the shop's own zero-length message unchanged; architecture-notes.md's anti-pattern check already names this as the leaky-abstraction-avoidance decision.
+- Extracted promoteSavedExpedition(saved) instead of inlining the clear-draft/append/draw sequence inside saveLine()'s try block.: Keeps saveLine() small and readable and matches the file's existing small-named-helper style.
+- Did not modify any Playwright spec file (reagent-map-api.spec.ts, reagent-map-expeditions.spec.ts, or a new reagent-map-save.spec.ts), including the cross-file expeditions.json lock architecture-notes.md's 'Developer Handoff Notes' section describes.: analysis.md's own Developer Tasks (items 1-10) scope this order's developer work to expeditions.ts, ReagentMapView.vue, and .env only. The lock mechanism and reagent-map-save.spec.ts are explicitly assigned under analysis.md's QA Tasks (items 1-4), and this agent's own contract reserves acceptance/integration test files for qa-engineer ('Acceptance and integration suites are the QA engineer's'). See Deviations.
+
+## Deviations from Analysis
+
+- architecture-notes.md's Developer Handoff Notes direct adding acquireExpeditionsLock()/releaseExpeditionsLock() to reagent-map-api.spec.ts and wiring test.describe.configure/beforeAll/afterAll into it, reagent-map-expeditions.spec.ts, and a new reagent-map-save.spec.ts.: analysis.md's Developer Tasks list (the authoritative task breakdown for this agent) does not include any test-file work — it only covers expeditions.ts, ReagentMapView.vue, and .env (tasks 1-10). The lock mechanism, reagent-map-save.spec.ts, and running the isolation proof are explicitly listed under analysis.md's QA Tasks (items 1-4), consistent with this agent's own rule that acceptance/integration test files belong to qa-engineer. Left for qa-engineer to implement exactly as architecture-notes.md's Developer Handoff Notes specify.
+
+## Dependencies Added
+
+None
+
+## Notes for QA
+
+- saveExpedition(from, to) added to src/api/expeditions.ts; a non-ok response throws new Error(body.error ?? 'Failed to save expedition.'), so AC13's server text ('Zero-length line: from and to are the same place') reaches the UI unchanged.
+- The save-line-tool button (data-testid="save-line-tool", aria-label="Save this expedition") is only rendered when toolStarted is true, and is :disabled when !canSaveLine (fewer than 2 draft points) or isSaving.
+- AC12: saveLine() checks authStore.isAuthenticated before calling saveExpedition() at all — signed out, saveMessage is set to 'Sign in to save this expedition.' and no network call is made. Verify via page.route interception that zero POST /api/expeditions occur.
+- Double-click guard: isSaving is set true for the duration of the request (try/finally) and both gates the handler's early return and the button's :disabled — a rapid double-click should still produce exactly one POST.
+- On success: saveMessage clears, draft entities/points clear, toolStarted resets to false, and the server's returned expedition is appended to expeditions.value and drawn via addExpeditionEntities — there is no GET refetch, so assert exactly one network request per successful save.
+- On any failure (timeout, network error, or the 422 zero-length response), saveMessage is set to the error's message and the draft line, its points, and its Cesium entities are left untouched so the adventurer can retry without redrawing — per analysis.md task 7.
+- I made no changes to any Playwright spec file, including the cross-file expeditions.json lock architecture-notes.md describes (acquireExpeditionsLock/releaseExpeditionsLock, test.describe.configure serial wiring) — see Deviations. Implementing that, writing reagent-map-save.spec.ts, proving the --workers=3 --repeat-each=3 isolation, and regenerating/reviewing the four @visual baselines are all still outstanding and scoped to the QA Tasks in analysis.md.
+- No unit-test layer exists under apps/ye-olde-magic-shop/src (confirmed Playwright-only in context-manifest.md/performance-engineer.md), so no unit tests were added for expeditions.ts or ReagentMapView.vue; per analysis.md's own fitness function for 'every changed line covered by a test proven able to fail', that proof is qa-engineer's to demonstrate via the new Playwright spec, per test-repair-contract.md.
+
+## Notes for DevOps
+
+None

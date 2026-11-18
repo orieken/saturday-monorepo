@@ -9,9 +9,51 @@
  * Runs only under the 'chrome' Playwright project (see playwright.config.ts's
  * testIgnore on the chromium project) — Cesium needs a real webgl2 context.
  */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import expeditionsFixture from '../../mock-api/data/expeditions.json';
 import { test, distance, type CesiumEntityResult } from '@orieken/saturday-playwright-cesium';
 import { expect, type APIRequestContext } from '@playwright/test';
+
+// Keyed to the same path as reagent-map-api.spec.ts's and reagent-map-save.spec.ts's own
+// copies of this lock (architecture-notes.md) — mutual exclusion comes from all three files
+// contending for the same filesystem path, not from a shared module. Each file keeps its own
+// copy because importing a sibling *.spec.ts file to reuse its functions would also execute
+// that file's top-level test.describe(...)/configure(...) calls as a side effect of the
+// import (Playwright tracks "the currently loading file suite" as a single value that a
+// plain import does not change), re-registering its tests inside the importing file and
+// colliding on a second describe.configure({mode: 'serial'}) call — confirmed by running the
+// cross-import version architecture-notes.md originally specified, which failed with
+// "serial" mode is already assigned for the enclosing scope.
+const LOCK_PATH = path.join(os.tmpdir(), 'reagent-map-expeditions.lock');
+// See the matching constant's comment in reagent-map-api.spec.ts: measured locally at
+// --workers=3 --repeat-each=3, the lock's hold time (one per file's whole serial describe
+// block, not one test) summed to ~69s of exclusive contention across the 9 total blocks (3
+// files x 3 repeats); 30_000 measurably fired on a legitimate holder and caused a lock-theft
+// double-release. 180_000 is comfortably above that measured worst case.
+const STALE_LOCK_MS = 180_000;
+const HOOK_TIMEOUT_MS = 200_000;
+
+async function acquireExpeditionsLock(): Promise<void> {
+  await expect(() => {
+    try {
+      fs.closeSync(fs.openSync(LOCK_PATH, 'wx'));
+    } catch (err) {
+      if (
+        (err as NodeJS.ErrnoException).code === 'EEXIST' &&
+        Date.now() - fs.statSync(LOCK_PATH).mtimeMs > STALE_LOCK_MS
+      ) {
+        fs.unlinkSync(LOCK_PATH);
+      }
+      throw err;
+    }
+  }).toPass({ timeout: STALE_LOCK_MS });
+}
+
+function releaseExpeditionsLock(): void {
+  fs.unlinkSync(LOCK_PATH);
+}
 
 type SeededExpedition = {
   id: string;
@@ -66,7 +108,22 @@ function assertDrawnBetween(
   ).toBe(true);
 }
 
+// This file only reads expeditions.json (via the live GET inside each test body), never
+// writes it — but it still shares the cross-file lock with reagent-map-api.spec.ts and
+// reagent-map-save.spec.ts so its exact-count assertions never observe the file mid-write by
+// one of those two (architecture-notes.md).
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Reagent map expeditions (AC3, AC4)', () => {
+  test.beforeAll(async () => {
+    test.setTimeout(HOOK_TIMEOUT_MS);
+    await acquireExpeditionsLock();
+  });
+
+  test.afterAll(() => {
+    releaseExpeditionsLock();
+  });
+
   test('signed out, only the shop\'s three seeded expeditions are drawn', async ({ page, cesium }) => {
     await page.goto('/reagent-map');
     await cesium.waitForSettled();
