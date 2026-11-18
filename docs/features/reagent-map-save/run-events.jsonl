@@ -1,0 +1,56 @@
+{"at":"2026-11-16T14:48:49.815968Z","kind":"run.started"}
+{"at":"2026-11-16T14:48:49.816594Z","kind":"stage.started","stage":"context-engineer","sequence":1}
+{"at":"2026-11-16T14:51:46.210233Z","kind":"stage.completed","stage":"context-engineer","sequence":1}
+{"at":"2026-11-16T14:51:46.211019Z","kind":"stage.started","stage":"analyst","sequence":2}
+{"at":"2026-11-16T14:57:28.078368Z","kind":"stage.completed","stage":"analyst","sequence":2}
+{"at":"2026-11-16T14:57:28.079561Z","kind":"stage.started","stage":"router","sequence":3}
+{"at":"2026-11-16T14:57:28.134427Z","kind":"stage.completed","stage":"router","sequence":3}
+{"at":"2026-11-16T14:57:28.134622Z","kind":"stage.skipped","stage":"data-engineer","sequence":4,"reason":"no data-model change to sequence"}
+{"at":"2026-11-16T14:57:28.13479Z","kind":"stage.skipped","stage":"sre-engineer","sequence":5,"reason":"the analysis declares no served runtime surface, so no availability or latency SLI applies"}
+{"at":"2026-11-16T14:57:28.135023Z","kind":"stage.skipped","stage":"devops-engineer","sequence":6,"reason":"the analysis lists no DevOps tasks"}
+{"at":"2026-11-16T14:57:28.135269Z","kind":"stage.started","stage":"architect","sequence":7}
+{"at":"2026-11-16T14:58:30.972432Z","kind":"stage.completed","stage":"architect","sequence":7}
+{"at":"2026-11-16T14:58:30.973129Z","kind":"stage.started","stage":"performance-engineer","sequence":8}
+{"at":"2026-11-16T14:59:44.959589Z","kind":"stage.completed","stage":"performance-engineer","sequence":8}
+{"at":"2026-11-16T14:59:44.959943Z","kind":"stage.started","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-16T15:00:32.857168Z","kind":"stage.completed","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-16T15:00:32.892842Z","kind":"gate.waiting","stage":"developer","gate":"confirm-design"}
+{"at":"2026-11-16T17:44:35.458754Z","kind":"stage.stale","stage":"context-engineer","sequence":1,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.458933Z","kind":"stage.stale","stage":"analyst","sequence":2,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.458954Z","kind":"stage.stale","stage":"router","sequence":3,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.458974Z","kind":"stage.stale","stage":"architect","sequence":7,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.458993Z","kind":"stage.stale","stage":"performance-engineer","sequence":8,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.459011Z","kind":"stage.stale","stage":"acceptance-scenarios","sequence":9,"staleReason":"SPEC_CHANGED"}
+{"at":"2026-11-16T17:44:35.459239Z","kind":"run.resumed"}
+{"at":"2026-11-16T17:44:35.461555Z","kind":"stage.started","stage":"context-engineer","sequence":1}
+{"at":"2026-11-16T17:47:53.695542Z","kind":"stage.completed","stage":"context-engineer","sequence":1}
+{"at":"2026-11-16T17:47:53.696295Z","kind":"stage.started","stage":"analyst","sequence":2}
+{"at":"2026-11-16T17:56:16.520198Z","kind":"stage.completed","stage":"analyst","sequence":2}
+{"at":"2026-11-16T17:56:16.520817Z","kind":"stage.started","stage":"router","sequence":3}
+{"at":"2026-11-16T17:56:16.57931Z","kind":"stage.completed","stage":"router","sequence":3}
+{"at":"2026-11-16T17:56:16.579562Z","kind":"stage.skipped","stage":"data-engineer","sequence":4,"reason":"no data-model change to sequence"}
+{"at":"2026-11-16T17:56:16.579759Z","kind":"stage.skipped","stage":"sre-engineer","sequence":5,"reason":"the analysis declares no served runtime surface, so no availability or latency SLI applies"}
+{"at":"2026-11-16T17:56:16.579939Z","kind":"stage.skipped","stage":"devops-engineer","sequence":6,"reason":"the analysis lists no DevOps tasks"}
+{"at":"2026-11-16T17:56:16.580275Z","kind":"stage.started","stage":"architect","sequence":7}
+{"at":"2026-11-16T18:00:11.999676Z","kind":"stage.completed","stage":"architect","sequence":7}
+{"at":"2026-11-16T18:00:12.000176Z","kind":"stage.started","stage":"performance-engineer","sequence":8}
+{"at":"2026-11-16T18:01:14.540578Z","kind":"stage.completed","stage":"performance-engineer","sequence":8}
+{"at":"2026-11-16T18:01:14.541227Z","kind":"stage.started","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-16T18:02:32.519193Z","kind":"stage.completed","stage":"acceptance-scenarios","sequence":9}
+{"at":"2026-11-16T18:02:32.556078Z","kind":"gate.waiting","stage":"developer","gate":"confirm-design"}
+{"at":"2026-11-17T22:29:54.826427Z","kind":"gate.approved","gate":"confirm-design","approvalMethod":"flag"}
+{"at":"2026-11-17T22:29:54.82718Z","kind":"run.resumed"}
+{"at":"2026-11-17T22:29:54.854906Z","kind":"stage.started","stage":"developer","sequence":10}
+{"at":"2026-11-17T22:35:36.885725Z","kind":"stage.completed","stage":"developer","sequence":10}
+{"at":"2026-11-17T22:35:36.886429Z","kind":"stage.started","stage":"code-reviewer","sequence":11}
+{"at":"2026-11-17T22:37:26.531331Z","kind":"stage.completed","stage":"code-reviewer","sequence":11}
+{"at":"2026-11-17T22:37:26.531725Z","kind":"stage.started","stage":"accessibility-engineer","sequence":12}
+{"at":"2026-11-17T22:39:16.612446Z","kind":"stage.completed","stage":"accessibility-engineer","sequence":12}
+{"at":"2026-11-17T22:39:16.613132Z","kind":"stage.started","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-17T22:42:06.463427Z","kind":"stage.completed","stage":"security-reviewer","sequence":13}
+{"at":"2026-11-17T22:42:06.490344Z","kind":"gate.waiting","stage":"qa-engineer","gate":"confirm-security"}
+{"at":"2026-11-18T03:39:20.959569Z","kind":"gate.approved","gate":"confirm-security","approvalMethod":"flag"}
+{"at":"2026-11-18T03:39:20.96058Z","kind":"run.resumed"}
+{"at":"2026-11-18T03:39:21.037677Z","kind":"stage.started","stage":"qa-engineer","sequence":14}
+{"at":"2026-11-18T04:09:21.114497Z","kind":"stage.failed","stage":"qa-engineer","sequence":14,"error":"stage \"qa-engineer\" subprocess terminated: context deadline exceeded"}
+{"at":"2026-11-18T04:10:21.70941Z","kind":"run.resumed"}

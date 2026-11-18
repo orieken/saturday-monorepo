@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 10,
+  "planName": "deliver-feature",
+  "createdBy": "executor",
+  "featureName": "reagent-map-save",
+  "specPath": ".claude/factory/claims/reagent-map-save.md",
+  "specSha256": "6768ce21e2355d7b92471f0b0ed6acce943f908172fc9be95a3bcfba97e120f6",
+  "provider": "claude",
+  "startedAt": "2026-11-16T14:48:49.809597Z",
+  "startCommit": "106e971b5ee4db467643e0df67051b6a87f45121",
+  "diffLines": {
+    "confirm-design": 6296,
+    "confirm-security": 6296
+  },
+  "reviewedDigest": "e3a84fd6b308f7c27065681d08917fbe07c362b625f9cdfa924585558ef238a5",
+  "stages": {
+    "acceptance-scenarios": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T18:01:14.540944Z",
+      "finishedAt": "2026-11-16T18:02:32.518657Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/acceptance-scenarios.json",
+      "artifactSha256": "aa51d64b4055718f93d5bcb6277cb6126ba17b138def089eb5c19d25f4e75ebe",
+      "sequence": 9,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "c2fa82de54a1085f030853e6b526a1fc607dc10e2a68fb1df90ded058dc1e8f7",
+      "iteration": 1,
+      "stateKind": "scenarios",
+      "agent": "qa-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/acceptance-scenarios.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 10,
+        "outputTokens": 12218,
+        "cacheReadTokens": 286292,
+        "cacheCreationTokens": 123090,
+        "costUsd": 0.6718184
+      }
+    },
+    "accessibility-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-17T22:37:26.531478Z",
+      "finishedAt": "2026-11-17T22:39:16.611917Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/accessibility-engineer.md",
+      "artifactSha256": "3801dad50f4bc75f98eeb1f5cf85d248b1ab9464e1e505b804be5a4e317f1d4d",
+      "sequence": 12,
+      "editedAfterReview": true,
+      "iteration": 1,
+      "agent": "accessibility-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 20,
+        "outputTokens": 9635,
+        "cacheReadTokens": 864081,
+        "cacheCreationTokens": 86209,
+        "costUsd": 0.6140422
+      }
+    },
+    "analyst": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T17:47:53.696056Z",
+      "finishedAt": "2026-11-16T17:56:16.519343Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/analyst.json",
+      "artifactSha256": "a56901d6f356725956d3cfe51d7b9db4fa7b5f8a30fe2d09e99afc255f8266a1",
+      "sequence": 2,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "66523c99876d3e69877e86d9212831e585c35bacea2f30dff64ba6367ed47c74",
+      "iteration": 1,
+      "stateKind": "analysis",
+      "agent": "analyst",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/analysis.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 78,
+        "outputTokens": 56271,
+        "cacheReadTokens": 4597686,
+        "cacheCreationTokens": 264145,
+        "costUsd": 2.5389832000000006
+      }
+    },
+    "architect": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T17:56:16.580039Z",
+      "finishedAt": "2026-11-16T18:00:11.999159Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/architect.json",
+      "artifactSha256": "3feb113b8f2ffd36e2ef63952a0e6d9619f4c01acd8bbc39a5f073e2152124d8",
+      "sequence": 7,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "c4734b12a410634d2114e6c5450e6ead41fed01ddd6c81df60ebf2e896fa7a79",
+      "iteration": 1,
+      "stateKind": "architecture",
+      "agent": "architect",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/architecture-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 24,
+        "outputTokens": 25913,
+        "cacheReadTokens": 1013360,
+        "cacheCreationTokens": 161598,
+        "costUsd": 1.1082420000000002
+      }
+    },
+    "code-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-17T22:35:36.886168Z",
+      "finishedAt": "2026-11-17T22:37:26.530873Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/code-reviewer.json",
+      "artifactSha256": "cc6d8ec021a595b595aa3bba57e1986190898d5b623508de2f8e07b171e09314",
+      "sequence": 11,
+      "iteration": 1,
+      "stateKind": "review",
+      "agent": "code-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/code-review-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 16,
+        "outputTokens": 9201,
+        "cacheReadTokens": 685798,
+        "cacheCreationTokens": 94299,
+        "costUsd": 0.6063976000000001
+      }
+    },
+    "context-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T17:44:35.461332Z",
+      "finishedAt": "2026-11-16T17:47:53.694887Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/context-engineer.json",
+      "artifactSha256": "1bb87906786ffb516ea7134009d74c64d5963f3dc7175e22b8a95b4a9ef042e4",
+      "sequence": 1,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "2fa9a1ea0a8a9e8ee2f5436e3b5d10c4ab618b11d77f0178087f2ea44ce9fa7f",
+      "iteration": 1,
+      "stateKind": "context",
+      "agent": "context-engineer",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/context-manifest.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 80,
+        "outputTokens": 30476,
+        "cacheReadTokens": 4058687,
+        "cacheCreationTokens": 229009,
+        "costUsd": 2.0326934000000003
+      }
+    },
+    "data-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-16T17:56:16.579375Z",
+      "sequence": 4,
+      "skipReason": "no data-model change to sequence",
+      "iteration": 1
+    },
+    "developer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-17T22:29:54.854627Z",
+      "finishedAt": "2026-11-17T22:35:36.885411Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/developer.json",
+      "artifactSha256": "cc5e12ea9d6d49690ed81c40568a6466282295dc538a34b4314acac8c65de724",
+      "gate": "confirm-design",
+      "sequence": 10,
+      "iteration": 1,
+      "stateKind": "implementation",
+      "agent": "developer",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/implementation-notes.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 90,
+        "outputTokens": 28562,
+        "cacheReadTokens": 6501524,
+        "cacheCreationTokens": 180792,
+        "costUsd": 2.3092727999999996
+      }
+    },
+    "devops-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-16T17:56:16.579785Z",
+      "sequence": 6,
+      "skipReason": "the analysis lists no DevOps tasks",
+      "iteration": 1
+    },
+    "performance-engineer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T18:00:11.999987Z",
+      "finishedAt": "2026-11-16T18:01:14.539344Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/performance-engineer.md",
+      "artifactSha256": "ee118636b4214ba814527214ec2a1b2cdfa96651ede1e29e1b069bded5895a02",
+      "sequence": 8,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "1e7cc1e2c5596d83fec21ac135dcc9f30ac58aaf5e60ee86f7e043d0bce0706c",
+      "iteration": 1,
+      "agent": "performance-engineer",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 36,
+        "outputTokens": 10276,
+        "cacheReadTokens": 1317264,
+        "cacheCreationTokens": 146231,
+        "costUsd": 0.9512088000000001
+      }
+    },
+    "qa-engineer": {
+      "status": "FAILED",
+      "startedAt": "2026-11-18T03:39:21.037205Z",
+      "finishedAt": "2026-11-18T04:09:21.113356Z",
+      "gate": "confirm-security",
+      "sequence": 14,
+      "iteration": 1,
+      "error": "stage \"qa-engineer\" subprocess terminated: context deadline exceeded",
+      "failureClass": "transient"
+    },
+    "router": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-16T17:56:16.520533Z",
+      "finishedAt": "2026-11-16T17:56:16.578735Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/router.json",
+      "artifactSha256": "11f5d9003c8b2b3f9b68d541ff56c22361780726ba40b7e843f265db15fcefc5",
+      "sequence": 3,
+      "previousStatus": "COMPLETED",
+      "staleReason": "SPEC_CHANGED",
+      "foundSha256": "11f5d9003c8b2b3f9b68d541ff56c22361780726ba40b7e843f265db15fcefc5",
+      "iteration": 1,
+      "stateKind": "route",
+      "agent": "router",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/route.md"
+    },
+    "security-reviewer": {
+      "status": "COMPLETED",
+      "startedAt": "2026-11-17T22:39:16.612903Z",
+      "finishedAt": "2026-11-17T22:42:06.463018Z",
+      "artifactPath": ".claude/feature-workspace/reagent-map-save/state/security-reviewer.json",
+      "artifactSha256": "167e620ca4ff2014343139384145a65fd7cf589b248a2a086019facebe9a6f8b",
+      "sequence": 13,
+      "iteration": 1,
+      "stateKind": "security",
+      "agent": "security-reviewer",
+      "viewPath": ".claude/feature-workspace/reagent-map-save/security-report.md",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "inputTokens": 28,
+        "outputTokens": 13270,
+        "cacheReadTokens": 1294093,
+        "cacheCreationTokens": 91324,
+        "costUsd": 0.7568706
+      }
+    },
+    "sre-engineer": {
+      "status": "SKIPPED",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "finishedAt": "2026-11-16T17:56:16.579587Z",
+      "sequence": 5,
+      "skipReason": "the analysis declares no served runtime surface, so no availability or latency SLI applies",
+      "iteration": 1
+    }
+  },
+  "approvals": {
+    "confirm-design": {
+      "approvedAt": "2026-11-17T22:29:54.822871Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "aa51d64b4055718f93d5bcb6277cb6126ba17b138def089eb5c19d25f4e75ebe",
+        "analyst": "a56901d6f356725956d3cfe51d7b9db4fa7b5f8a30fe2d09e99afc255f8266a1",
+        "architect": "3feb113b8f2ffd36e2ef63952a0e6d9619f4c01acd8bbc39a5f073e2152124d8",
+        "context-engineer": "1bb87906786ffb516ea7134009d74c64d5963f3dc7175e22b8a95b4a9ef042e4",
+        "performance-engineer": "ee118636b4214ba814527214ec2a1b2cdfa96651ede1e29e1b069bded5895a02",
+        "router": "11f5d9003c8b2b3f9b68d541ff56c22361780726ba40b7e843f265db15fcefc5"
+      }
+    },
+    "confirm-security": {
+      "approvedAt": "2026-11-18T03:39:20.955518Z",
+      "method": "flag",
+      "approver": "oscarrieken",
+      "artifactDigests": {
+        "acceptance-scenarios": "aa51d64b4055718f93d5bcb6277cb6126ba17b138def089eb5c19d25f4e75ebe",
+        "accessibility-engineer": "3801dad50f4bc75f98eeb1f5cf85d248b1ab9464e1e505b804be5a4e317f1d4d",
+        "analyst": "a56901d6f356725956d3cfe51d7b9db4fa7b5f8a30fe2d09e99afc255f8266a1",
+        "architect": "3feb113b8f2ffd36e2ef63952a0e6d9619f4c01acd8bbc39a5f073e2152124d8",
+        "code-reviewer": "cc6d8ec021a595b595aa3bba57e1986190898d5b623508de2f8e07b171e09314",
+        "context-engineer": "1bb87906786ffb516ea7134009d74c64d5963f3dc7175e22b8a95b4a9ef042e4",
+        "developer": "cc5e12ea9d6d49690ed81c40568a6466282295dc538a34b4314acac8c65de724",
+        "performance-engineer": "ee118636b4214ba814527214ec2a1b2cdfa96651ede1e29e1b069bded5895a02",
+        "router": "11f5d9003c8b2b3f9b68d541ff56c22361780726ba40b7e843f265db15fcefc5",
+        "security-reviewer": "167e620ca4ff2014343139384145a65fd7cf589b248a2a086019facebe9a6f8b"
+      }
+    }
+  },
+  "baselines": {
+    "confirm-design": {
+      "at": "2026-11-17T22:29:54.823948Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/acceptance-scenarios.md",
+          "sha256": "438e3dc638688da55627d4fdeeef7e607a819c41bada641b507e78d9273c89e0",
+          "at": "2026-11-17T22:29:54.825317Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/analyst.md",
+          "sha256": "a3b51952a95eb0b01160038cf9937037a9ae77346532a9a342f624215b02e87a",
+          "at": "2026-11-17T22:29:54.825558Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/architect.md",
+          "sha256": "779058791c8ece4453e741b322976759470c27d89abfa6841017dfd18d407a6e",
+          "at": "2026-11-17T22:29:54.824734Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/context-engineer.md",
+          "sha256": "71b514b7607974f74bf4df1bfa53517f340c7043e428327a9374b24d23115526",
+          "at": "2026-11-17T22:29:54.825928Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/performance-engineer.md",
+          "sha256": "ee118636b4214ba814527214ec2a1b2cdfa96651ede1e29e1b069bded5895a02",
+          "at": "2026-11-17T22:29:54.824989Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-design/router.md",
+          "sha256": "6a6a1b4e8a1622ac62a0e8117ae156d9c1edc034cec842a2d03050d6e1c88bd3",
+          "at": "2026-11-17T22:29:54.825089Z"
+        }
+      }
+    },
+    "confirm-security": {
+      "at": "2026-11-18T03:39:20.956619Z",
+      "reason": "APPROVED",
+      "artifacts": {
+        "acceptance-scenarios": {
+          "stage": "acceptance-scenarios",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/acceptance-scenarios.md",
+          "sha256": "438e3dc638688da55627d4fdeeef7e607a819c41bada641b507e78d9273c89e0",
+          "at": "2026-11-18T03:39:20.958377Z"
+        },
+        "accessibility-engineer": {
+          "stage": "accessibility-engineer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/accessibility-engineer.md",
+          "sha256": "3801dad50f4bc75f98eeb1f5cf85d248b1ab9464e1e505b804be5a4e317f1d4d",
+          "at": "2026-11-18T03:39:20.95847Z"
+        },
+        "analyst": {
+          "stage": "analyst",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/analyst.md",
+          "sha256": "a3b51952a95eb0b01160038cf9937037a9ae77346532a9a342f624215b02e87a",
+          "at": "2026-11-18T03:39:20.958663Z"
+        },
+        "architect": {
+          "stage": "architect",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/architect.md",
+          "sha256": "779058791c8ece4453e741b322976759470c27d89abfa6841017dfd18d407a6e",
+          "at": "2026-11-18T03:39:20.957604Z"
+        },
+        "code-reviewer": {
+          "stage": "code-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/code-reviewer.md",
+          "sha256": "ea912b63597a8db1b42ca05cabc6abe43def7a0be65d6b58574fa3ce36c49445",
+          "at": "2026-11-18T03:39:20.958954Z"
+        },
+        "context-engineer": {
+          "stage": "context-engineer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/context-engineer.md",
+          "sha256": "71b514b7607974f74bf4df1bfa53517f340c7043e428327a9374b24d23115526",
+          "at": "2026-11-18T03:39:20.958287Z"
+        },
+        "developer": {
+          "stage": "developer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/developer.md",
+          "sha256": "9fffc720d1526c7c9d063c9f5ee0f930dff4db6aba4a6f67757464e0e3a91437",
+          "at": "2026-11-18T03:39:20.958782Z"
+        },
+        "performance-engineer": {
+          "stage": "performance-engineer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/performance-engineer.md",
+          "sha256": "ee118636b4214ba814527214ec2a1b2cdfa96651ede1e29e1b069bded5895a02",
+          "at": "2026-11-18T03:39:20.95887Z"
+        },
+        "router": {
+          "stage": "router",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/router.md",
+          "sha256": "6a6a1b4e8a1622ac62a0e8117ae156d9c1edc034cec842a2d03050d6e1c88bd3",
+          "at": "2026-11-18T03:39:20.959144Z"
+        },
+        "security-reviewer": {
+          "stage": "security-reviewer",
+          "path": ".claude/feature-workspace/reagent-map-save/.approved/confirm-security/security-reviewer.md",
+          "sha256": "c4e63d570bbbd88a350f538acb5b29ad6195e1737d159a9d2a04bc16f9ac0483",
+          "at": "2026-11-18T03:39:20.957968Z"
+        }
+      }
+    }
+  },
+  "spend": {
+    "model": "claude-sonnet-5",
+    "inputTokens": 382,
+    "outputTokens": 195822,
+    "cacheReadTokens": 20618785,
+    "cacheCreationTokens": 1376697,
+    "costUsd": 11.589528999999997
+  },
+  "budget": {
+    "maxUsd": 20,
+    "maxHours": 3
+  },
+  "budgetHalt": {
+    "limit": "usd",
+    "allowed": 20,
+    "consumed": 11.589528999999997,
+    "unmeasured": [
+      "qa-engineer"
+    ],
+    "beforeStage": "qa-engineer",
+    "at": "2026-11-18T04:10:21.763134Z"
+  },
+  "updatedAt": "2026-11-18T04:10:21.763135Z"
+}

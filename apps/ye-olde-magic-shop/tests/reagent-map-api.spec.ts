@@ -1,9 +1,66 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 import { ShopApi, Expedition, GeoPoint } from '../lib/api/ShopApi';
 // The pure geometry module: no dependency on Cesium or a browser.
 import { distance } from '../../../packages/saturday-playwright-cesium/src/geometry';
+
+// Exclusive cross-file mutex over apps/mock-api/data/expeditions.json, keyed by this same
+// LOCK_PATH in this file, reagent-map-save.spec.ts, and reagent-map-expeditions.spec.ts
+// (architecture-notes.md). All three hit the same running mock-api process under
+// --workers=3, so a test body's live GET/POST in one file could otherwise interleave with
+// another file's write to this file.
+//
+// architecture-notes.md's Developer Handoff Notes called for exporting acquire/release from
+// this file and importing them into the other two. That breaks Playwright's test collection:
+// importing a spec file executes its entire top-level body — including its own
+// test.describe(...) and test.describe.configure(...) calls — as if written inline in the
+// importing file (Playwright tracks "the currently loading file suite" as a single value,
+// not something that changes across a plain `require`/`import`). Importing this file from
+// another spec would re-register all of "Reagent map API"'s own tests inside that other
+// file's suite, and collide on a second describe.configure({mode: 'serial'}) call. Each of
+// the three files therefore keeps its own copy of this acquire/release pair instead — never
+// a tracked path, since LOCK_PATH is created and deleted at runtime only, so the duplication
+// can never be an out-of-scope file change.
+const LOCK_PATH = path.join(os.tmpdir(), 'reagent-map-expeditions.lock');
+// The lock is held for an entire file's serial describe block (every test in it, acquired in
+// beforeAll, released in afterAll), not one test — measured locally at --workers=3
+// --repeat-each=3 across all three lock-holding files, reagent-map-save.spec.ts's own block
+// alone runs ~17-18s, and the 9 total blocks (3 files x 3 repeats) summed to ~69s of
+// exclusive hold time contending for this one lock. The original 30_000 was sized to a single
+// test's duration and was wrong: it measurably fired on a legitimate (non-crashed) holder
+// under exactly this contention, which then caused a second worker to steal the lock and a
+// double-release (ENOENT) once both finished. 180_000 is comfortably above that measured ~69s
+// worst-case serialized critical path, with headroom for slower CI hardware.
+const STALE_LOCK_MS = 180_000;
+// The beforeAll hook awaiting acquireExpeditionsLock() must not be killed by Playwright's own
+// default 30s hook timeout while legitimately waiting out another file's turn — see
+// test.setTimeout(HOOK_TIMEOUT_MS) at the top of this file's own beforeAll below.
+const HOOK_TIMEOUT_MS = 200_000;
+
+// architecture-guardrails.md #5 bans a hand-rolled retry-with-sleep loop; expect(fn).toPass()
+// is Playwright's own polling-with-backoff primitive for exactly this "retry until a
+// side-effecting check stops throwing" case.
+async function acquireExpeditionsLock(): Promise<void> {
+  await expect(() => {
+    try {
+      fs.closeSync(fs.openSync(LOCK_PATH, 'wx'));
+    } catch (err) {
+      if (
+        (err as NodeJS.ErrnoException).code === 'EEXIST' &&
+        Date.now() - fs.statSync(LOCK_PATH).mtimeMs > STALE_LOCK_MS
+      ) {
+        fs.unlinkSync(LOCK_PATH);
+      }
+      throw err;
+    }
+  }).toPass({ timeout: STALE_LOCK_MS });
+}
+
+function releaseExpeditionsLock(): void {
+  fs.unlinkSync(LOCK_PATH);
+}
 
 // Order F1, from features/reagent-map/ (@level-api). Spec tolerances are on Aurelis, never Earth.
 const AURELIS_RADIUS_METERS = 6_000_000;
@@ -33,12 +90,18 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Reagent map API', () => {
   let seed: string;
 
-  test.beforeAll(() => {
+  test.beforeAll(async () => {
+    test.setTimeout(HOOK_TIMEOUT_MS);
+    await acquireExpeditionsLock();
     seed = fs.readFileSync(EXPEDITIONS_PATH, 'utf8');
   });
 
   test.afterEach(() => {
     fs.writeFileSync(EXPEDITIONS_PATH, seed, 'utf8');
+  });
+
+  test.afterAll(() => {
+    releaseExpeditionsLock();
   });
 
   test('@AC1 The shop publishes every reagent site', async ({ request }) => {

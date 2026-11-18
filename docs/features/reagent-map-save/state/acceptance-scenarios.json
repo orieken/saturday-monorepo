@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-save",
+  "scenarios": [
+    {
+      "criterion": "Elara, signed in, MUST see her saved expedition drawn again after reopening the reagent map, and the shop MUST hold it with both ends within 1 km of where she placed them (spec AC11, rule R6).",
+      "name": "Signed-in adventurer sees a saved expedition again after reopening the reagent map",
+      "given": [
+        "Elara is signed in",
+        "Elara has drawn a line on the reagent map from Moonwell Spring to Ember Crag and saved it"
+      ],
+      "when": [
+        "Elara reopens the reagent map"
+      ],
+      "then": [
+        "The saved expedition is drawn on the map",
+        "The shop holds the expedition with both ends within 1 km of where Elara placed them"
+      ]
+    },
+    {
+      "criterion": "When no adventurer is signed in and a completed line is on the map, saving it MUST ask the adventurer to sign in and MUST NOT send a POST or store anything (spec AC12, rule R7).",
+      "name": "Saving without being signed in asks the adventurer to sign in and stores nothing",
+      "given": [
+        "No adventurer is signed in",
+        "A completed line is drawn on the reagent map"
+      ],
+      "when": [
+        "The adventurer tries to save the line"
+      ],
+      "then": [
+        "The adventurer is asked to sign in",
+        "Nothing is sent to the shop",
+        "Nothing new is stored"
+      ]
+    },
+    {
+      "criterion": "When both points of a completed line are less than 1 km apart, saving it MUST show the server's own zero-length message and MUST NOT store anything (spec AC13, rule R7).",
+      "name": "Saving a zero-length line shows the shop's own message and stores nothing",
+      "given": [
+        "An adventurer is signed in",
+        "Both points of a completed line are less than 1 km apart"
+      ],
+      "when": [
+        "The adventurer saves the line"
+      ],
+      "then": [
+        "The shop's own zero-length message is shown to the adventurer",
+        "Nothing new is stored"
+      ]
+    },
+    {
+      "criterion": "An unsaved line MUST NOT be shown, and nothing MUST be stored, after the adventurer leaves the reagent map and opens it again (spec AC15, rule R8).",
+      "name": "An unsaved line is gone after leaving and reopening the reagent map",
+      "given": [
+        "An adventurer has placed one or two points on the reagent map",
+        "The adventurer has not saved the line"
+      ],
+      "when": [
+        "The adventurer leaves the reagent map and opens it again"
+      ],
+      "then": [
+        "No draft point or draft line remains on the map",
+        "Nothing new is stored"
+      ]
+    },
+    {
+      "criterion": "Once this order ships, apps/ye-olde-magic-shop/.env MUST set VITE_FEATURE_REAGENT_MAP=true so the nav link and route show by default, and setting the variable to false MUST still hide both.",
+      "name": "The reagent map is visible by default",
+      "given": [
+        "The shop is configured with its shipped default settings"
+      ],
+      "when": [
+        "An adventurer opens the shop"
+      ],
+      "then": [
+        "The reagent map nav link is visible",
+        "The reagent map route is reachable"
+      ]
+    },
+    {
+      "criterion": "Once this order ships, apps/ye-olde-magic-shop/.env MUST set VITE_FEATURE_REAGENT_MAP=true so the nav link and route show by default, and setting the variable to false MUST still hide both.",
+      "name": "Turning the reagent map feature flag off hides the map",
+      "given": [
+        "The shop's reagent map feature flag is set to false"
+      ],
+      "when": [
+        "An adventurer opens the shop"
+      ],
+      "then": [
+        "The reagent map nav link is hidden",
+        "The reagent map route is not reachable"
+      ]
+    },
+    {
+      "criterion": "Every test that saves an expedition MUST restore apps/mock-api/data/expeditions.json afterward, and no test MUST see an expedition another test saved, proven by running the reagent map specs at --workers=3 --repeat-each=3 with reagent-map-expeditions.spec.ts still counting exactly Elara's expeditions. No existing count assertion MUST be loosened to make this pass.",
+      "name": "Concurrently saving expeditions keeps each adventurer's own data intact",
+      "given": [
+        "Two adventurers are signed in on separate sessions"
+      ],
+      "when": [
+        "Both adventurers save a completed line at the same time"
+      ],
+      "then": [
+        "Each adventurer sees only their own newly saved expedition",
+        "Elara's expedition count is exactly what it was before, plus her own save, unaffected by the other adventurer's save"
+      ]
+    },
+    {
+      "criterion": "Only a @visual baseline this order changes on purpose MUST be regenerated, in both runner images, via scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines; every changed PNG MUST be viewed by eye and the delivery record MUST state what changed and why; no tolerance MUST be raised.",
+      "name": "The reagent map's appearance is unchanged by the save feature unless a reviewed change is recorded",
+      "given": [
+        "The reagent map's existing visual baselines"
+      ],
+      "when": [
+        "The save feature ships"
+      ],
+      "then": [
+        "Each baseline is either unchanged or its change was viewed by eye and recorded with what changed and why",
+        "No visual comparison tolerance was raised to make a baseline pass"
+      ]
+    },
+    {
+      "criterion": "Every new or changed function MUST keep cyclomatic complexity below 7, every changed line MUST be covered by a test proven able to fail, and no file outside scope.paths MUST change except this order's own delivery record under docs/features/reagent-map-save/.",
+      "name": "The delivery stays within its agreed scope and quality bars",
+      "given": [
+        "The save feature implementation is complete"
+      ],
+      "when": [
+        "The change is reviewed"
+      ],
+      "then": [
+        "Every new or changed function has cyclomatic complexity below 7",
+        "Every changed line is covered by a test proven able to fail",
+        "No file outside the agreed scope paths changed except this order's own delivery record"
+      ]
+    }
+  ],
+  "retrieval": {
+    "domainTerms": [
+      "adventurer",
+      "expedition",
+      "reagent map",
+      "draft line",
+      "draft point"
+    ],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

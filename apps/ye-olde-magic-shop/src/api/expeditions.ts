@@ -33,3 +33,27 @@ export async function fetchExpeditions(): Promise<Expedition[]> {
     clearTimeout(timer);
   }
 }
+
+// POST requires a signed-in caller (the server derives ownership from the
+// session token alone, never from the request body) and surfaces the
+// server's own error text verbatim — e.g. the zero-length-line message —
+// rather than a client-recomputed one.
+export async function saveExpedition(from: GeoPoint, to: GeoPoint): Promise<Expedition> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API_BASE}/api/expeditions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ from, to }),
+      signal: controller.signal
+    });
+    if (!res.ok) {
+      const body = await res.json();
+      throw new Error(body.error ?? 'Failed to save expedition.');
+    }
+    return (await res.json()) as Expedition;
+  } finally {
+    clearTimeout(timer);
+  }
+}
