@@ -3,7 +3,7 @@ intake: 1
 id: leaflet-local-tiles
 type: feature
 plan: deliver-feature
-status: draft
+status: ready
 priority: 3
 created: 2026-10-29
 requested-by: oscar
@@ -18,7 +18,7 @@ budget:
   max-usd: 20
   max-hours: 2
 scope:
-  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/public/**, apps/ye-olde-magic-shop/tests/**, apps/mock-api/public/**, docs/**]
+  paths: [apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/public/**, apps/ye-olde-magic-shop/tests/**, docs/**]
 ---
 
 # Serve the Leaflet map without the internet
@@ -38,6 +38,9 @@ and its tests work with no network.
       origin; no request leaves it.
 - [ ] Given the existing markers, territory polygon and popups, then each appears in the same place
       relative to the others as before.
+- [ ] Given `tests/map.spec.ts`, then every test in it passes unchanged. They read real latitudes and
+      longitudes: the centre, the bounds at zoom 10, geolocation, and a 300 to 400 km distance. Keep
+      Leaflet's default CRS so those stay true.
 - [ ] Given a Playwright test that blocks every request not to the app's origin, then the locations
       view loads, `leaflet.waitForMapLoad()` resolves and `leaflet.checkTileFailures()` is false.
 - [ ] Given the imagery, then its licence is recorded next to it (made in-repo, or with a licence
@@ -66,10 +69,16 @@ and its tests work with no network.
 
 Saturday/Playwright, run through `scripts/ui-suite-in-chrome.sh`.
 
+One suite run takes about two minutes in each image, and a stage has 30 minutes. While developing,
+run only `tests/map.spec.ts` and the new test. Run the full suite one image at a time, never two at
+once, and wait for each run to finish before ending the stage.
+
 ## Open Questions
 
-- Image overlay on `CRS.Simple` or local tiles: Assumption if unresolved: one image with
-  `L.imageOverlay` and `CRS.Simple`, with marker coordinates converted and the conversion tested.
+- None. Settled: keep the default CRS (EPSG:3857) and replace the OpenStreetMap tile layer with one
+  image made in-repo, placed with `L.imageOverlay` over a latitude and longitude box that covers the
+  view at every zoom the tests use. `CRS.Simple` would break `map.spec.ts`, which measures real
+  distances.
 
 ## Infrastructure / Deploy Notes
 
