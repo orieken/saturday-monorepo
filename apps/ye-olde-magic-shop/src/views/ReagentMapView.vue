@@ -22,6 +22,17 @@
       >
         Draw a new expedition
       </button>
+      <button
+        v-if="toolStarted"
+        type="button"
+        data-testid="save-line-tool"
+        aria-label="Save this expedition"
+        class="ml-2 rounded-lg border-2 border-dnd-slate px-4 py-2 text-dnd-parchment disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!canSaveLine || isSaving"
+        @click="saveLine"
+      >
+        Save this expedition
+      </button>
       <p
         v-if="toolStarted"
         data-testid="line-tool-status"
@@ -30,6 +41,23 @@
         class="mt-2 text-sm text-gray-400"
       >
         {{ lineToolStatus }}
+      </p>
+      <p
+        v-if="saveMessage"
+        data-testid="save-line-message"
+        role="alert"
+        class="mt-2 text-sm text-red-300"
+      >
+        {{ saveMessage }}
+      </p>
+      <p
+        v-if="saveStatus"
+        data-testid="save-line-status"
+        role="status"
+        aria-live="polite"
+        class="mt-2 text-sm text-gray-400"
+      >
+        {{ saveStatus }}
       </p>
     </div>
     <div class="flex gap-6">
@@ -68,7 +96,8 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 // matters) — it only gives us real types for the global Cesium exposes.
 import type * as CesiumModule from 'cesium';
 import { fetchReagentSites, type ReagentSite } from '../api/reagentSites';
-import { fetchExpeditions, type Expedition, type GeoPoint } from '../api/expeditions';
+import { fetchExpeditions, saveExpedition, type Expedition, type GeoPoint } from '../api/expeditions';
+import { useAuthStore } from '../stores/authStore';
 
 declare global {
   interface Window {
@@ -92,11 +121,16 @@ const DEFAULT_VIEW = { lat: 10, lng: 20, heightMeters: 12_000_000 };
 const FLY_TO_HEIGHT_METERS = 3_000_000;
 const MAX_LINE_POINTS = 2;
 
+const authStore = useAuthStore();
 const sites = ref<ReagentSite[]>([]);
 const expeditions = ref<Expedition[]>([]);
 const mapError = ref<string | null>(null);
 const toolStarted = ref(false);
 const draftPoints = ref<GeoPoint[]>([]);
+const saveMessage = ref<string | null>(null);
+const saveStatus = ref<string | null>(null);
+const isSaving = ref(false);
+const canSaveLine = computed(() => draftPoints.value.length === MAX_LINE_POINTS);
 const lineToolStatus = computed(() => {
   if (!toolStarted.value) return '';
   if (draftPoints.value.length === 0) return 'Line tool active. Click the globe to place the first point.';
@@ -222,7 +256,37 @@ function clearDraftEntities(): void {
 function startLine(): void {
   clearDraftEntities();
   draftPoints.value = [];
+  saveMessage.value = null;
+  saveStatus.value = null;
   toolStarted.value = true;
+}
+
+function promoteSavedExpedition(saved: Expedition): void {
+  saveMessage.value = null;
+  saveStatus.value = 'Expedition saved.';
+  clearDraftEntities();
+  draftPoints.value = [];
+  toolStarted.value = false;
+  expeditions.value = [...expeditions.value, saved];
+  addExpeditionEntities(cesium!, viewer!, ellipsoid!, [saved]);
+}
+
+async function saveLine(): Promise<void> {
+  if (!canSaveLine.value || isSaving.value) return;
+  if (!authStore.isAuthenticated) {
+    saveMessage.value = 'Sign in to save this expedition.';
+    return;
+  }
+
+  isSaving.value = true;
+  try {
+    const [from, to] = draftPoints.value;
+    promoteSavedExpedition(await saveExpedition(from, to));
+  } catch (err) {
+    saveMessage.value = err instanceof Error ? err.message : 'Failed to save expedition.';
+  } finally {
+    isSaving.value = false;
+  }
 }
 
 function addDraftPointEntity(point: GeoPoint): CesiumModule.Entity {

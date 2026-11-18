@@ -1,0 +1,56 @@
+---
+feature: "reagent-map-save"
+bounded_context: ""
+domain_terms: ["Adventurer", "Expedition", "Seeded Expedition", "Reagent Site", "Aurelis"]
+files_touched: []
+issue_refs: ["reagent-map-save"]
+linked_adrs: []
+linked_kis: []
+---
+
+# QA Report: reagent-map-save
+
+## Test Files Created
+
+None
+
+## Test Files Modified
+
+None
+
+## Coverage Summary
+
+- Acceptance criteria covered: 8/8
+- Total new tests: 5
+
+## Test Results
+
+- Passed: 39
+- Failed: 0
+- Skipped: 0
+
+## Accessibility Check
+
+- save-line-tool is a native <button type="button"> with aria-label="Save this expedition", falls into the existing tab order after start-line-tool, no tabindex manipulation
+- save-line-message uses role="alert" (sign-in prompt, server zero-length text, failure text) — verified against exact text in reagent-map-save.spec.ts's AC12/AC13 assertions
+- save-line-status uses role="status" aria-live="polite" for the success confirmation (accessibility-engineer's fix, verified text 'Expedition saved.' in AC11 and double-click tests)
+- Native :disabled binding on save-line-tool (not aria-disabled) correctly removes it from the tab order when fewer than 2 points are placed or a save is in flight
+- No new div-soup or non-semantic interactive element introduced — consistent with existing reagent-map-a11y-check.spec.ts, which still passes unchanged
+
+## Bugs Found
+
+None
+
+## Known Gaps
+
+- Every new or changed function MUST keep cyclomatic complexity below 7, every changed line MUST be covered by a test proven able to fail: This Vue/Playwright-only app has no unit-test or statement-coverage tooling (no vitest/istanbul in package.json) — confirmed by code-reviewer and independently here. Coverage assurance instead comes from the Playwright suite exercising every changed line: the save-line-tool button, save-line-message/save-line-status elements, and saveExpedition() did not exist before this order, so every new assertion in reagent-map-save.spec.ts necessarily fails against pre-change code (element-not-found), satisfying 'proven able to fail' without a statement-coverage percentage to report.
+- Only a @visual baseline this order changes on purpose MUST be regenerated, in both runner images, via scripts/ui-suite-in-chrome.sh --update-baselines and --ubi9 --update-baselines: Both regeneration runs completed and all 4 @visual tests passed in both images; git diff confirms zero baseline PNG bytes changed in either image (expected, since the new save UI sits outside the four baselined regions: header, site list, error state, globe). The ubi9 run separately showed 4 unrelated test failures/timeouts ('Target crashed', tile/settle timeouts) traced to a second, debian-image container (ui-suite-in-chrome-14107) already running on this host, started by a process other than this QA session — the exact double-run resource contention the claim's own Test Approach note warns against ('two runs together make tests time out... parked twice by doing both'). Re-running the same affected tests locally immediately afterward, uncontended, passed cleanly (13/13). Not a regression in this feature; flagged for whoever owns that other container.
+
+## Notes for Tech Writer
+
+- reagent-map-save.spec.ts, and the cross-file expeditions.json lock duplicated into reagent-map-api.spec.ts and reagent-map-expeditions.spec.ts, already existed and were already correct when this QA stage began — verified and proven correct in this session via test runs, but no file was written or edited here (git status is identical to this session's start).
+- Isolation fitness function proven: tests/reagent-map-api.spec.ts + reagent-map-expeditions.spec.ts + reagent-map-save.spec.ts all pass at --project=chrome --workers=3 --repeat-each=3 (39/39), with reagent-map-expeditions.spec.ts's exact-count assertions unchanged and passing every repetition.
+- The lock mechanism deviates from architecture-notes.md's 'export from reagent-map-api.spec.ts and import into the other two files' instruction: each file keeps its own local copy of acquireExpeditionsLock/releaseExpeditionsLock instead, because importing a sibling *.spec.ts file re-executes its top-level test.describe.configure({mode:'serial'}) as a side effect and collides with the importing file's own call (confirmed in the files' own code comments, consistent with Playwright's documented single-suite-loading behavior). Mutual exclusion still holds: all three files contend for the same tmp-dir lock path.
+- STALE_LOCK_MS is 180_000 in the shipped code, not architecture-notes.md's recommended 30_000 — the code comments explain 30_000 measurably fired on a legitimate (non-crashed) lock holder under --workers=3 --repeat-each=3 contention and caused a lock-theft double-release; 180_000 has headroom above the measured ~69s worst-case serialized critical path.
+- tests/reagent-map-pan-zoom.spec.ts failed twice during the debian-image full-suite run — this is the pre-existing flake the claim's own Test Approach note already documents as known and out of scope for this order (drag misses by ~312px under load).
+- Feature flag default-on behavior (AC: nav link/route visible by default, hidden when VITE_FEATURE_REAGENT_MAP=false) is covered by the pre-existing tests/reagent-map-feature-flag.spec.ts, re-verified passing (7/7) in this session; apps/ye-olde-magic-shop/.env correctly sets VITE_FEATURE_REAGENT_MAP=true.

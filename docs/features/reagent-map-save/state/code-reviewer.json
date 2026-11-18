@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-save",
+  "verdict": "APPROVED",
+  "designNarrative": "The implementation adds one new adapter function, saveExpedition(), that mirrors fetchExpeditions()'s AbortController/timeout/getAuthHeaders shape in the existing api/expeditions.ts gateway, and wires a small save handler into ReagentMapView.vue's existing draft-point/draft-line state machine, gated on a client-side auth check before any network call and on an isSaving flag against double submission. On success the returned expedition is promoted directly into the view's existing expedition list and drawn via the existing addExpeditionEntities helper with no extra refetch; on failure the server's own error text is shown verbatim and the draft is left untouched for retry. Behaviour change: yes.",
+  "designScore": {
+    "clarity": 4,
+    "cohesion": 4,
+    "coupling": 4,
+    "craft": 4
+  },
+  "securitySurface": [
+    "Client-side authStore.isAuthenticated check gates saveLine() before any fetch — this is a UX convenience only; actual enforcement remains apps/mock-api/server.js's requireAuth, which is unchanged.",
+    "POST body is JSON.stringify({ from, to }) only — no owner/adventurer identifier is sent, matching the NFR that ownership is derived server-side from the session token alone."
+  ],
+  "performanceSurface": [
+    "saveExpedition() sets an explicit AbortController timeout at the existing REQUEST_TIMEOUT_MS=5000ms budget, matching fetchExpeditions() — no unbounded network wait (architecture-guardrails.md #5).",
+    "isSaving is set synchronously before the awaited call and checked at the top of saveLine(), so a rapid double-click cannot produce two in-flight POSTs even before Vue re-renders the button's :disabled binding.",
+    "POST /api/expeditions remains non-idempotent server-side (no idempotency key) — architecture-notes.md already accepted this as a judgment-only trade-off (client-side prevention, not a server guarantee); not a new finding, just confirming the code matches that decision."
+  ],
+  "testDesignReview": [
+    "This diff (apps/ye-olde-magic-shop/.env, src/api/expeditions.ts, src/views/ReagentMapView.vue) adds or modifies no test files — no unit-test layer exists under apps/ye-olde-magic-shop/src (Playwright-only app), and analysis.md scopes all Playwright spec work (reagent-map-save.spec.ts, the cross-file lock, the --workers=3 --repeat-each=3 proof) to the QA Tasks, not the developer. There is nothing to judge for this stage; that judgment belongs to qa-engineer's review of reagent-map-save.spec.ts."
+  ],
+  "selfReviewCheck": [
+    "Checklist item 'No function exceeds 30 LOC' confirmed against the diff: saveLine() is 16 lines, saveExpedition() ~18 lines including the mirrored AbortController boilerplate, promoteSavedExpedition() ~8 lines — matches the developer's stated estimate.",
+    "Checklist item 'Cyclomatic complexity < 7' confirmed: saveLine() has two guard branches plus try/catch/finally (~4), saveExpedition() has one branch (~2), promoteSavedExpedition() has none (1) — matches.",
+    "Checklist item 'Dependency direction verified' confirmed: the view still never calls fetch directly — saveExpedition is the only new fetch call and it lives in api/expeditions.ts, not ReagentMapView.vue.",
+    "Checklist item 'Passes the tests' / 'no test-file changes to fail' confirmed via git status — only .env, expeditions.ts, and ReagentMapView.vue are modified; no test file is touched.",
+    "Deviation from architecture-notes.md's Developer Handoff Notes (not implementing the expeditions.json lock or reagent-map-save.spec.ts) is correctly justified: analysis.md's own Developer Tasks list (items 1-10) scopes this agent's work to expeditions.ts/ReagentMapView.vue/.env only, and explicitly assigns the lock and spec file to QA Tasks — the deviation is documented, not silent."
+  ],
+  "behaviorChange": true,
+  "findings": [
+    {
+      "operation": "Extract Function",
+      "file": "apps/ye-olde-magic-shop/src/api/expeditions.ts",
+      "smell": "fetchExpeditions() and saveExpedition() each hand-roll the identical AbortController + setTimeout + clearTimeout boilerplate — the only difference between the two blocks is the fetch call itself.",
+      "instruction": "Consider extracting a small fetchWithTimeout(input, init) helper shared by both functions to remove the duplication. Non-blocking: architecture-notes.md already reviewed this file's placement and accepted the mirrored-shape duplication as consistent with the file's existing style, so this is a suggestion for a future pass, not a condition of approval.",
+      "blocking": false
+    },
+    {
+      "operation": "Add defensive parsing",
+      "file": "apps/ye-olde-magic-shop/src/api/expeditions.ts",
+      "smell": "On a non-ok response, `await res.json()` can itself throw (e.g. if the server ever returns a non-JSON error body such as an HTML 500 page), which would surface a raw JSON-parse error message to the adventurer instead of the intended server error text or a friendly fallback.",
+      "instruction": "Non-blocking: apps/mock-api/server.js's documented contract always returns a JSON error body for non-ok /api/expeditions responses, so this cannot occur against the real mock API today. Flagged for awareness only.",
+      "blocking": false
+    }
+  ],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Reagent Site", "Expedition", "Seeded Expedition", "Aurelis"],
+    "issueRefs": ["reagent-map-save", "reagent-map-line-tool"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

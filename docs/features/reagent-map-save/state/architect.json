@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 2,
+  "feature": "reagent-map-save",
+  "structuralDecisions": [
+    {
+      "decision": "Resolve the open cross-file isolation question: protect every read/write of apps/mock-api/data/expeditions.json with one exclusive mutex, shared by reagent-map-save.spec.ts, reagent-map-api.spec.ts, and reagent-map-expeditions.spec.ts. Implement acquire/release as plain exported functions inside reagent-map-api.spec.ts (it already owns the seed-capture/restore pattern) and import them into the other two files. Lock acquisition polls with Playwright's own expect(fn).toPass({ timeout: 30_000 }) around an atomic fs.openSync(lockPath, 'wx') — EEXIST means someone else holds it, toPass's built-in retry/backoff handles the wait. Release is fs.unlinkSync. The lock file itself lives at path.join(os.tmpdir(), 'reagent-map-expeditions.lock'), never under a tracked path, so it can never be an out-of-scope file change (it is created and deleted at runtime, never committed). Each of the three files keeps/adds test.describe.configure({ mode: 'serial' }) and acquires the lock in beforeAll (after capturing seed) and releases it in afterAll, restoring seed content in afterEach exactly as reagent-map-api.spec.ts already does — this guarantees no worker's test body (where the live GET/POST against the one shared mock-api process actually happens) can interleave with another file's mutation, while each file's own internal tests stay serial as today.",
+      "rationale": "playwright.config.ts (fullyParallel: true, one shared webServer, no project dependencies) is outside scope.paths, so the mechanism cannot live in config — it must live inside files matching tests/reagent-map-*.spec.ts, which rules out a separate non-spec helper module too (also out of scope). All three specs hit the same running mock-api instance (one webServer, reused across workers), so the race is real: reagent-map-expeditions.spec.ts's exact-count assertions run against a live GET that happens inside the test body, not at its static top-of-file JSON import (that import only supplies the three seeded expeditions' fixed names/ids, which no test ever mutates), so lock coverage starting in beforeAll is sufficient — the static import races nothing. A single exclusive lock (not separate read/write locks) is correct here because writes are infrequent relative to the whole suite and the simplicity of one mutex avoids a reader/writer protocol this test suite doesn't need.",
+      "tradeOffs": [
+        "A stale lock (worker crash mid-test while holding it) hangs every subsequent run against the same temp path until the stale lock file is manually deleted — mitigated by a before-retry staleness check (see fitness/judgmentOnly entry below) but not eliminated.",
+        "Serializing all expeditions.json-touching specs across files reduces the effective parallelism --workers=3 is meant to buy for this subset of the suite — acceptable because the claim's own Test Approach already says to run the full suite one image at a time and treat these specs as a small, known-serial slice.",
+        "Duplicated-looking beforeAll/afterEach/afterAll scaffolding appears in three files instead of one; the alternative (a shared non-spec helper module) is blocked by scope.paths, so this is the in-scope trade, not a design preference."
+      ],
+      "fitness": {
+        "property": "No reagent-map-*.spec.ts test observes expeditions.json in a state another file's test left mid-write, proven by running the full reagent-map spec set at --workers=3 --repeat-each=3 with reagent-map-expeditions.spec.ts's exact-count assertions passing every repetition, in both runner images",
+        "verification": "npx playwright test tests/reagent-map-*.spec.ts --workers=3 --repeat-each=3 (chromium project locally, chrome project via scripts/ui-suite-in-chrome.sh and its --ubi9 variant) — qa-engineer records the command and a clean result in qa-report.md; no existing count assertion may be loosened to pass",
+        "owner": "qa-engineer"
+      }
+    },
+    {
+      "decision": "The lock's retry loop is built entirely from Playwright's own expect(fn).toPass({ timeout }) polling primitive, never a hand-rolled for/while plus sleep.",
+      "rationale": "architecture-guardrails.md #5 bans custom retry-with-sleep loops and requires a framework-provided CircuitBreaker or ExponentialBackoffStrategy. toPass() is @playwright/test's own built-in polling-with-backoff mechanism for exactly this kind of 'retry until a side-effecting check stops throwing' case — using it instead of a hand-written while(true){...; await sleep(...)} satisfies the guardrail's intent in test tooling, the same way the guardrail is satisfied in production code by a named resilience strategy class.",
+      "tradeOffs": [
+        "toPass()'s default interval schedule is a fixed Playwright default, not independently tuned for this lock — acceptable since contention here is between at most 3 workers over a short critical section, not a production reliability concern."
+      ],
+      "fitness": {
+        "property": "The lock acquisition path contains no custom while/for+sleep retry construct",
+        "verification": "code-reviewer greps the three reagent-map-*.spec.ts files touched by this order for a hand-rolled retry loop around the lock file open; none should be present outside the expect(...).toPass(...) call",
+        "owner": "architect"
+      }
+    },
+    {
+      "decision": "Guard against a permanently stuck lock: before each acquisition attempt inside the toPass() callback, if fs.openSync throws EEXIST, stat the lock file and fs.unlinkSync it when its mtime is older than a named STALE_LOCK_MS constant (recommend 30_000, comfortably above the suite's per-test and REQUEST_TIMEOUT_MS=5000 budgets) before retrying.",
+      "rationale": "Without this, a worker process that crashes or is killed mid-test while holding the lock leaves every later run against the same machine's temp directory deadlocked indefinitely, with no automated recovery and no visible cause.",
+      "tradeOffs": [
+        "A worker that is merely slow (not crashed) past STALE_LOCK_MS could have its lock forcibly stolen by another worker, in principle letting two test bodies touch expeditions.json concurrently for a brief window — accepted because 30s is far above any observed single-test duration in this suite, and the alternative (no staleness handling) is a hard hang, which is worse."
+      ],
+      "judgmentOnly": true
+    },
+    {
+      "decision": "saveExpedition(from, to) is placed in apps/ye-olde-magic-shop/src/api/expeditions.ts beside the existing fetchExpeditions(), as the only function in the codebase permitted to call fetch for this resource.",
+      "rationale": "This file is the project's existing Interface-Adapter-layer HTTP gateway for expeditions (ARCHITECTURE_RULES.md layer III) — ReagentMapView.vue already never calls fetch directly, importing fetchExpeditions instead (confirmed at ReagentMapView.vue:71,283). Adding saveExpedition here, not in the view, keeps that boundary intact; no new file, package, or layer is introduced.",
+      "tradeOffs": [],
+      "judgmentOnly": true
+    },
+    {
+      "decision": "VITE_FEATURE_REAGENT_MAP flip in apps/ye-olde-magic-shop/.env and the isSaving double-click guard inside ReagentMapView.vue's existing saveLine() handler are confirmed as the right placement with no structural change needed beyond what analysis.md's developer tasks already specify.",
+      "rationale": "Both are purely additive within the established flag-read (isReagentMapEnabled()) and Vue ref/computed conventions this feature's prior orders set — no new abstraction, base class, or layer boundary is involved, so no fitness function beyond the ones analyst already proposed (double-click Playwright assertion, flag-off visual baseline) is needed.",
+      "tradeOffs": [],
+      "judgmentOnly": true
+    }
+  ],
+  "componentPlacement": [
+    {
+      "component": "saveExpedition(from, to)",
+      "layer": "Interface Adapters",
+      "package": "apps/ye-olde-magic-shop/src/api/expeditions.ts",
+      "reason": "Same HTTP-gateway module and AbortController/REQUEST_TIMEOUT_MS/getAuthHeaders shape as the existing fetchExpeditions() in this file — the adapter layer that talks to apps/mock-api over HTTP."
+    },
+    {
+      "component": "saveLine(), canSaveLine, isSaving, saveMessage",
+      "layer": "Frameworks & Drivers (UI)",
+      "package": "apps/ye-olde-magic-shop/src/views/ReagentMapView.vue",
+      "reason": "View-local state and handler orchestrating the adapter call and Cesium entity drawing — matches the existing draftPoints/toolStarted/line-tool-status pattern in the same file."
+    },
+    {
+      "component": "acquireExpeditionsLock() / releaseExpeditionsLock()",
+      "layer": "test tooling (not an application layer)",
+      "package": "apps/ye-olde-magic-shop/tests/reagent-map-api.spec.ts (exported, imported by reagent-map-save.spec.ts and reagent-map-expeditions.spec.ts)",
+      "reason": "Must live inside a file matching scope.paths' tests/reagent-map-*.spec.ts glob; reagent-map-api.spec.ts already owns the seed-capture/restore convention these functions extend."
+    }
+  ],
+  "boundedContext": {
+    "owning": "Expedition Planning (Ye Olde Magic Shop demo app) — DOMAIN_DICTIONARY.md section 7",
+    "crossings": [
+      "apps/mock-api POST /api/expeditions — pre-existing endpoint, client-only usage, no backend change in this order"
+    ]
+  },
+  "stabilityDesign": [
+    {
+      "pattern": "Explicit timeout (AbortController)",
+      "appliesTo": "saveExpedition()'s fetch call",
+      "rationale": "Mirrors fetchExpeditions()'s existing REQUEST_TIMEOUT_MS=5000ms budget per architecture-guardrails.md #5 — no network call in this file may wait indefinitely."
+    },
+    {
+      "pattern": "In-flight guard (idempotency-by-prevention, not a server idempotency key)",
+      "appliesTo": "saveLine()'s isSaving ref disabling the save control",
+      "rationale": "POST /api/expeditions is non-idempotent and unauthenticated-retry-unsafe; since the server defines no idempotency key for this endpoint (out of scope to add one), the client prevents the double-send at the source instead."
+    },
+    {
+      "pattern": "Bounded mutual exclusion with staleness recovery (bulkhead-adjacent, test-infra scope only)",
+      "appliesTo": "The cross-file expeditions.json lock in the Playwright suite",
+      "rationale": "Isolates the one shared mutable fixture the three spec files contend over, with a 30s staleness timeout so a crashed holder cannot deadlock the suite permanently."
+    }
+  ],
+  "observabilityDesign": [],
+  "layerBoundaryChecks": [
+    {
+      "rule": "Vue view (Frameworks & Drivers) never calls fetch directly — all HTTP goes through api/expeditions.ts (Interface Adapters)",
+      "verdict": "PASS",
+      "notes": "Confirmed by reading ReagentMapView.vue:71,283 — fetchExpeditions is imported and called, no raw fetch exists in the view today; saveExpedition must follow the same import pattern. Checked by direct import inspection, not the loom graph: the mcp__loom__* tools are not registered in this session (ToolSearch found no match), so this is the documented fallback, stated here as required."
+    },
+    {
+      "rule": "Domain layer (Entities) has zero external dependencies",
+      "verdict": "NOT_APPLICABLE",
+      "notes": "This order touches no domain/entity file — only an existing adapter module and a Vue view."
+    }
+  ],
+  "antiPatternChecks": [
+    {
+      "pattern": "Shotgun surgery",
+      "found": false,
+      "notes": "Change is confined to one adapter function, one view's handler, one env var, and three test files already named for this bounded context."
+    },
+    {
+      "pattern": "Leaky abstraction",
+      "found": false,
+      "notes": "saveExpedition() surfaces the server's own error text verbatim rather than wrapping or reinterpreting it — the caller gets exactly what the trust boundary produced, nothing invented client-side."
+    },
+    {
+      "pattern": "Premature generalization",
+      "found": false,
+      "notes": "The lock mechanism is scoped to exactly the three files that touch expeditions.json today; it is not built as a generic cross-suite locking framework."
+    }
+  ],
+  "fitnessFunctions": [
+    {
+      "property": "Every new or changed function in this order keeps cyclomatic complexity below 7",
+      "verification": "ESLint complexity rule capped at 6 per typescript-conventions.md, run in CI lint",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "No reagent-map-*.spec.ts test observes expeditions.json mid-write by another file's test, proven at --workers=3 --repeat-each=3 in both runner images with reagent-map-expeditions.spec.ts's exact-count assertions unchanged and passing",
+      "verification": "npx playwright test tests/reagent-map-*.spec.ts --workers=3 --repeat-each=3, run directly and via scripts/ui-suite-in-chrome.sh / --ubi9; result recorded in qa-report.md",
+      "owner": "qa-engineer"
+    },
+    {
+      "property": "The lock's retry path uses only Playwright's expect(...).toPass(), never a hand-rolled while/for+sleep loop",
+      "verification": "code-reviewer inspects reagent-map-api.spec.ts, reagent-map-save.spec.ts, and reagent-map-expeditions.spec.ts for the lock implementation",
+      "owner": "architect"
+    },
+    {
+      "property": "No file outside scope.paths changes except this order's own delivery record under docs/features/reagent-map-save/",
+      "verification": "loom's own scope guard against the claim's scope.paths glob",
+      "owner": "devops-engineer"
+    },
+    {
+      "property": "A stale (crash-abandoned) lock does not deadlock the suite forever",
+      "verification": "Not CI-enforceable without deliberately crashing a worker mid-test; judgment-only — developer documents the STALE_LOCK_MS constant and its rationale inline",
+      "owner": "architect",
+      "judgmentOnly": true
+    }
+  ],
+  "refactoringOpportunities": [],
+  "retrieval": {
+    "domainTerms": ["Adventurer", "Expedition", "Seeded Expedition", "Reagent Site", "Aurelis"],
+    "issueRefs": ["reagent-map-save"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "developerHandoffNotes": [
+    "Add to apps/ye-olde-magic-shop/tests/reagent-map-api.spec.ts (exported for import elsewhere): a LOCK_PATH constant = path.join(os.tmpdir(), 'reagent-map-expeditions.lock'); a STALE_LOCK_MS constant = 30_000; acquireExpeditionsLock(): await expect(() => { try { fs.closeSync(fs.openSync(LOCK_PATH, 'wx')); } catch (err) { if ((err as NodeJS.ErrnoException).code === 'EEXIST' && Date.now() - fs.statSync(LOCK_PATH).mtimeMs > STALE_LOCK_MS) fs.unlinkSync(LOCK_PATH); throw err; } }).toPass({ timeout: 30_000 }); releaseExpeditionsLock(): fs.unlinkSync(LOCK_PATH).",
+    "In reagent-map-api.spec.ts's existing test.beforeAll, call acquireExpeditionsLock() before reading seed; add a new test.afterAll that calls releaseExpeditionsLock().",
+    "In the new reagent-map-save.spec.ts, add test.describe.configure({ mode: 'serial' }) and the same beforeAll(acquire lock + capture seed)/afterEach(restore seed)/afterAll(release lock) scaffolding, importing acquireExpeditionsLock/releaseExpeditionsLock from './reagent-map-api.spec'.",
+    "In the existing reagent-map-expeditions.spec.ts, add test.describe.configure({ mode: 'serial' }) plus beforeAll(acquireExpeditionsLock())/afterAll(releaseExpeditionsLock()) — no seed capture/restore needed there since it never writes, only reads live state inside the lock.",
+    "Everything else in analysis.md's developerTasks (saveExpedition in expeditions.ts, saveLine()/isSaving/canSaveLine/saveMessage in ReagentMapView.vue, the save button and message element, the .env flip) stands as written — no structural change to those tasks."
+  ],
+  "openQuestions": [],
+  "rfcPath": ""
+}
