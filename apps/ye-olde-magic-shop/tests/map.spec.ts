@@ -136,3 +136,28 @@ test.describe('Ye Olde Magic Shop - Map Locations', () => {
     expect(isVisibleAfter).toBe(false);
   });
 });
+
+test('locations view loads with every off-origin request blocked (NFR)', async ({ page, leaflet }) => {
+  const APP_ORIGIN = 'http://localhost:8000';
+
+  await page.route('**/*', (route) => {
+    const requestOrigin = new URL(route.request().url()).origin;
+    if (requestOrigin === APP_ORIGIN) {
+      return route.continue();
+    }
+    return route.abort();
+  });
+
+  await page.goto('/locations');
+  await leaflet.waitForMapLoad();
+
+  const imageOverlayLoaded = await page.evaluate(() => {
+    const img = document.querySelector('.leaflet-image-layer') as HTMLImageElement | null;
+    return img !== null && img.complete && img.naturalWidth > 0;
+  });
+  expect(imageOverlayLoaded).toBe(true);
+
+  // Secondary guard in case a tile layer ever reappears.
+  const hasTileFailures = await leaflet.checkTileFailures();
+  expect(hasTileFailures).toBe(false);
+});

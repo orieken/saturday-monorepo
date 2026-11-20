@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 2,
+  "feature": "leaflet-local-tiles",
+  "summary": "LocationsView.vue currently loads OpenStreetMap tiles from tile.openstreetmap.org, so the shop-locations map (and its Playwright suite) requires network access. This swap replaces the L.tileLayer call with L.imageOverlay over an in-repo image, keeping Leaflet's default EPSG:3857 CRS so map.spec.ts's real lat/lng, bounds, geolocation and Turf-distance assertions stay valid. Markers, the Sword Coast territory polygon, popups and the layer control are untouched; a new Playwright test proves the view loads with every non-origin request blocked, and the new image's licence is recorded next to it.",
+  "acceptanceCriteria": [
+    {
+      "statement": "The locations view's map imagery MUST come only from the app's own origin; no tile or image request MUST leave the page.",
+      "examples": [
+        "Only same-origin asset requests occur when /locations loads, e.g. a request to /sword-coast-map.png served by the app's own build output"
+      ]
+    },
+    {
+      "statement": "The existing markers, territory polygon and popups MUST keep the same position relative to each other after the tile layer is replaced.",
+      "examples": [
+        "Waterdeep Branch marker stays at [45.0, -120.0]",
+        "The Sword Coast polygon still spans [-122.0, 48.0] to [-118.0, 41.0]"
+      ]
+    },
+    {
+      "statement": "Every test in tests/map.spec.ts MUST pass unchanged under the default Leaflet CRS.",
+      "examples": [
+        "Map centre stays close to 45.0, -120.0",
+        "Zoom-10 bounds include 45.0, -120.0 but exclude 42.0 latitude",
+        "Geolocation pan moves the centre to 47.6, -121.1",
+        "Turf distance between Waterdeep and Baldur's Gate stays between 300 and 400 km"
+      ]
+    },
+    {
+      "statement": "A Playwright test that aborts every request not addressed to the app's own origin MUST show the locations view loading, leaflet.waitForMapLoad() resolving, and leaflet.checkTileFailures() returning false."
+    },
+    {
+      "statement": "The new map image's licence MUST be recorded next to it, either as an original in-repo creation or under a licence that permits redistribution."
+    },
+    {
+      "statement": "Every new or changed function MUST have cyclomatic complexity below 7, every changed line MUST be covered by a test that can fail, and no file outside scope.paths MUST change except the run's own delivery record under docs/features/leaflet-local-tiles/."
+    }
+  ],
+  "nonFunctionalRequirements": [
+    {
+      "category": "security",
+      "requirement": "The locations view MUST make zero requests to any origin other than the app's own while loading and rendering the map.",
+      "threshold": {
+        "metric": "off-origin HTTP(S) requests triggered by loading /locations",
+        "value": 0,
+        "unit": "requests"
+      }
+    }
+  ],
+  "proposedFitnessFunctions": [
+    {
+      "property": "No tile or image request leaves the app's own origin when the locations view loads",
+      "verification": "Playwright: new test in tests/map.spec.ts that page.route()-aborts any request whose URL is not same-origin, then asserts leaflet.waitForMapLoad() resolves and leaflet.checkTileFailures() is false",
+      "owner": "qa-engineer",
+      "judgmentOnly": false
+    },
+    {
+      "property": "Real-geography assertions (centre, zoom-10 bounds, geolocation pan, 300-400km Turf distance) keep passing under the default CRS",
+      "verification": "tests/map.spec.ts unchanged, run via scripts/ui-suite-in-chrome.sh",
+      "owner": "qa-engineer",
+      "judgmentOnly": false
+    },
+    {
+      "property": "Every new or changed function stays below cyclomatic complexity 7",
+      "verification": "analyze-complexity skill / lint run on changed files in apps/ye-olde-magic-shop/src/views/LocationsView.vue",
+      "owner": "devops-engineer",
+      "judgmentOnly": false
+    },
+    {
+      "property": "The in-repo map image's licence is recorded next to the asset",
+      "verification": "code-reviewer / tech-writer confirms a licence note sits beside the image in apps/ye-olde-magic-shop/public/; no automated check can judge licence sufficiency",
+      "owner": "tech-writer",
+      "judgmentOnly": true
+    }
+  ],
+  "outOfScope": [
+    "Changing the Leaflet package version or swapping it for another mapping library."
+  ],
+  "surfaces": {
+    "ui": true,
+    "runtime": false
+  },
+  "boundedContext": {
+    "owning": "ye-olde-magic-shop frontend — shop-locations map (Leaflet)",
+    "crossings": [
+      "packages/saturday-playwright-leaflet's test fixture contract (waitForMapLoad/checkTileFailures) — relied on, not modified",
+      "tests/reagent-map-globe.spec.ts's off-origin-request-blocking pattern — reused for the new no-network test"
+    ]
+  },
+  "domainEvents": {
+    "commands": [],
+    "eventsProduced": [],
+    "owningAggregates": [],
+    "readModels": []
+  },
+  "affectedComponents": [
+    {
+      "path": "apps/ye-olde-magic-shop/src/views/LocationsView.vue",
+      "reason": "Remove the L.tileLayer OSM call in onMounted and replace it with L.imageOverlay over an in-repo image and a lat/lng bounds box; keep the default CRS, markers, territory layer, popups, layer control and window.__SATURDAY_LEAFLET_MAP__ exposure exactly as they are"
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/public/",
+      "reason": "Add the new in-repo map image asset (e.g. sword-coast-map.svg or .png) and a licence note file placed next to it"
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/tests/map.spec.ts",
+      "reason": "Add the new 'blocks every off-origin request' test alongside the existing tests, which must pass unchanged"
+    }
+  ],
+  "dataModelChanges": [],
+  "apiChanges": [],
+  "newDependencies": [],
+  "architecturalFlags": [
+    "Architect not required: this is an additive swap of L.tileLayer for L.imageOverlay inside the existing LocationsView.vue component, following CLAUDE.md's guidance to skip the architect for purely additive changes within an established pattern. No new package, base class, or layer-boundary change is involved."
+  ],
+  "retrieval": {
+    "domainTerms": [],
+    "issueRefs": ["leaflet-local-tiles"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "tasks": {
+    "developer": [
+      "Create an in-repo map image asset under apps/ye-olde-magic-shop/public/ (e.g. sword-coast-map.svg or .png) depicting the Sword Coast region; author it originally in-repo or use an image whose licence explicitly permits redistribution",
+      "Add a licence/attribution note file directly beside the new image asset (e.g. sword-coast-map.LICENSE.txt), recording authorship or the permitting licence",
+      "In LocationsView.vue's onMounted, remove the L.tileLayer('https://{s}.tile.openstreetmap.org/...') call and add L.imageOverlay(imageUrl, bounds, { className: 'map-tiles-parchment' }).addTo(map.value)",
+      "Size the imageOverlay's lat/lng bounds to cover all three shop coordinates (45.0,-120.0 / 42.0,-119.5 / 47.5,-121.0), the Sword Coast polygon (-122.0,48.0 to -118.0,41.0), and the zoom-6 geolocation flyTo target (47.6,-121.1), with margin so no marker or the flyTo view sits outside the image",
+      "Keep Leaflet's default CRS (EPSG:3857) — do not pass crs: L.CRS.Simple or any other CRS to L.map()",
+      "Confirm the existing .map-tiles-parchment CSS filter (sepia/hue-rotate/saturate/contrast/brightness) still reads acceptably against the new image; adjust the image's own colours rather than removing the filter if it does not"
+    ],
+    "qa": [
+      "While developing, run only tests/map.spec.ts and the new test; confirm every existing test in tests/map.spec.ts passes unchanged",
+      "Add a new Playwright test that uses page.route() to abort any request whose URL origin is not the app's own, then loads /locations, calls leaflet.waitForMapLoad(), and asserts leaflet.checkTileFailures() is false",
+      "Run the full suite via scripts/ui-suite-in-chrome.sh one image at a time, waiting for each run to finish before starting the next or ending the stage",
+      "Confirm cyclomatic complexity stays below 7 for every changed function, and every changed line is covered by a test that can fail",
+      "Confirm no file outside scope.paths changed, other than the delivery record under docs/features/leaflet-local-tiles/"
+    ],
+    "techWriter": [
+      "Confirm the new map image's licence note sits next to the asset and is accurate (original work vs. a named redistribution-permitting licence)",
+      "Record the tile-layer-to-image-overlay change and the licence decision in the feature's delivery record under docs/features/leaflet-local-tiles/"
+    ],
+    "devops": []
+  },
+  "edgeCases": [
+    {
+      "case": "Image overlay bounds are too narrow and crop the geolocation flyTo view (47.6,-121.1) or a shop marker out of frame",
+      "handling": "Size bounds generously around all three shop coordinates, the territory polygon, and the zoom-6 flyTo target; verify visually and via the existing bounds-reading assertions in map.spec.ts"
+    },
+    {
+      "case": "L.ImageOverlay causes waitForMapLoad() to hang because some layer unexpectedly exposes isLoading()",
+      "handling": "packages/saturday-playwright-leaflet/src/fixture.ts only waits on layers that define isLoading(); L.ImageOverlay does not define it, so waitForMapLoad() resolves immediately — confirm this holds for the Leaflet version pinned in this repo"
+    },
+    {
+      "case": "checkTileFailures() looks for `.leaflet-tile` elements with naturalWidth===0, but an image overlay renders under the `.leaflet-image-layer` class, not `.leaflet-tile`",
+      "handling": "With the tile layer removed, no `.leaflet-tile` elements exist at all, so the existing check's `.some()` over an empty array returns false automatically — no fixture change is needed"
+    },
+    {
+      "case": "The chosen image licence turns out not to permit redistribution",
+      "handling": "Prefer an original in-repo creation (hand-authored SVG or PNG) over any third-party map image, per the spec's settled preference, to avoid licence risk entirely"
+    },
+    {
+      "case": "A developer runs two ui-suite-in-chrome.sh images concurrently, exceeding the 30-minute stage budget",
+      "handling": "Run one image at a time to completion, per the spec's Test Approach, before starting the next"
+    }
+  ],
+  "definitionOfDone": [
+    "All 6 acceptance criteria verified; the locations view loads with zero off-origin requests",
+    "L.imageOverlay over an in-repo image replaces the OSM L.tileLayer, with Leaflet's default EPSG:3857 CRS kept",
+    "Markers, the territory polygon, popups and the layer control render in the same relative positions as before",
+    "tests/map.spec.ts passes unchanged; the new off-origin-blocking test passes",
+    "The map image's licence is recorded next to the asset",
+    "Every new or changed function has cyclomatic complexity below 7; every changed line is covered by a test that can fail",
+    "No file outside scope.paths changed, except docs/features/leaflet-local-tiles/",
+    "scripts/ui-suite-in-chrome.sh passes, run one image at a time to completion"
+  ],
+  "openQuestions": []
+}

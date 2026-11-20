@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" width="1024" height="768" preserveAspectRatio="none">
+  <title>The Sword Coast (stylized, original artwork)</title>
+  <rect x="0" y="0" width="1024" height="768" fill="#9fd3e8" />
+
+  <!-- Landmass: a single hand-drawn coastline, not traced from any source -->
+  <path
+    d="M 120 40
+       L 860 40
+       L 900 140
+       L 840 230
+       L 900 300
+       L 820 380
+       L 880 460
+       L 790 540
+       L 830 620
+       L 740 700
+       L 460 728
+       L 300 700
+       L 180 640
+       L 230 560
+       L 150 480
+       L 210 400
+       L 140 320
+       L 190 240
+       L 110 160
+       Z"
+    fill="#e8d9b0"
+    stroke="#8b6f3e"
+    stroke-width="4"
+  />
+
+  <!-- Mountains (Sword Mountains), simple hand-drawn triangles -->
+  <g fill="#9c8b6b" stroke="#5f4b2a" stroke-width="2">
+    <path d="M 300 160 L 340 90 L 380 160 Z" />
+    <path d="M 360 170 L 400 100 L 440 170 Z" />
+    <path d="M 420 160 L 460 95 L 500 160 Z" />
+  </g>
+
+  <!-- Forest clusters, simple circles -->
+  <g fill="#4c7a3d">
+    <circle cx="250" cy="300" r="10" />
+    <circle cx="275" cy="310" r="10" />
+    <circle cx="260" cy="330" r="10" />
+    <circle cx="560" cy="420" r="10" />
+    <circle cx="585" cy="430" r="10" />
+    <circle cx="570" cy="450" r="10" />
+  </g>
+
+  <!-- Rivers, simple curved lines -->
+  <path d="M 360 180 C 380 260, 340 340, 400 460 S 480 560, 460 650" fill="none" stroke="#5a9bd5" stroke-width="5" />
+
+  <!-- Decorative compass rose, drawn from basic shapes -->
+  <g transform="translate(900,660)" stroke="#5f4b2a" stroke-width="2" fill="none">
+    <circle r="40" />
+    <line x1="0" y1="-40" x2="0" y2="40" />
+    <line x1="-40" y1="0" x2="40" y2="0" />
+    <text x="0" y="-48" text-anchor="middle" font-family="serif" font-size="14" stroke="none" fill="#5f4b2a">N</text>
+  </g>
+
+  <text x="512" y="384" text-anchor="middle" font-family="serif" font-size="28" fill="#5f4b2a" opacity="0.5">
+    The Sword Coast
+  </text>
+</svg>

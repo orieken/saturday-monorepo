@@ -1,0 +1,11 @@
+sword-coast-map.svg
+
+Original work created for this repository (hand-authored SVG shapes: coastline,
+mountains, forest clusters, rivers, compass rose). Not traced or derived from any
+third-party map, dataset, or imagery.
+
+Copyright (c) 2026 Oscar Rieken.
+
+Licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/) — the same
+license used elsewhere in this project's documentation. Redistribution and reuse are
+permitted with attribution.
