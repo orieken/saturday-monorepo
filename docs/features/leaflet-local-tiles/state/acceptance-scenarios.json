@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 2,
+  "feature": "leaflet-local-tiles",
+  "scenarios": [
+    {
+      "criterion": "The locations view's map imagery MUST come only from the app's own origin; no tile or image request MUST leave the page.",
+      "name": "Locations view loads map imagery from its own origin only",
+      "given": ["the locations view is open"],
+      "when": ["the map finishes loading"],
+      "then": [
+        "no network request is made to any origin other than the app's own",
+        "the map's imagery is served from the app's own build output, for example a same-origin request to /sword-coast-map.png"
+      ]
+    },
+    {
+      "criterion": "The existing markers, territory polygon and popups MUST keep the same position relative to each other after the tile layer is replaced.",
+      "name": "Markers, territory polygon and popups keep their relative positions after the tile layer is replaced",
+      "given": ["the locations view has loaded with the local map imagery in place"],
+      "when": ["the shop markers, the Sword Coast territory polygon, and their popups are inspected"],
+      "then": [
+        "the Waterdeep Branch marker stays at [45.0, -120.0]",
+        "the Sword Coast polygon still spans [-122.0, 48.0] to [-118.0, 41.0]",
+        "each marker, polygon and popup sits in the same position relative to the others as it did before the imagery changed"
+      ]
+    },
+    {
+      "criterion": "Every test in tests/map.spec.ts MUST pass unchanged under the default Leaflet CRS.",
+      "name": "Map centre stays at the documented coordinates under the default CRS",
+      "when": ["the locations view loads"],
+      "then": ["the map centre stays close to latitude 45.0 and longitude -120.0"]
+    },
+    {
+      "criterion": "Every test in tests/map.spec.ts MUST pass unchanged under the default Leaflet CRS.",
+      "name": "Zoom level 10 bounds include Waterdeep and exclude the southern boundary",
+      "when": ["the map is zoomed to level 10"],
+      "then": [
+        "the visible bounds include latitude 45.0, longitude -120.0",
+        "the visible bounds exclude latitude 42.0"
+      ]
+    },
+    {
+      "criterion": "Every test in tests/map.spec.ts MUST pass unchanged under the default Leaflet CRS.",
+      "name": "Geolocation pan moves the map centre to the user's location",
+      "given": ["the browser reports a geolocation position"],
+      "when": ["the locations view requests the user's location"],
+      "then": ["the map centre pans to latitude 47.6, longitude -121.1"]
+    },
+    {
+      "criterion": "Every test in tests/map.spec.ts MUST pass unchanged under the default Leaflet CRS.",
+      "name": "Distance between Waterdeep and Baldur's Gate stays within the expected range",
+      "when": ["the distance between the Waterdeep and Baldur's Gate markers is calculated"],
+      "then": ["the calculated distance stays between 300 and 400 km"]
+    },
+    {
+      "criterion": "A Playwright test that aborts every request not addressed to the app's own origin MUST show the locations view loading, leaflet.waitForMapLoad() resolving, and leaflet.checkTileFailures() returning false.",
+      "name": "Locations view loads successfully with every off-origin request blocked",
+      "given": ["every network request whose origin is not the app's own origin is blocked"],
+      "when": ["the locations view loads"],
+      "then": [
+        "the page's map helper waitForMapLoad() resolves",
+        "the page's map helper checkTileFailures() returns false"
+      ]
+    },
+    {
+      "criterion": "The new map image's licence MUST be recorded next to it, either as an original in-repo creation or under a licence that permits redistribution.",
+      "name": "The map image's licence is recorded next to the asset",
+      "given": ["the local map image exists in the repository"],
+      "when": ["the image's licence information is checked"],
+      "then": [
+        "a licence record sits next to the image",
+        "the record either marks the image as an original in-repo creation or names a licence that permits redistribution"
+      ]
+    },
+    {
+      "criterion": "Every new or changed function MUST have cyclomatic complexity below 7, every changed line MUST be covered by a test that can fail, and no file outside scope.paths MUST change except the run's own delivery record under docs/features/leaflet-local-tiles/.",
+      "name": "Changed code stays within complexity, coverage and scope limits",
+      "when": ["the implementation for this feature is complete"],
+      "then": [
+        "every new or changed function has cyclomatic complexity below 7",
+        "every changed line is covered by a test that can fail",
+        "no file outside scope.paths changes, except the delivery record under docs/features/leaflet-local-tiles/"
+      ]
+    }
+  ],
+  "retrieval": {
+    "domainTerms": [],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

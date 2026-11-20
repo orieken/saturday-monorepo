@@ -76,9 +76,15 @@ onMounted(() => {
   // Expose for playwright testing
   (window as any).__SATURDAY_LEAFLET_MAP__ = map.value;
 
-  // Use OSM with a CSS class we can style to look like parchment
-  const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
+  // Served from this app's own origin (apps/ye-olde-magic-shop/public/), so the
+  // map needs no network access. Bounds are sized generously around the three
+  // shop markers, the Sword Coast polygon, and the geolocation flyTo target
+  // (47.6, -121.1) so none of them render outside the image.
+  const swordCoastImageBounds: L.LatLngBoundsExpression = [
+    [40.0, -123.0],
+    [49.0, -117.0]
+  ];
+  L.imageOverlay('/sword-coast-map.svg', swordCoastImageBounds, {
     className: 'map-tiles-parchment'
   }).addTo(map.value);
 
