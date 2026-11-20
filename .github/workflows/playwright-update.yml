@@ -1,0 +1,113 @@
+name: Playwright update
+
+# Every Monday, moves every Playwright pin (workspace packages, runner-check,
+# versions.lock) to the latest stable release in one PR, using
+# scripts/update-playwright.sh. Nothing merges on its own: the PR waits for a
+# human, and the runner-image ui-suite (debian and ubi9) runs before merge.
+#
+# Repository settings this needs (Settings > Actions > General):
+#   "Allow GitHub Actions to create and approve pull requests" switched on.
+# A PR opened with the default GITHUB_TOKEN does not start other workflows,
+# so Packages CI/CD will not run on it by itself. To have it run, add a
+# fine-grained token with contents and pull-requests write access as the
+# PLAYWRIGHT_UPDATE_TOKEN repository secret; this workflow then uses it.
+
+on:
+  schedule:
+    - cron: '0 13 * * 1' # Mondays 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Playwright version (blank = npm latest)'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: playwright-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.PLAYWRIGHT_UPDATE_TOKEN || github.token }}
+      BRANCH: deps/playwright-update
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.PLAYWRIGHT_UPDATE_TOKEN || github.token }}
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Test the update script
+        run: bash scripts/update-playwright.test.sh
+
+      - name: Resolve the target version
+        id: target
+        env:
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          version="${REQUESTED:-$(npm view @playwright/test dist-tags.latest)}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when already current
+        id: current
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          if scripts/update-playwright.sh --check --version "$VERSION"; then
+            echo "is_current=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump every Playwright pin
+        if: steps.current.outputs.is_current != 'true'
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+        run: scripts/update-playwright.sh --version "$VERSION"
+
+      # Browser suites (apps, cesium, leaflet) need the runner image. They run
+      # in the ui-suite before merge, not here.
+      - name: Build and unit-test the packages
+        if: steps.current.outputs.is_current != 'true'
+        run: |
+          pnpm -r build
+          pnpm -r --filter './packages/**' --filter '!@orieken/saturday-playwright-cesium' --filter '!@orieken/saturday-playwright-leaflet' test
+
+      - name: Open or update the PR
+        if: steps.current.outputs.is_current != 'true'
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A
+          git commit -m "chore(deps): update Playwright to $VERSION"
+          git push --force-with-lease origin "$BRANCH"
+          body_file="$(mktemp)"
+          cat > "$body_file" <<EOF
+          Moves every Playwright pin to $VERSION with \`scripts/update-playwright.sh\`.
+
+          Release notes: https://github.com/microsoft/playwright/releases/tag/v$VERSION
+
+          Before merge:
+          - [ ] Read the release notes for breaking changes
+          - [ ] Rebuild both runner images (\`--target debian\` and \`--target ubi9\`)
+          - [ ] \`scripts/ui-suite-in-chrome.sh\` and \`scripts/ui-suite-in-chrome.sh --ubi9\` pass
+          EOF
+          if gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -q OPEN; then
+            gh pr edit "$BRANCH" --title "chore(deps): update Playwright to $VERSION" --body-file "$body_file"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore(deps): update Playwright to $VERSION" --body-file "$body_file"
+          fi

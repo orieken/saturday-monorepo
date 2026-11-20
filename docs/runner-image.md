@@ -185,6 +185,28 @@ to get past a missing version; regenerate. `--ubi9` also re-downloads the EPEL R
 and rewrites `rpms/SHA256SUMS`; review that diff, since it is the only place a package enters the
 image from the build context.
 
+## Updating Playwright
+
+Playwright is pinned in three places that must agree: the workspace `package.json` files, runner-check's
+exact `playwright-core` pin, and `versions.lock`. The Containerfile fails the build when runner-check and
+`versions.lock` disagree. One script moves all three and regenerates the lockfiles:
+
+```bash
+scripts/update-playwright.sh                    # to npm's latest stable release
+scripts/update-playwright.sh --version 1.65.1   # to a named release
+scripts/update-playwright.sh --check            # change nothing; exit 1 if any pin is behind
+```
+
+`peerDependencies` ranges stay as they are: they state what consumers may use. The script does not touch
+`apt.lock` or `rpm.lock`, because the image runs the real Chrome and Edge stable channels, not a
+Playwright-bundled browser. Then rebuild both images and run both suites, as in the block above.
+
+`.github/workflows/playwright-update.yml` runs the script every Monday and opens or updates one PR on
+the `deps/playwright-update` branch. It needs "Allow GitHub Actions to create and approve pull requests"
+switched on in the repository's Actions settings. A PR opened with the default token does not start
+Packages CI/CD. A `PLAYWRIGHT_UPDATE_TOKEN` secret (a fine-grained token with contents and pull-requests
+write access) makes it start.
+
 ## Debian variant: first build record (2026-10-30)
 
 The factory's first developer run (2026-10-30) produced most of `containers/saturday-runner/`
