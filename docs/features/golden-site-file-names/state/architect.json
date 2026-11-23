@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-site-file-names",
+  "structuralDecisions": [
+    {
+      "decision": "No new structural decision is required: this feature renames existing files to match the already-established name.type.ts kebab-case convention (demonstrated by flows/draw-line.flow.ts), with no class rename, no new abstraction, no layer boundary change, and no new package.",
+      "rationale": "CLAUDE.md's architect-invocation criteria (new package, new base class, layer boundary change, cross-cutting concern, or constraining decision) do not apply. Verified on disk: apps/ye-olde-magic-shop/lib/site/ already contains only account.page.ts, cart.page.ts, home.page.ts, login.page.ts, magic-shop.site.ts, product-details.page.ts, reagent-map.page.ts, and flows/draw-line.flow.ts. A grep for the seven old PascalCase paths across apps/ye-olde-magic-shop returned zero matches, and magic-shop.site.ts's imports already read from the six new kebab-case page paths. This is additive-within-an-established-pattern work, which CLAUDE.md explicitly instructs the architect to skip.",
+      "tradeOffs": [],
+      "judgmentOnly": true
+    }
+  ],
+  "componentPlacement": [
+    { "component": "MagicShop", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/magic-shop.site.ts", "reason": "App-specific Site composition root; unchanged placement, filename now matches name.type.ts convention." },
+    { "component": "HomePage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/home.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." },
+    { "component": "CartPage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/cart.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." },
+    { "component": "LoginPage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/login.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." },
+    { "component": "AccountPage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/account.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." },
+    { "component": "ProductDetailsPage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/product-details.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." },
+    { "component": "ReagentMapPage", "layer": "Interface Adapters", "package": "apps/ye-olde-magic-shop/lib/site/reagent-map.page.ts", "reason": "App-specific Page object extending BasePage; unchanged placement." }
+  ],
+  "boundedContext": {
+    "owning": "Test Automation",
+    "crossings": [
+      "apps/ye-olde-magic-shop/lib/site/** is imported by features/support/world.ts, features/step_definitions/webapp.steps.ts, tests/cart.spec.ts, and tests/reagent-map-ui.spec.ts by file path — all four already updated to the new paths, verified on disk."
+    ]
+  },
+  "stabilityDesign": [],
+  "observabilityDesign": [],
+  "layerBoundaryChecks": [
+    {
+      "rule": "Site/Page objects (Interface Adapters layer) must not introduce new dependencies on domain or framework internals as part of this rename.",
+      "verdict": "PASS",
+      "notes": "Confirmed by reading magic-shop.site.ts: only import changes are the six relative page paths and the existing BaseSite/Page/DrawLineFlow imports, all unchanged in target, only path changed. mcp__loom__* graph tools were not used (no need — a plain import read sufficed for a pure rename with no new edges)."
+    }
+  ],
+  "antiPatternChecks": [],
+  "fitnessFunctions": [
+    {
+      "property": "Every file in apps/ye-olde-magic-shop/lib/site/ matches kebab-case name.type.ts (page/site/element/flow suffix), with no PascalCase .ts file remaining in that directory.",
+      "verification": "judgment-only — code-reviewer confirms the rename map and naming shape at review time; a machine-enforced lint for this convention is the separate, downstream intake/golden-lint-and-exemplars.md chore and is out of scope for this run.",
+      "owner": "code-reviewer",
+      "judgmentOnly": true
+    }
+  ],
+  "refactoringOpportunities": [],
+  "retrieval": {
+    "domainTerms": ["Site", "Page", "BaseSite", "BasePage", "BaseFlow"],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "developerHandoffNotes": [
+    "No architect-driven changes are needed. Verified on disk that the rename and import updates described in analysis.md are already complete and correct: lib/site/ contains exactly the seven target files plus flows/draw-line.flow.ts, and a repo-wide grep for the seven old PascalCase paths returns zero matches.",
+    "Developer's only remaining obligation is the reporting-format fix analysis.md already specifies: list the seven renamed files once each, by new path only, in filesCreated, and list flows/draw-line.flow.ts, features/support/world.ts, features/step_definitions/webapp.steps.ts, tests/cart.spec.ts, and tests/reagent-map-ui.spec.ts as plain paths in filesModified — never an 'old -> new' pair in any field."
+  ],
+  "openQuestions": [],
+  "rfcPath": ""
+}

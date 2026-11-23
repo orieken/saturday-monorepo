@@ -1,12 +1,12 @@
 
 import { BaseSite } from '@orieken/saturday-core';
 import { Page } from '@playwright/test';
-import { HomePage } from './HomePage';
-import { CartPage } from './CartPage';
-import { ProductDetailsPage } from './ProductDetailsPage';
-import { LoginPage } from './LoginPage';
-import { AccountPage } from './AccountPage';
-import { ReagentMapPage } from './ReagentMapPage';
+import { HomePage } from './home.page';
+import { CartPage } from './cart.page';
+import { ProductDetailsPage } from './product-details.page';
+import { LoginPage } from './login.page';
+import { AccountPage } from './account.page';
+import { ReagentMapPage } from './reagent-map.page';
 import { DrawLineFlow } from './flows/draw-line.flow';
 
 export class MagicShop extends BaseSite {

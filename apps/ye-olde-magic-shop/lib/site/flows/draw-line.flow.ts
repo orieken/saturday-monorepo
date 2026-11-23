@@ -1,6 +1,6 @@
 import { BaseFlow } from '@orieken/saturday-core';
 import type { CesiumFixture } from '@orieken/saturday-playwright-cesium';
-import type { ReagentMapPage } from '../ReagentMapPage';
+import type { ReagentMapPage } from '../reagent-map.page';
 
 export interface GeoPoint {
   lat: number;
