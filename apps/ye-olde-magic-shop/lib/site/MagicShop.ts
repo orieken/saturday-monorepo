@@ -6,6 +6,8 @@ import { CartPage } from './CartPage';
 import { ProductDetailsPage } from './ProductDetailsPage';
 import { LoginPage } from './LoginPage';
 import { AccountPage } from './AccountPage';
+import { ReagentMapPage } from './ReagentMapPage';
+import { DrawLineFlow } from './flows/draw-line.flow';
 
 export class MagicShop extends BaseSite {
   constructor(page: Page) {
@@ -18,10 +20,11 @@ export class MagicShop extends BaseSite {
     this.registerPage('productDetailsPage', ProductDetailsPage);
     this.registerPage('loginPage', LoginPage);
     this.registerPage('accountPage', AccountPage);
+    this.registerPage('reagentMapPage', ReagentMapPage);
   }
 
   protected initializeFlows(): void {
-    // No flows
+    this.registerFlow('drawLine', DrawLineFlow);
   }
 
   get homePage(): HomePage {
@@ -42,5 +45,13 @@ export class MagicShop extends BaseSite {
 
   get accountPage(): AccountPage {
     return this.getPage<AccountPage>('accountPage');
+  }
+
+  get reagentMapPage(): ReagentMapPage {
+    return this.getPage<ReagentMapPage>('reagentMapPage');
+  }
+
+  get drawLine(): DrawLineFlow {
+    return this.getFlow<DrawLineFlow>('drawLine');
   }
 }
