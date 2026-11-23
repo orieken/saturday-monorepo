@@ -58,6 +58,13 @@ A pure rename, so the files a factory copies follow the naming rule.
 
 - None — no auth, no user input, no external calls
 
+## Reporting the renames
+
+An earlier run did every rename, then parked because its developer state listed them as
+`old -> new` in `filesModified`. Loom checks that each listed path exists, and has no field for a
+removed file. List each renamed file once, by its new path, in `filesCreated`. Never list an old
+path or an `old -> new` pair. Files whose imports changed go in `filesModified` as plain paths.
+
 ## Test Approach
 
 Saturday/Cucumber and Saturday/Playwright, existing suites.
