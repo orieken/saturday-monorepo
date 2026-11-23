@@ -26,11 +26,14 @@ export class ShopApi {
 
   constructor(private readonly request: APIRequestContext) {}
 
-  async signIn(email: string, password = 'password123'): Promise<void> {
+  /** Signs in and returns the session, which a browser stores to be signed in too. */
+  async signIn(email: string, password = 'password123'): Promise<{ token: string; user: unknown }> {
     const response = await this.request.post(`${MOCK_API_URL}/api/auth/login`, {
       data: { email, password },
     });
-    this.token = (await response.json()).token;
+    const session = await response.json();
+    this.token = session.token;
+    return session;
   }
 
   async reagentSites(): Promise<ReagentSite[]> {
