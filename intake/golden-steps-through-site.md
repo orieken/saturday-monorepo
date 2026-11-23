@@ -3,7 +3,7 @@ intake: 1
 id: golden-steps-through-site
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-10-29
 requested-by: oscar
@@ -39,6 +39,8 @@ model.
 - [ ] Given a step that needed one of those, then the behaviour moved to a page method or a flow,
       named for what it does (`accountPage.newestOrderStatus()`), and the step calls that.
 - [ ] Given login and checkout steps, then they call `loginFlow` and `checkoutFlow`.
+- [ ] Given `lib/site/`, then no page waits a fixed time: `waitForTimeout` in `LoginPage` and
+      `AccountPage` becomes a wait for the result it stands in for.
 - [ ] Given the existing feature files, then every scenario that passed before passes after, with no
       `.feature` file changed and no `Then` asserting less than before.
 - [ ] Given the change is complete, then every new or changed function has cyclomatic complexity
@@ -64,6 +66,11 @@ model.
 ## Test Approach
 
 Saturday/Cucumber, existing suite.
+
+Run the Playwright suite through `scripts/ui-suite-in-chrome.sh`, one runner image at a time, never
+two at once, and wait for each run to finish before ending the stage. One run takes about two minutes
+and a stage has 30. Run the Cucumber suite with the app's `test:bdd` script against the same running
+app. Changing `.feature` files is out of scope for every golden order.
 
 ## Open Questions
 

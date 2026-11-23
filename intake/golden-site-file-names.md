@@ -3,7 +3,7 @@ intake: 1
 id: golden-site-file-names
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-10-29
 requested-by: oscar
@@ -61,6 +61,11 @@ A pure rename, so the files a factory copies follow the naming rule.
 ## Test Approach
 
 Saturday/Cucumber and Saturday/Playwright, existing suites.
+
+Run the Playwright suite through `scripts/ui-suite-in-chrome.sh`, one runner image at a time, never
+two at once, and wait for each run to finish before ending the stage. One run takes about two minutes
+and a stage has 30. Run the Cucumber suite with the app's `test:bdd` script against the same running
+app. Changing `.feature` files is out of scope for every golden order.
 
 ## Open Questions
 

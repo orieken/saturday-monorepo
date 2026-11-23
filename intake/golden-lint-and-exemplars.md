@@ -3,7 +3,7 @@ intake: 1
 id: golden-lint-and-exemplars
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-10-29
 requested-by: oscar
@@ -36,8 +36,11 @@ the named set a factory pins as its pattern.
 
 - [ ] Given a lint run over the demo app (an ESLint rule set or a small checker), then it fails on:
       `this.page`, `getByTestId`, `locator(` or `$(` in `step_definitions/`; a text or structural
-      locator in `lib/site/`; `waitForTimeout` or `setTimeout` in test code; a file in `lib/site/`
+      locator in `lib/site/`; `waitForTimeout` or `setTimeout` in `step_definitions/` or `lib/site/`; a file in `lib/site/`
       not named `name.type.ts`; a page or flow not registered on the site.
+- [ ] Given the Playwright specs in `tests/`, then the fixed-wait rule does not apply to them: the
+      pan and zoom specs hold the mouse button for a set time on purpose, which is gesture timing,
+      not a wait for state.
 - [ ] Given each rule, then a test shows the lint failing on a fixture that breaks it and passing on
       one that does not.
 - [ ] Given the app's `lint` script, then it runs the rule set and the current code passes.
@@ -66,6 +69,11 @@ the named set a factory pins as its pattern.
 ## Test Approach
 
 Unit tests for each lint rule.
+
+Run the Playwright suite through `scripts/ui-suite-in-chrome.sh`, one runner image at a time, never
+two at once, and wait for each run to finish before ending the stage. One run takes about two minutes
+and a stage has 30. Run the Cucumber suite with the app's `test:bdd` script against the same running
+app. Changing `.feature` files is out of scope for every golden order.
 
 ## Open Questions
 

@@ -3,7 +3,7 @@ intake: 1
 id: golden-flows
 type: chore
 plan: deliver-feature
-status: draft
+status: ready
 priority: 2
 created: 2026-10-29
 requested-by: oscar
@@ -12,13 +12,13 @@ trust: internal
 base-branch: main
 finish: pr
 autonomy: inherit
-depends-on: [golden-site-file-names]
+depends-on: [golden-test-ids]
 budget:
   max-attempts: 2
   max-usd: 25
   max-hours: 3
 scope:
-  paths: [apps/ye-olde-magic-shop/lib/**, docs/**]
+  paths: [apps/ye-olde-magic-shop/lib/**, apps/ye-olde-magic-shop/tests/**, docs/**]
 ---
 
 # Register the demo app's login and checkout flows
@@ -36,6 +36,8 @@ shows Site → Flow → Page → Element.
 
 - [ ] Given `lib/site/`, then `login.flow.ts` and `checkout.flow.ts` exist, each extends `BaseFlow`,
       takes its inputs as typed parameters, and uses only pages from the site.
+- [ ] Given `lib/site/flows/draw-line.flow.ts`, then the new flows follow its shape and sit beside it.
+      It is the reagent map's flow from E1 and is already registered on the site.
 - [ ] Given `MagicShop`, then both flows are registered in `initializeFlows()` and exposed through
       typed getters, like the pages.
 - [ ] Given each flow, then a unit test drives it against stubbed pages and asserts the calls it
@@ -63,6 +65,11 @@ shows Site → Flow → Page → Element.
 ## Test Approach
 
 Unit tests for the flows; existing suites unchanged.
+
+Run the Playwright suite through `scripts/ui-suite-in-chrome.sh`, one runner image at a time, never
+two at once, and wait for each run to finish before ending the stage. One run takes about two minutes
+and a stage has 30. Run the Cucumber suite with the app's `test:bdd` script against the same running
+app. Changing `.feature` files is out of scope for every golden order.
 
 ## Open Questions
 
