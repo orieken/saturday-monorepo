@@ -17,9 +17,7 @@ export class CartPage extends BasePage {
     this.registerElement('decreaseQtyBtn', ButtonElement, '[data-testid="decrease-qty-btn"]');
     this.registerElement('removeItemBtn', ButtonElement, '[data-testid="remove-item-btn"]');
     
-    // Using a broad selector for now as we don't know the exact testid, but assuming it's a button
-    // In a real app we'd ask the dev to add a testid
-    this.registerElement('completeTransactionBtn', ButtonElement, 'button:has-text("COMPLETE TRANSACTION")');
+    this.registerElement('completeTransactionBtn', ButtonElement, '[data-testid="complete-transaction-btn"]');
     this.registerElement('cartItemQty', TextElement, '[data-testid="cart-item-qty"]');
   }
   

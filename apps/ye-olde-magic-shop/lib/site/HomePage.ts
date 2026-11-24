@@ -36,6 +36,6 @@ export class HomePage extends BasePage {
   }
 
   async clickFirstProductDetails() {
-    await this.page.locator('[data-testid="item-card"] a').first().click();
+    await this.page.locator('[data-testid="item-name"]').first().click();
   }
 }
