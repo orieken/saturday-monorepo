@@ -1,6 +1,6 @@
 import { setWorldConstructor, IWorldOptions } from '@cucumber/cucumber';
 import { SaturdayWorld } from '@orieken/saturday-cucumber';
-import { MagicShop } from '../../lib/site/MagicShop';
+import { MagicShop } from '../../lib/site/magic-shop.site';
 
 export interface TestWorld extends SaturdayWorld {
   site?: MagicShop;
