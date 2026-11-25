@@ -3,7 +3,7 @@ intake: 1
 id: golden-lint-and-exemplars
 type: chore
 plan: deliver-feature
-status: ready
+status: hold
 priority: 2
 created: 2026-10-29
 requested-by: oscar
