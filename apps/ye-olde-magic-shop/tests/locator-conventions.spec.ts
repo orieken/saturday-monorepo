@@ -59,7 +59,7 @@ test.describe('locator conventions in lib/site/ (golden-test-ids AC1, AC3)', () 
   });
 
   test("CartPage's complete-transaction button is located by data-testid=\"complete-transaction-btn\" (AC2)", () => {
-    const source = readFileSync(join(SITE_DIR, 'CartPage.ts'), 'utf-8');
+    const source = readFileSync(join(SITE_DIR, 'cart.page.ts'), 'utf-8');
 
     expect(source).toContain(
       "this.registerElement('completeTransactionBtn', ButtonElement, '[data-testid=\"complete-transaction-btn\"]')"
@@ -67,7 +67,7 @@ test.describe('locator conventions in lib/site/ (golden-test-ids AC1, AC3)', () 
   });
 
   test("HomePage's clickFirstProductDetails uses a flat data-testid locator, not nested item-card markup", () => {
-    const source = readFileSync(join(SITE_DIR, 'HomePage.ts'), 'utf-8');
+    const source = readFileSync(join(SITE_DIR, 'home.page.ts'), 'utf-8');
     const methodMatch = source.match(/async clickFirstProductDetails\(\) \{([\s\S]*?)\n {2}\}/);
 
     expect(methodMatch).not.toBeNull();
