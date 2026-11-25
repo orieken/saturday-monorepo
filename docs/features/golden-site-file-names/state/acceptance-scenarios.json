@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-site-file-names",
+  "scenarios": [
+    {
+      "criterion": "Every file under apps/ye-olde-magic-shop/lib/site/ MUST use kebab-case name.type.ts naming: pages as *.page.ts, the site as magic-shop.site.ts, elements as *.element.ts.",
+      "name": "Site module files follow kebab-case name.type.ts naming",
+      "given": [
+        "the ye-olde-magic-shop site module lives under apps/ye-olde-magic-shop/lib/site/"
+      ],
+      "when": [
+        "the file names in apps/ye-olde-magic-shop/lib/site/ (including flows/) are inspected"
+      ],
+      "then": [
+        "every page file is named *.page.ts, the site file is named magic-shop.site.ts, any element file is named *.element.ts, and the existing flows/draw-line.flow.ts is unchanged",
+        "no PascalCase .ts file remains anywhere in apps/ye-olde-magic-shop/lib/site/"
+      ]
+    },
+    {
+      "criterion": "Class names MUST stay unchanged and every import of a renamed file MUST be updated to its new path.",
+      "name": "Renamed site files keep their class names and every importer points to the new path",
+      "given": [
+        "the site, page, and flow files under apps/ye-olde-magic-shop/lib/site/ have been renamed to kebab-case"
+      ],
+      "when": [
+        "the exported class names in the renamed files and every file that imports them are inspected"
+      ],
+      "then": [
+        "each exported class name (for example MagicShop) is exactly the same as before the rename",
+        "every importer, including magic-shop.site.ts, flows/draw-line.flow.ts, features/support/world.ts, features/step_definitions/webapp.steps.ts, tests/cart.spec.ts, and tests/reagent-map-ui.spec.ts, imports from the new kebab-case path",
+        "a search for any of the old PascalCase import paths (lib/site/MagicShop, HomePage, CartPage, LoginPage, AccountPage, ProductDetailsPage, ReagentMapPage) across apps/ye-olde-magic-shop returns zero matches"
+      ]
+    },
+    {
+      "criterion": "Every scenario that passed before the change MUST still pass after it, with no .feature file or assertion changed.",
+      "name": "Existing BDD and Playwright suites pass unchanged after the rename",
+      "given": [
+        "the test:bdd Cucumber suite and the Playwright suite run via scripts/ui-suite-in-chrome.sh were passing before the file rename"
+      ],
+      "when": [
+        "the same suites are run again against the renamed site files"
+      ],
+      "then": [
+        "test:bdd produces the same scenario pass count as before the rename",
+        "the Playwright suite run through scripts/ui-suite-in-chrome.sh produces the same spec pass count as before the rename",
+        "no .feature file and no assertion in any .spec.ts or .steps.ts file differs from before the rename"
+      ]
+    },
+    {
+      "criterion": "The developer stage MUST report this work in the exact field shape loom's state validator accepts, so a correct diff is not rejected a second time.",
+      "name": "Developer stage reports renamed files in the shape the state validator accepts",
+      "given": [
+        "the developer stage has renamed the seven PascalCase site files to kebab-case using git mv"
+      ],
+      "when": [
+        "the developer stage records its filesCreated and filesModified fields for this change"
+      ],
+      "then": [
+        "filesCreated lists only the new kebab-case paths (magic-shop.site.ts, home.page.ts, cart.page.ts, login.page.ts, account.page.ts, product-details.page.ts, reagent-map.page.ts) and never an old path or an 'old -> new' pair",
+        "filesModified lists only plain paths for files whose imports changed but which were not themselves renamed (flows/draw-line.flow.ts, features/support/world.ts, features/step_definitions/webapp.steps.ts, tests/cart.spec.ts, tests/reagent-map-ui.spec.ts)",
+        "loom's state validator accepts the stage on this attempt"
+      ]
+    }
+  ]
+}

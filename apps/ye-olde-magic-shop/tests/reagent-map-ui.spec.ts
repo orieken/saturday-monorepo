@@ -22,7 +22,7 @@ import {
   type CesiumFixture,
 } from '@orieken/saturday-playwright-cesium';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
-import { MagicShop } from '../lib/site/MagicShop';
+import { MagicShop } from '../lib/site/magic-shop.site';
 import { ShopApi, type GeoPoint } from '../lib/api/ShopApi';
 import {
   EXPEDITIONS_PATH,

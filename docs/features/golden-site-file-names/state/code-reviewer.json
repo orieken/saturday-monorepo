@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-site-file-names",
+  "verdict": "APPROVED",
+  "designNarrative": "This is a pure file-rename refactor: seven PascalCase files under apps/ye-olde-magic-shop/lib/site/ (MagicShop.ts and the six *Page.ts files) move to kebab-case name.type.ts filenames (magic-shop.site.ts, *.page.ts), matching the convention flows/draw-line.flow.ts already followed. Every class name, export, and method body is byte-for-byte unchanged; git shows clean R/RM renames, and the only diff hunks are relative import-path updates in magic-shop.site.ts, draw-line.flow.ts, world.ts, webapp.steps.ts, cart.spec.ts, and reagent-map-ui.spec.ts. Behaviour change: no.",
+  "designScore": {
+    "clarity": 5,
+    "cohesion": 5,
+    "coupling": 5,
+    "craft": 5
+  },
+  "securitySurface": [],
+  "performanceSurface": [],
+  "testDesignReview": [
+    "Diff adds or modifies no test files or assertions — only import paths changed in cart.spec.ts and reagent-map-ui.spec.ts. No test design review applicable."
+  ],
+  "selfReviewCheck": [
+    "Developer's self-review checklist matches reality: verified via git status (clean R/RM renames, not delete+add), a repo-wide grep for all seven old PascalCase import paths (zero matches), and diffing each changed file (only import lines changed, no body/class/behavior changes).",
+    "Developer's claim that filesCreated/filesModified reporting format was the only defect in the prior attempt is consistent with the on-disk state — no code changes were needed or made this iteration."
+  ],
+  "behaviorChange": false,
+  "findings": [],
+  "retrieval": {
+    "domainTerms": ["BaseSite", "BasePage", "BaseElement", "BaseFlow"],
+    "issueRefs": ["intake/golden-site-file-names.md"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

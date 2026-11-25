@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { MagicShop } from '../lib/site/MagicShop';
+import { MagicShop } from '../lib/site/magic-shop.site';
 
 test.describe('Shopping Cart', () => {
   let site: MagicShop;

@@ -2,7 +2,7 @@ import { Given, When, Then, setDefaultTimeout } from '@cucumber/cucumber';
 import { expect, Page } from '@playwright/test';
 import * as assert from 'assert';
 import { TestWorld } from '../support/world';
-import { MagicShop } from '../../lib/site/MagicShop.ts';
+import { MagicShop } from '../../lib/site/magic-shop.site.ts';
 
 setDefaultTimeout(60 * 10000);
 
