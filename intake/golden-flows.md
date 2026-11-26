@@ -62,6 +62,12 @@ shows Site → Flow → Page → Element.
 
 - None — test credentials only, from the existing fixtures
 
+## Base
+
+Start from `main` with #35 and #36 merged: the site files are `name.type.ts` (`magic-shop.site.ts`,
+`login.page.ts`, `cart.page.ts`, `home.page.ts`), and the pages use `data-testid` locators. An
+earlier run of this order started before those merged and designed against the old names.
+
 ## Test Approach
 
 Unit tests for the flows; existing suites unchanged.
