@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-test-ids",
+  "summary": "CartPage.ts registers its complete-transaction button with a text-matching selector (button:has-text(\"COMPLETE TRANSACTION\")) because no test id was ever added for it, and a second locator in HomePage.ts builds a CSS selector by nesting a bare tag under an attribute selector ([data-testid=\"item-card\"] a). Both are fragile: a copy or markup change can silently break the test suite even though the feature itself is unchanged. This chore replaces both with flat data-testid locators — adding the missing complete-transaction-btn test id to CartView.vue and renaming its current, wrongly-named checkout-btn test id, and pointing HomePage.ts at the item-name test id ItemCard.vue already renders — with zero visual or behavioral change to the app and zero .feature/assertion edits.",
+  "acceptanceCriteria": [
+    {
+      "statement": "Every registerElement call in lib/site/ locates its element with a [data-testid=\"...\"] locator or a role-based locator, and the Vue component renders that test id.",
+      "examples": [
+        "CartPage.ts's completeTransactionBtn becomes [data-testid=\"complete-transaction-btn\"]; CartView.vue's button gets that same test id (replacing its current, incorrect checkout-btn test id)."
+      ]
+    },
+    {
+      "statement": "CartPage's complete-transaction button is located by data-testid=\"complete-transaction-btn\"."
+    },
+    {
+      "statement": "No locator in lib/site/ uses has-text, :text, a CSS nth- pseudo-selector, or a selector string built from element nesting.",
+      "examples": [
+        "HomePage.ts's clickFirstProductDetails() currently uses [data-testid=\"item-card\"] a, a single CSS string nesting a bare a tag under an attribute selector. It must become a flat testid locator ([data-testid=\"item-name\"]), which ItemCard.vue already renders."
+      ]
+    },
+    {
+      "statement": "Every scenario that passed before this change passes after it, with no .feature file or assertion changed."
+    },
+    {
+      "statement": "Every new or changed function has cyclomatic complexity below 7, every changed line is covered by a test that can fail, and no file outside scope.paths changes except this run's own delivery record under docs/features/golden-test-ids/."
+    }
+  ],
+  "nonFunctionalRequirements": [],
+  "proposedFitnessFunctions": [
+    {
+      "property": "No locator string under apps/ye-olde-magic-shop/lib/site/ matches has-text(, :text(, a CSS :nth- pseudo-class, or a descendant-combinator (nested) selector.",
+      "verification": "A qa-engineer-authored regression test that scans lib/site/**/*.ts source text for these patterns and fails the suite if any match (plain string/regex scan, not a CI pipeline change).",
+      "owner": "qa-engineer",
+      "judgmentOnly": false
+    }
+  ],
+  "outOfScope": [
+    "Editing any .feature file or step definition file.",
+    "Any visual or behavioral change to the running app.",
+    "The golden-site-file-names rename (CartPage.ts -> cart.page.ts, etc.) — a separate, not-yet-merged dependency feature; this run acts on the current file names."
+  ],
+  "surfaces": {
+    "ui": false,
+    "runtime": false
+  },
+  "boundedContext": {
+    "owning": "Saturday Site-Centric test layer (BasePage/BaseElement locators) for ye-olde-magic-shop",
+    "crossings": [
+      "ye-olde-magic-shop frontend components (Vue data-testid attributes) — the locator fix requires adding/renaming a test id in CartView.vue"
+    ]
+  },
+  "affectedComponents": [
+    {
+      "path": "apps/ye-olde-magic-shop/lib/site/CartPage.ts",
+      "reason": "Line 22's registerElement('completeTransactionBtn', ...) uses button:has-text(\"COMPLETE TRANSACTION\"); the only has-text/:text violation in lib/site/. Must become [data-testid=\"complete-transaction-btn\"] per AC1/AC2."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/src/views/CartView.vue",
+      "reason": "Line 61 renders the complete-transaction button with the wrong test id (data-testid=\"checkout-btn\"); grep confirms this is the only checkout-btn occurrence repo-wide, so renaming it to complete-transaction-btn is isolated and required by AC2."
+    },
+    {
+      "path": "apps/ye-olde-magic-shop/lib/site/HomePage.ts",
+      "reason": "Line 39's clickFirstProductDetails() uses [data-testid=\"item-card\"] a, a single CSS selector string nesting a bare tag under an attribute selector — a literal AC3 violation ('selector built from element nesting') found by direct grep beyond the context-manifest's single named case. Fix: swap to the existing [data-testid=\"item-name\"] test id, which ItemCard.vue already renders on an anchor pointing at the same /item/:id route, so the fix is behavior-preserving."
+    }
+  ],
+  "dataModelChanges": [],
+  "apiChanges": [],
+  "newDependencies": [],
+  "architecturalFlags": [
+    "golden-site-file-names (this feature's depends-on dependency) has not merged into this branch (confirmed via MagicShop.ts imports and commit ancestry) — current file names (CartPage.ts, HomePage.ts, etc.) are authoritative for this run, not the renamed ones.",
+    "HomePage.ts:39 is a second, independently-confirmed AC3 violation beyond the context-manifest's single named case (CartPage.ts:22) — the context-manifest pinned HomePage.ts only for its .nth(1) boundary case and did not flag the nested-selector line."
+  ],
+  "retrieval": {
+    "domainTerms": ["BasePage", "BaseElement"],
+    "issueRefs": ["golden-test-ids"],
+    "linkedAdrs": [],
+    "linkedKis": []
+  },
+  "tasks": {
+    "developer": [
+      "In CartPage.ts, change registerElement('completeTransactionBtn', ButtonElement, 'button:has-text(\"COMPLETE TRANSACTION\")') to use '[data-testid=\"complete-transaction-btn\"]'; remove the now-obsolete inline comment about guessing the selector.",
+      "In CartView.vue (~line 61), rename the complete-transaction button's data-testid from 'checkout-btn' to 'complete-transaction-btn'.",
+      "In HomePage.ts, replace the nested selector string '[data-testid=\"item-card\"] a' in clickFirstProductDetails() with '[data-testid=\"item-name\"]' (already rendered by ItemCard.vue on the item-name link, which navigates to the same destination as the image link currently being matched).",
+      "Leave HomePage.ts's .nth(1)/.nth(randomIndex) Playwright locator-chaining calls and ProductDetailsPage.ts's page.locator('h2') untouched — neither is a has-text/:text/CSS-nth-/nested-selector-string match under AC3's literal wording, and fixing them is not requested by this spec.",
+      "After the edits, grep apps/ye-olde-magic-shop/lib/site/ for has-text(, :text(, a CSS :nth- pseudo-class, and any quoted selector string containing an internal space (nesting), and confirm zero matches."
+    ],
+    "qa": [
+      "Run the Playwright suite via scripts/ui-suite-in-chrome.sh, one runner image at a time, waiting for each ~2-minute run to finish before ending the stage (30-minute budget).",
+      "Run the Cucumber suite with the app's test:bdd script against the same running app.",
+      "Confirm no .feature file and no assertion changed, and that every scenario that passed before still passes.",
+      "Add the regression test proposed in proposedFitnessFunctions: scan lib/site/**/*.ts for has-text(, :text(, CSS :nth-, or nested selector strings, and fail if any are found.",
+      "Verify every changed line (CartPage.ts, CartView.vue, HomePage.ts) is covered by an existing test that would fail if the fix were reverted — the existing Cucumber checkout scenario and cart.spec.ts cover CartPage/CartView; confirm HomePage.ts's clickFirstProductDetails() path is exercised by an existing scenario, or note the gap."
+    ],
+    "techWriter": [],
+    "devops": []
+  },
+  "edgeCases": [
+    {
+      "case": "HomePage.ts's .nth(1) and .nth(randomIndex) are Playwright locator-chaining method calls, not CSS :nth-child/:nth-of-type pseudo-selector strings.",
+      "handling": "Leave untouched. AC3 targets selector strings (the literal substring 'nth-' as it would appear inside a CSS pseudo-class), not Playwright API methods operating on an already-flat data-testid locator."
+    },
+    {
+      "case": "ProductDetailsPage.ts's page.locator('h2') is a bare tag selector outside any registerElement call.",
+      "handling": "Leave untouched. It is not has-text/:text/nth- and is not built from nesting (no descendant combinator) — not a violation under AC1 (scoped to registerElement) or AC3's literal wording. Flagged so it isn't 'fixed' as scope creep."
+    },
+    {
+      "case": "HomePage.ts's clickFirstProductDetails() uses [data-testid=\"item-card\"] a, a single CSS string combining an attribute selector with a nested bare tag via a descendant combinator.",
+      "handling": "This is a genuine AC3 violation even though it sits outside any registerElement call — AC3 says 'no locator in lib/site/', not 'no registered locator'. Fix by pointing at the existing [data-testid=\"item-name\"] test id; confirmed behavior-preserving because both anchors in ItemCard.vue (the image link and the item-name link) navigate to the same /item/${item.id} route."
+    },
+    {
+      "case": "The golden-site-file-names dependency (CartPage.ts -> cart.page.ts rename) has not merged into this branch.",
+      "handling": "Act on current file names now. If that rename lands first and this run is re-based, the same registerElement call is simply under a renamed file — the selector-string fix itself is unaffected."
+    },
+    {
+      "case": "CartView.vue's button already carries a data-testid, just the wrong literal value.",
+      "handling": "Rename in place rather than adding a second attribute. Grep confirms checkout-btn has exactly one occurrence repo-wide, so the rename is isolated and safe."
+    }
+  ],
+  "definitionOfDone": [
+    "CartPage.ts's completeTransactionBtn registerElement call uses [data-testid=\"complete-transaction-btn\"].",
+    "CartView.vue's complete-transaction button carries data-testid=\"complete-transaction-btn\" (renamed from checkout-btn).",
+    "HomePage.ts's clickFirstProductDetails() uses a flat data-testid locator, not a nested selector string.",
+    "Grep across apps/ye-olde-magic-shop/lib/site/ confirms zero remaining has-text, :text, CSS nth- pseudo-selector, or nested-selector-string matches.",
+    "No .feature file changed; no step definition changed; no assertion changed.",
+    "Full Playwright suite (scripts/ui-suite-in-chrome.sh) passes, one runner image at a time.",
+    "Full Cucumber suite (test:bdd) passes against the same running app.",
+    "Every new or changed function has cyclomatic complexity below 7.",
+    "Every changed line is covered by a test that can fail.",
+    "No file outside scope.paths (apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/lib/**, docs/**) changes, except this run's own delivery record under docs/features/golden-test-ids/."
+  ],
+  "openQuestions": [
+    "AC3 is read here as applying to every locator in lib/site/, not only registerElement calls — this brings HomePage.ts:39 into scope alongside CartPage.ts:22, one file beyond what the context-manifest named. Confirm this reading before the developer stage.",
+    "Whether the has-text/:text/nth-/nesting ban should become a standing regression test (proposed above) beyond this one cleanup, so the pattern can't recreep unnoticed."
+  ]
+}

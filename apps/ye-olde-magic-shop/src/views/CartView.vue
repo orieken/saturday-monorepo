@@ -58,7 +58,7 @@
           @click="checkout"
           :disabled="checkingOut"
           class="w-full bg-dnd-crimson hover:bg-red-700 text-white py-4 rounded font-magical text-xl transition-colors shadow-lg active:transform active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          data-testid="checkout-btn"
+          data-testid="complete-transaction-btn"
         >
           <span v-if="!checkingOut">Complete Transaction</span>
           <span v-else>Processing...</span>

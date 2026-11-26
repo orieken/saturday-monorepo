@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-test-ids",
+  "scenarios": [
+    {
+      "criterion": "Every registerElement call in lib/site/ locates its element with a [data-testid=\"...\"] locator or a role-based locator, and the Vue component renders that test id.",
+      "name": "Every registered page element resolves through a stable data-testid or role locator",
+      "given": [
+        "A Saturday page object in lib/site/ registers an element via registerElement",
+        "The Vue component that element targets is rendered"
+      ],
+      "when": [
+        "Each registerElement call's locator string is inspected against the rendered component's markup"
+      ],
+      "then": [
+        "The locator is either a [data-testid=\"...\"] attribute selector or a role-based locator",
+        "The Vue component renders an element carrying that exact test id (or exposing that exact role)"
+      ]
+    },
+    {
+      "criterion": "CartPage's complete-transaction button is located by data-testid=\"complete-transaction-btn\".",
+      "name": "The complete-transaction button is found by a dedicated, literal test id",
+      "given": [
+        "CartPage registers its completeTransactionBtn element",
+        "CartView.vue renders the complete-transaction button"
+      ],
+      "when": [
+        "CartPage locates the complete-transaction button"
+      ],
+      "then": [
+        "The locator used is exactly [data-testid=\"complete-transaction-btn\"]",
+        "CartView.vue's button element carries data-testid=\"complete-transaction-btn\" (not checkout-btn, and not a text- or role-based guess)"
+      ]
+    },
+    {
+      "criterion": "No locator in lib/site/ uses has-text, :text, a CSS nth- pseudo-selector, or a selector string built from element nesting.",
+      "name": "No locator in the site layer depends on visible text, CSS position, or DOM nesting",
+      "given": [
+        "The full set of locator strings used anywhere under lib/site/"
+      ],
+      "when": [
+        "Each locator string is scanned for has-text(, :text(, a CSS :nth- pseudo-class, or a descendant-combinator (nested) selector such as [data-testid=\"item-card\"] a"
+      ],
+      "then": [
+        "Zero locator strings in lib/site/ contain has-text(, :text(, or a :nth- pseudo-class",
+        "Zero locator strings in lib/site/ combine a parent selector with a nested element via a descendant combinator",
+        "HomePage.ts's clickFirstProductDetails() locates its target through a flat [data-testid=\"item-name\"] locator instead of [data-testid=\"item-card\"] a"
+      ]
+    },
+    {
+      "criterion": "Every scenario that passed before this change passes after it, with no .feature file or assertion changed.",
+      "name": "The existing behavior-verification suites are unaffected by the locator cleanup",
+      "given": [
+        "The full existing Playwright and Cucumber suites pass before this change"
+      ],
+      "when": [
+        "The same suites are run again after the locator changes land, with no .feature file and no assertion edited"
+      ],
+      "then": [
+        "Every scenario that passed before still passes",
+        "No .feature file differs from before the change",
+        "No assertion in any test file differs from before the change"
+      ]
+    },
+    {
+      "criterion": "Every new or changed function has cyclomatic complexity below 7, every changed line is covered by a test that can fail, and no file outside scope.paths changes except this run's own delivery record under docs/features/golden-test-ids/.",
+      "name": "The change stays small, verifiable, and inside its declared scope",
+      "given": [
+        "The complete set of source and test edits made to satisfy this change"
+      ],
+      "when": [
+        "Each new or changed function is measured for cyclomatic complexity",
+        "Each changed line is checked for a covering test, and that test is checked for a path to failure",
+        "The full list of changed files is compared against scope.paths"
+      ],
+      "then": [
+        "Every new or changed function has cyclomatic complexity below 7",
+        "Every changed line is covered by a test that fails if the fix is reverted",
+        "No file outside apps/ye-olde-magic-shop/src/**, apps/ye-olde-magic-shop/lib/**, or docs/** changes, other than this run's delivery record under docs/features/golden-test-ids/"
+      ]
+    }
+  ],
+  "retrieval": {
+    "domainTerms": [],
+    "issueRefs": [],
+    "linkedAdrs": [],
+    "linkedKis": []
+  }
+}

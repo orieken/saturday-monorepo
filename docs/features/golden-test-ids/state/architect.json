@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "feature": "golden-test-ids",
+  "structuralDecisions": [
+    {
+      "decision": "Fix both fragile locators in place using the existing flat `[data-testid=\"...\"]` pattern already dominant in CartPage.ts and HomePage.ts — no new selector strategy, base class, or package.",
+      "rationale": "Confirmed by reading both files: every other registerElement/locator call in CartPage.ts and HomePage.ts already uses a flat data-testid attribute selector. The two violations (CartPage.ts:22 has-text, HomePage.ts:39 nested selector) are exceptions to an established pattern, not evidence a new pattern is needed. This is additive-within-pattern per the architect invocation criteria — no layer boundary, package, or abstraction decision is actually in play here.",
+      "tradeOffs": ["None material — confirmed by direct file inspection rather than assumed."],
+      "fitness": {
+        "property": "No locator string under apps/ye-olde-magic-shop/lib/site/ matches has-text(, :text(, a CSS :nth- pseudo-class, or a descendant-combinator (nested) selector string.",
+        "verification": "qa-engineer-authored regression test scanning lib/site/**/*.ts source text for these patterns; fails the suite on any match.",
+        "owner": "qa-engineer"
+      }
+    },
+    {
+      "decision": "Rename CartView.vue's complete-transaction button test id from `checkout-btn` to `complete-transaction-btn` in place, rather than adding a second, parallel test id.",
+      "rationale": "grep confirms `checkout-btn` has exactly one occurrence repo-wide (CartView.vue:61). A rename is safe and leaves no stale attribute that could silently reattract a future locator.",
+      "tradeOffs": ["None — single call site verified by grep before deciding."],
+      "judgmentOnly": true
+    },
+    {
+      "decision": "Point HomePage.ts's clickFirstProductDetails() at the existing `item-name` test id (already rendered by ItemCard.vue) instead of inventing a new, purpose-built test id for the details link.",
+      "rationale": "ItemCard.vue:26 already renders data-testid=\"item-name\" on a router-link to the same /item/:id destination the current nested selector `[data-testid=\"item-card\"] a` resolves to. Reusing it is behavior-preserving and avoids a redundant attribute on markup that already has an addressable id.",
+      "tradeOffs": ["The locator's semantic intent (navigate to product details) is now carried by an attribute named after the item's name text rather than its own purpose — acceptable: a third testid on the same anchor would duplicate markup for no behavioral gain."],
+      "judgmentOnly": true
+    }
+  ],
+  "componentPlacement": [
+    {
+      "component": "CartPage.completeTransactionBtn locator",
+      "layer": "adapter",
+      "package": "apps/ye-olde-magic-shop/lib/site/CartPage.ts",
+      "reason": "Saturday BasePage element registration (interface-adapter layer); selector string changes only, no new component."
+    },
+    {
+      "component": "CartView complete-transaction-btn data-testid",
+      "layer": "framework",
+      "package": "apps/ye-olde-magic-shop/src/views/CartView.vue",
+      "reason": "Vue template attribute in the app under test; renames an existing attribute, adds no new UI."
+    },
+    {
+      "component": "HomePage.clickFirstProductDetails locator",
+      "layer": "adapter",
+      "package": "apps/ye-olde-magic-shop/lib/site/HomePage.ts",
+      "reason": "Saturday BasePage method; swaps a nested CSS selector for the existing item-name testid already rendered by ItemCard.vue."
+    }
+  ],
+  "boundedContext": {
+    "owning": "Saturday Site-Centric test layer (BasePage/BaseElement locators) for ye-olde-magic-shop",
+    "crossings": ["ye-olde-magic-shop Vue components (data-testid attributes) — CartView.vue's test id must be renamed in lockstep with CartPage.ts's locator"]
+  },
+  "layerBoundaryChecks": [
+    {
+      "rule": "lib/site/ (interface-adapter layer) must not acquire new dependencies on application/domain internals or new base classes.",
+      "verdict": "PASS",
+      "notes": "Verified by reading CartPage.ts and HomePage.ts directly: both edits are locator-string-only, no new imports, no new classes. Checked by direct file read, not the loom graph (not invoked for a change this small)."
+    },
+    {
+      "rule": "Vue component test-id rename must not alter component logic, props, or markup structure.",
+      "verdict": "PASS",
+      "notes": "CartView.vue edit is limited to one attribute value; ItemCard.vue needs no edit since its item-name testid already exists (confirmed by grep)."
+    }
+  ],
+  "antiPatternChecks": [
+    {
+      "pattern": "Leaky Abstraction",
+      "found": false,
+      "notes": "Flat data-testid locators reduce coupling to DOM structure versus the nested-selector and has-text locators being removed; this fix closes leakage rather than adding it."
+    },
+    {
+      "pattern": "Premature Generalization",
+      "found": false,
+      "notes": "No new abstraction, package, or base class introduced; reuses the existing testid convention already dominant in both files."
+    }
+  ],
+  "fitnessFunctions": [
+    {
+      "property": "No locator string under apps/ye-olde-magic-shop/lib/site/ matches has-text(, :text(, a CSS :nth- pseudo-class, or a descendant-combinator (nested) selector string.",
+      "verification": "qa-engineer-authored regression test scanning lib/site/**/*.ts source text for these patterns; fails the suite on any match.",
+      "owner": "qa-engineer"
+    }
+  ],
+  "refactoringOpportunities": [
+    {
+      "operation": "Remove Dead Code",
+      "target": "CartPage.ts — inline comment above completeTransactionBtn explaining the has-text guess ('Using a broad selector for now...')",
+      "reason": "The comment documents a workaround for a missing test id; once complete-transaction-btn exists the comment is stale and should be deleted, not edited."
+    }
+  ],
+  "developerHandoffNotes": [
+    "CartPage.ts:22 — change registerElement('completeTransactionBtn', ButtonElement, 'button:has-text(\"COMPLETE TRANSACTION\")') to '[data-testid=\"complete-transaction-btn\"]'; delete the two-line comment above it.",
+    "CartView.vue:61 — rename data-testid=\"checkout-btn\" to data-testid=\"complete-transaction-btn\".",
+    "HomePage.ts:39 — replace '[data-testid=\"item-card\"] a' with '[data-testid=\"item-name\"]' in clickFirstProductDetails().",
+    "Do not touch HomePage.ts's .nth(1)/.nth(randomIndex) calls or ProductDetailsPage.ts's page.locator('h2') — out of scope per analyst.",
+    "After edits, grep lib/site/ for has-text(, :text(, :nth-, and nested selector strings and confirm zero matches before handing off to code-reviewer."
+  ],
+  "openQuestions": [
+    "Analyst's scope question (whether AC3 covers HomePage.ts:39 beyond the single context-manifest-named case) is resolved here: AC3's text applies to every locator in lib/site/, so HomePage.ts:39 is in scope — confirmed by direct read of both files.",
+    "Whether the has-text/:text/nth-/nesting regression scan (this run's fitness function) should become a permanent, standing test beyond this cleanup is still open for qa-engineer or a human to decide; this run's fitness function covers only the current change set."
+  ]
+}
